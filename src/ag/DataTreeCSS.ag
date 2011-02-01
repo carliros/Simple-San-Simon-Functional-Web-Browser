@@ -1,0 +1,49 @@
+PRAGMA genlinepragmas
+
+DATA SRoot
+    | SRoot Rules
+
+TYPE Rules = [Rule]
+
+TYPE Rule = ({Bool}, Selectors, {[Property]})
+
+TYPE Selectors = [Selector]
+
+DATA Selector
+    | SimpSelector SSelector
+    | DescSelector SSelector
+    | ChilSelector SSelector
+    | SiblSelector SSelector
+    -- | CombSelector SSelector String -- combinators: ' ', >, +
+
+DATA SSelector
+    | TypeSelector String atselectors: ATSelectors
+    | UnivSelector        atselectors: ATSelectors
+
+TYPE ATSelectors = [ATSelector]
+
+DATA ATSelector
+    | ID         value: String              -- id selector (#)
+    | ATName     name : String
+    | ATOperator name, op, value: String    -- op: =, ~=, |=    it includes the class selector (.)
+
+DATA Property
+    | Property Origin prop: String Value important:Bool
+
+DATA Origin
+    | UserAgent
+    | User
+    | Author
+
+DATA Value
+    | PixelNumber Float
+    | PointNumber Float
+    | EmNumber    Float
+    | Percentage  Float
+    | KeyValue    String
+    | KeyColor    String
+    | NotSpecified
+
+DERIVING Origin Value: Eq
+DERIVING *: Show
+

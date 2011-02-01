@@ -1,0 +1,22 @@
+
+DATA Root
+    | Root ntree:NTree
+
+DATA NTree
+    | NTree Node ntrees: NTrees
+
+TYPE NTrees = [NTree]
+
+DATA Node
+    | NText text      : String
+    | NTag  name      : String
+            iamReplacedElement: Bool
+            attributes: {Map.Map String String}
+
+DERIVING *: Show
+
+{
+instance Eq Node where
+    NTag n1 _ _ == NTag n2 _ _ = n1 == n2
+    _           == _           = False
+}

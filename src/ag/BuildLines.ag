@@ -1,0 +1,106 @@
+
+INCLUDE "WrapList.ag"
+
+-- assingning a code to each boxtree element
+-- codeChild
+ATTR BoxTree Boxes [ codChild: Int ||]
+SEM BoxRoot
+    | BoxRoot boxtree.codChild = 1
+
+SEM BoxTree
+    | BoxContainer boxes.codChild = 1
+
+SEM Boxes
+    | Cons hd.codChild = @lhs.codChild
+           tl.codChild = @lhs.codChild + 1
+
+-- codeFather
+ATTR BoxTree Boxes [ codFather: Int ||]
+SEM BoxRoot
+    | BoxRoot boxtree.codFather = 1
+
+SEM BoxTree
+    | BoxContainer boxes.codFather = getCode @loc.code
+
+-- building a code for each ntree
+SEM BoxTree
+    | BoxContainer     loc.code = Code @lhs.codFather @lhs.codChild
+    | BoxContainerText loc.code = Code @lhs.codFather @lhs.codChild
+
+-- Distributing the contaning block (cb)
+ATTR BoxRoot BoxTree Boxes [cb: {Window a} ||]
+
+-- separating the text into list of text, and getting the sizes
+SEM BoxTree
+    | BoxContainerText loc.strs  = words @content
+                       loc.sizes = let fsize cnt = unsafePerformIO $ getSizeBox cnt @lhs.cb @loc.usedValueProps
+                                   in map (\str -> let (w,h,_,_) = fsize str in (w,h)) @loc.strs
+
+-- building a plain tree for inline formating
+ATTR BoxTree Boxes [|| elements USE {++} {[]}: {[ElementList]}]
+SEM BoxTree
+    | BoxContainer lhs.elements 
+                        = if @amireplaced
+                          then let (we,he) = getExternalSizeBox @loc.usedValueProps
+                                   (iw,ih) = mapTuple (\prop -> toInt $ unPixelUsedValue $ @loc.usedValueProps Map.! prop) ("width", "height")
+                               in [ReplacedContainer @loc.code Full @loc.usedValueProps @attributes (iw+we) (ih+he)]
+                          else let (wl,wr,ht,hb) = getExternalSizeBox4Tuple @loc.usedValueProps
+                               in case @boxes.elements of
+                                    []        -> [] -- Que pasa si el elemento tiene margin,border y padding???????????
+                                    [only]    -> let (w,h) = getElementSize only
+                                                 in [ElementContainer @loc.code Full @loc.usedValueProps @attributes (w+wl+wr) h only]
+                                    [ini,end] -> let (w1,h1) = getElementSize ini
+                                                     (w2,h2) = getElementSize end
+                                                     eini = ElementContainer @loc.code Init @loc.usedValueProps @attributes (w1+wl) h1 ini
+                                                     eend = ElementContainer @loc.code End  @loc.usedValueProps @attributes (w2+wr) h2 end
+                                                 in [eini, eend]
+                                    otherwise -> let ini = head @boxes.elements
+                                                     end = last @boxes.elements
+                                                     (w1,h1) = getElementSize ini
+                                                     (w2,h2) = getElementSize end
+                                                     eini = ElementContainer @loc.code Init @loc.usedValueProps @attributes (w1+wl) h1 ini
+                                                     eend = ElementContainer @loc.code End  @loc.usedValueProps @attributes (w2+wr) h2 end
+                                                     lmed = let lelem = init (tail @boxes.elements)
+                                                                lsize = map getElementSize lelem
+                                                            in zipWith (\el (w,h) -> ElementContainer @loc.code Medium @loc.usedValueProps @attributes w h el) lelem lsize
+                                                 in [eini] ++ lmed ++ [eend]
+    | BoxContainerText lhs.elements 
+                        = let (wl,wr,ht,hb) = getExternalSizeBox4Tuple @loc.usedValueProps
+                          in case @loc.strs of
+                                []        -> [] -- Que pasa si el elemento tiene margin,border y padding???????????
+                                [only]    -> let (w,h) = head @loc.sizes
+                                             in [ElementText @loc.code Full @loc.usedValueProps @attributes (w+wl+wr) h only]
+                                [ini,end] -> let (w1,h1) = head @loc.sizes
+                                                 (w2,h2) = last @loc.sizes
+                                                 eini = ElementText @loc.code Init @loc.usedValueProps @attributes (w1+wl) h1 ini
+                                                 eend = ElementText @loc.code End  @loc.usedValueProps @attributes (w2+wr) h2 end
+                                             in [eini, eend]
+                                otherwise -> let (w1,h1) = head @loc.sizes
+                                                 (w2,h2) = last @loc.sizes
+                                                 eini = ElementText @loc.code Init @loc.usedValueProps @attributes (w1+wl) h1 (head @loc.strs)
+                                                 eend = ElementText @loc.code End  @loc.usedValueProps @attributes (w2+wr) h2 (last @loc.strs)
+                                                 lmed = let lelem = init (tail @loc.strs)
+                                                            lsize = init (tail @loc.sizes)
+                                                        in zipWith (\str (w,h) -> ElementText @loc.code Medium @loc.usedValueProps @attributes w h str) lelem lsize
+                                             in [eini] ++ lmed ++ [eend]
+
+-- distribuiting the width and height of the containing block
+ATTR BoxRoot BoxTree Boxes [cbSize:{(Int,Int)} ||]
+
+SEM BoxTree
+    | BoxContainer 
+            loc.width  = toInt $ unPixelUsedValue $ @loc.usedValueProps Map.! "width"
+    | BoxContainerText 
+            loc.width  = toInt $ unPixelUsedValue $ @loc.usedValueProps Map.! "width"
+
+-- building lines of BoxTrees
+SEM BoxTree
+    | BoxContainer loc.lines = applyWrap2 @loc.width 6 @boxes.elements   -- 6 es numero en pixels que un spacio ocupa
+
+-- auxiliar functions
+{
+getElementSize (ElementText       _ _ _ _ w h _) = (w,h)
+getElementSize (ElementContainer  _ _ _ _ w h _) = (w,h)
+getElementSize (ReplacedContainer _ _ _ _ w h  ) = (w,h)
+}
+

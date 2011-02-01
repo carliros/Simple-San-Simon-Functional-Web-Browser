@@ -1,0 +1,25 @@
+
+-- Attr to state who is the Root
+ATTR BoxTree Boxes [ iamtheroot: Bool ||]
+SEM BoxRoot
+    | BoxRoot boxtree.iamtheroot = True
+
+SEM BoxTree
+    | BoxContainer boxes.iamtheroot = False
+
+-- build the used value
+SEM BoxTree
+    | BoxContainer 
+        loc.usedValueProps = Map.mapWithKey (doUsedValue @lhs.iamtheroot (toTupleFloat @lhs.cbSize) @lhs.propsFather @props @attributes @amireplaced) @props
+    | BoxContainerText
+        loc.usedValueProps = Map.mapWithKey (doUsedValue @lhs.iamtheroot (toTupleFloat @lhs.cbSize) @lhs.propsFather @props @attributes @amireplaced) @props
+
+-- Downloading the father property throughout the fstree
+ATTR BoxTree Boxes [propsFather: {Map.Map String PropertyValue} ||]
+SEM BoxTree
+    | BoxContainer boxes.propsFather = @loc.usedValueProps
+
+SEM BoxRoot
+    | BoxRoot boxtree.propsFather = Map.empty
+
+

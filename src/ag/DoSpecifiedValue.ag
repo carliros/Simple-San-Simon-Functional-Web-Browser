@@ -1,0 +1,50 @@
+
+-- Attr to state who is the Root
+ATTR NTree NTrees [ iamtheroot: Bool ||]
+SEM Root
+    | Root ntree.iamtheroot = True
+
+SEM NTree
+    | NTree ntrees.iamtheroot = False
+
+-- build the specified value for all properties
+SEM NTree
+    | NTree loc.specifiedValueProps
+                    = let funGenKeyValues (pn,inh,def) = (pn, doSpecifiedValue pn inh def @lhs.propsFather @lhs.iamtheroot @loc.myRuleDecls)
+                      in  Map.fromList $ map funGenKeyValues propertiesCSS
+
+{
+-- doSpecifiedValue, asigns an specified value to each property and receives a list of properties that match an html tag element (rules).
+doSpecifiedValue nm inh defval father isRoot rules
+    = let lprop = getPropertyDeclarations nm rules
+          rlist = head' $ dropWhile null $ cascadingSorting lprop
+      in if null rlist
+         then if inh && (not isRoot)
+              then buildPropertyValue $ computedValue $ father Map.! nm
+              else defval
+         else let (_,Property _ _ val _,_) = head rlist
+              in if compareKeyPropertyValue val "inherit"
+                 then if isRoot
+                      then defval
+                      else buildPropertyValue $ computedValue $ father Map.! nm
+                 else buildPropertyValue val 
+
+getPropertyDeclarations prop = filter (\(_, Property _ nm _ _, _) -> nm == prop)
+
+cascadingSorting lista = let lst1 = sortBy fsort $ getDeclarations User      True  lista
+                             lst2 = sortBy fsort $ getDeclarations Author    True  lista
+                             lst3 = sortBy fsort $ getDeclarations Author    False lista
+                             lst4 = sortBy fsort $ getDeclarations User      False lista
+                             lst5 = sortBy fsort $ getDeclarations UserAgent False lista
+                          in [lst1, lst2 ,lst3, lst4, lst5]
+                          where getDeclarations origin important = filter (\(_, Property org _ _ imp, _) -> origin==org && important==imp)
+                                fsort (_ , Property _ _ _ _, v1) (_, Property _ _ _ _, v2)
+                                    | v1 > v2   = LT
+                                    | v1 < v2   = GT
+                                    | otherwise = EQ
+ 
+-- my own version of head function
+head' []     = []
+head' (x:xs) = x
+
+}

@@ -1,0 +1,93 @@
+PRAGMA genlinepragmas
+
+imports{
+import qualified Data.Map as Map
+import PropertyValue
+}
+
+DATA FSRoot
+    | FSRoot fsbox: FSBox
+
+DATA FSBox
+    | FSBox name : String
+            props: {Map.Map String PropertyValue}
+            boxes: FSBoxes
+
+TYPE FSBoxes = [FSBox]
+
+DERIVING *: Show
+
+-- Computing yPos
+ATTR FSBox FSBoxes [| yPos: Int |]
+SEM FSRoot
+    | FSRoot fsbox.yPos = yInit
+SEM FSBox
+    | FSBox loc.yPos   = @lhs.yPos
+            boxes.yPos = @lhs.yPos + ySep
+            lhs.yPos   = @boxes.yPos
+SEM FSBoxes
+    | Cons hd.yPos  = @lhs.yPos
+           tl.yPos  = @lhs.yPos
+           lhs.yPos = @tl.yPos
+    | Nil  lhs.yPos = @lhs.yPos
+
+
+-- Computing xPos
+
+-- "len" is the horizontal lenght of an element box and his children boxes
+ATTR FSBox FSBoxes [|| len USE {+} {0}: Int ]
+SEM FSBox
+    | FSBox loc.len = if @boxes.len == 0
+                      then xBox + xSep
+                      else @boxes.len
+            lhs.len = @loc.len
+
+ATTR FSBox FSBoxes [ | xPos:Int | ]
+SEM FSRoot
+    | FSRoot fsbox.xPos = xInit
+
+SEM FSBox
+    | FSBox boxes.xPos = @lhs.xPos
+            lhs.xPos   = @boxes.xPos
+            loc.xPos   = @lhs.xPos + (@loc.len `div` 2) + (xSep `div` 2) - (xBox `div` 2)
+
+SEM FSBoxes
+    | Cons hd.xPos  = @lhs.xPos
+           tl.xPos  = @lhs.xPos + @hd.len
+           lhs.xPos = @tl.xPos
+    | Nil  lhs.xPos = @lhs.xPos
+
+{
+xInit = 10
+yInit = 10
+xSep = 40
+ySep = 80
+xBox = 95
+yBox = 50
+
+-- formatting datatypes
+data OBox = BoxBlock String (Int,Int) (Int,Int) (Map.Map String PropertyValue)
+          | BoxLine (Int,Int) (Int, Int)
+          | BoxWTam Int Int
+}
+
+-- Generating (x,y) positions for lines
+ATTR FSBox [|| vec:{(Int,Int)} ]
+SEM FSBox
+    | FSBox lhs.vec  = (@loc.xPos + (xBox `div` 2),@loc.yPos)
+            loc.vec1 = (@loc.xPos + (xBox `div` 2),@loc.yPos + yBox)
+
+ATTR FSBoxes [|| vec2s:{[(Int,Int)]}]
+SEM FSBoxes
+    | Cons lhs.vec2s = @hd.vec : @tl.vec2s
+    | Nil  lhs.vec2s = []
+
+-- Generating Drawing Functions
+ATTR FSRoot FSBox FSBoxes [|| out USE {++} {[]}: {[OBox]}]
+SEM FSRoot
+    | FSRoot lhs.out = (BoxWTam @fsbox.len @fsbox.yPos) : @fsbox.out
+
+SEM FSBox
+    | FSBox lhs.out = let cmdVec = map (BoxLine @loc.vec1) @boxes.vec2s
+                      in ((BoxBlock @name (@loc.xPos,@loc.yPos) (xBox,yBox) @props) : @boxes.out) ++ cmdVec
+

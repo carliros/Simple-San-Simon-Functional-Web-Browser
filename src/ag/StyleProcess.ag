@@ -1,0 +1,53 @@
+PRAGMA genlinepragmas
+
+INCLUDE "DataTreeCSS.ag"
+imports{
+import DataTreeCSS
+}
+
+-- Selector's specifycity
+ATTR Rules Rule Selectors Selector SSelector ATSelectors ATSelector Property Origin Value [|| myself: SELF]
+
+-- calculate the specifycity, counting
+ATTR Selector SSelector [|| counter: {(Int, Int, Int, Int)}]
+SEM SSelector
+    | TypeSelector lhs.counter = (0, @atselectors.ids, @atselectors.ats, 1)
+    | UnivSelector lhs.counter = (0, @atselectors.ids, @atselectors.ats, 0)
+
+ATTR Selectors [|| counter USE {`ftp`} {(0,0,0,0)} : {(Int, Int, Int, Int)}]
+
+ATTR ATSelectors ATSelector [|| ids,ats USE {+} {0}: Int]
+SEM ATSelector
+    | ID         lhs.ids = 1
+                 lhs.ats = 0
+    | ATName     lhs.ids = 0
+                 lhs.ats = 1
+    | ATOperator lhs.ids = 0
+                 lhs.ats = 1
+
+-- generating output
+ATTR Rule [|| output: {([Selector], [Property], Int)}]
+SEM Rule
+    | Tuple loc.specifycity = let (_,b,c,d) = @x2.counter
+                              in if @x1 
+                                 then 1*(10^4)+b*(10^3)+c*(10^2)+d*10
+                                 else 0*(10^4)+b*(10^3)+c*(10^2)+d*10
+            lhs.output = (@x2.myself, @x3, @loc.specifycity)
+
+ATTR Rules [|| outputs: {[([Selector], [Property], Int)]}]
+SEM Rules
+    | Cons lhs.outputs = @hd.output : @tl.outputs
+    | Nil  lhs.outputs = []
+
+ATTR SRoot [|| outputs: {[([Selector], Property, Int)]}]
+SEM SRoot
+    | SRoot lhs.outputs = let drules = distributeDeclarations @rules.outputs
+                          in map (\(sel,prop,i) -> (reverse sel,prop,i)) drules
+
+{
+-- function that transform to a flat list of rules where each rule has one selector and one property. And not a list of properties.
+distributeDeclarations = concat . map (\(sel, lprop, spe) -> map (\prop -> (sel, prop, spe)) lprop)
+
+ftp :: (Int, Int, Int, Int) -> (Int, Int, Int, Int) -> (Int, Int, Int, Int)
+ftp (_,b1,c1,d1) (_,b2,c2,d2) = (0, b1+b2, c1+c2, d1+d2)
+}

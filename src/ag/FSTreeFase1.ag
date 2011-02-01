@@ -1,0 +1,70 @@
+PRAGMA genlinepragmas
+
+imports{
+-- libraries
+import Graphics.UI.WXCore hiding (empty)
+import Graphics.UI.WX hiding (text, empty)
+
+import UU.Pretty
+import qualified Data.Map as Map
+import System.IO.Unsafe
+import Data.List
+
+-- user types and functions
+import FSTreeFase2
+import CssBox
+import PropertyValue
+import PropertiesCSS
+import DataTreeCSS
+import ImageProcess
+import AuxiliarFunctions
+}
+
+-- datatypes Formatting Structure Fase 1
+DATA BoxRoot
+    | BoxRoot boxtree: BoxTree
+
+DATA BoxTree
+    | BoxContainer fcontext   : String
+                   props      : {Map.Map String PropertyValue}
+                   amireplaced: Bool
+                   attributes : {Map.Map String String}
+                   boxes      : Boxes
+    | BoxContainerText 
+                   fcontext   : String
+                   props      : {Map.Map String PropertyValue}
+                   amireplaced: Bool
+                   attributes : {Map.Map String String}
+                   content    : String
+
+TYPE Boxes = [BoxTree]
+
+-- instances
+SET InstancesShow = * - Code
+DERIVING InstancesShow: Show
+
+INCLUDE "DoUsedValue.ag"
+INCLUDE "BuildLines.ag"
+
+-- Going from Fase 1 to the Fase 2
+ATTR BoxRoot BoxTree [|| boxtree: {BoxF2Tree} ]
+SEM BoxTree
+    | BoxContainer 
+            lhs.boxtree = let vdisplay = unKeyComputedValue $ @loc.usedValueProps Map.! "display"
+                          in case vdisplay of
+                                "block"  -> case @fcontext of
+                                                "block"  -> F2Container "block"  @loc.usedValueProps @attributes Full @amireplaced @boxes.boxtrees []
+                                                "inline" -> F2Container "inline" @loc.usedValueProps @attributes Full @amireplaced []              @loc.lines
+                                "inline" -> case @fcontext of
+                                                "inline" -> F2Container "inline" @loc.usedValueProps @attributes Full @amireplaced @boxes.boxtrees []
+                                                _        -> error $ "[fstree fase 1] unexpected fcontext value: " ++ @fcontext
+                                _        -> error $ "[fstree fase 1] unexpected display value: " ++ vdisplay
+    | BoxContainerText
+            lhs.boxtree = F2ContainerText @fcontext @loc.usedValueProps @attributes Full @amireplaced @content
+
+ATTR Boxes [|| boxtrees: {[BoxF2Tree]}]
+SEM Boxes
+    | Cons lhs.boxtrees = @hd.boxtree : @tl.boxtrees
+    | Nil  lhs.boxtrees = []
+
+

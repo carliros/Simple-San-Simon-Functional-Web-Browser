@@ -1,0 +1,21 @@
+
+-- uploading the type element
+ATTR Node [|| iamReplacedElement: {Maybe Bool}]
+SEM Node
+    | NTag  lhs.iamReplacedElement = Just @iamReplacedElement
+    | NText lhs.iamReplacedElement = Nothing  -- this value is not important
+
+-- build the computed value for each property and for every element in the html tree
+SEM NTree
+    | NTree loc.computedValueProps
+                    = Map.mapWithKey (doComputedValue @lhs.iamtheroot @lhs.propsFather @loc.specifiedValueProps @node.iamReplacedElement) @loc.specifiedValueProps
+
+-- Downloading the father computed value properties throughout the html tree
+ATTR NTree NTrees [propsFather: {Map.Map String PropertyValue} ||]
+SEM NTree
+    | NTree ntrees.propsFather = @loc.computedValueProps
+
+SEM Root
+    | Root ntree.propsFather = Map.empty
+
+

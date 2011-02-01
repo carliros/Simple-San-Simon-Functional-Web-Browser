@@ -1,0 +1,315 @@
+PRAGMA genlinepragmas
+
+imports{
+-- libraries
+import qualified Graphics.UI.WXCore as WXC
+import qualified Graphics.UI.WX as WX
+
+import UU.Pretty
+import qualified Data.Map as Map
+import System.IO.Unsafe
+import Data.Function
+import Url
+
+-- datatypes
+import CssBox
+import PropertyValue
+import DataTreeCSS
+import FSBox
+import ImageProcess
+import AuxiliarFunctions
+}
+
+DATA BoxF2Root
+    | BoxF2Root BoxF2Tree
+
+DATA BoxF2Tree
+    | F2Container
+            fcontext         : String
+            props            : {Map.Map String PropertyValue}
+            attributes       : {Map.Map String String}
+            typeContinuation : {TypeContinuation}
+            amireplaced      : Bool
+            boxes            : BoxesF2
+            lines            : Lines
+    | F2ContainerText
+            fcontext         : String
+            props            : {Map.Map String PropertyValue}
+            attributes       : {Map.Map String String}
+            typeContinuation : {TypeContinuation}
+            amireplaced      : Bool
+            content          : String
+
+DATA Line
+    | Line boxes: BoxesF2
+
+TYPE BoxesF2 = [BoxF2Tree]
+TYPE Lines = [Line]
+
+DERIVING *: Show
+
+-- distribuiting the width and height of the containing block
+SEM BoxF2Tree
+    | F2Container
+            loc.cbSize = (@props Map.! "width", @props Map.! "height")
+    | F2ContainerText 
+            loc.cbSize = (@props Map.! "width", @props Map.! "height")
+
+-- generating the baseline for each element
+
+-- generating a width and height for all boxtrees
+ATTR BoxF2Tree Line [|| size: {(Int,Int)}]
+SEM BoxF2Tree
+    | F2ContainerText
+        loc.vdisplay = unKeyComputedValue $ @props Map.! "display"
+        loc.fontmetrics = unsafePerformIO $ getSizeBox @content @lhs.cb @props
+        loc.size
+           = let (w,h) = (cfst @loc.fontmetrics, csnd @loc.fontmetrics)
+                 (we,he) = let (wl,wr,ht,hb) = getExternalSizeBox4Tuple @props
+                           in case (@typeContinuation) of
+                                Full   -> (wl+wr,ht+hb)
+                                Init   -> (wl   ,ht+hb)
+                                End    -> (   wr,ht+hb)
+                                Medium -> (0    ,ht+hb)
+             in ( if compareKeyPropertyValue (usedValue (fst @loc.cbSize)) "auto"
+                  then w + we
+                  else (toInt $ unPixelUsedValue $ fst @loc.cbSize) + we
+                , if compareKeyPropertyValue (usedValue (snd @loc.cbSize)) "auto"
+                  then h + he
+                  else (toInt $ unPixelUsedValue $ snd @loc.cbSize) + he
+                )
+        lhs.size = @loc.size
+
+    | F2Container
+        loc.vdisplay = unKeyComputedValue $ @props Map.! "display"
+        loc.size 
+           = case @loc.vdisplay of
+                  "block"  -> case @fcontext of
+                                "block"  
+                                    -> let (we,he) = getExternalSizeBox @props
+                                       in ( (toInt $ unPixelUsedValue $ fst @loc.cbSize) + we       -- the width of the containing block
+                                          , if (compareKeyPropertyValue (usedValue (snd @loc.cbSize)) "auto")
+                                            then foldr (\t v -> (snd t) + v) 0 @boxes.sizes + he    -- the sum of the heights of children block boxes
+                                            else (toInt $ unPixelUsedValue $ snd @loc.cbSize) + he)
+                                "inline" -- any block can have width and height different than "auto"
+                                    -> let (we,he) = getExternalSizeBox @props
+                                       in ( (toInt $ unPixelUsedValue $ fst @loc.cbSize) +we        -- the width of the containing block
+                                          , if (compareKeyPropertyValue (usedValue (snd @loc.cbSize)) "auto")
+                                            then foldr (\t v -> (snd t) + v) 0 @lines.sizes + he    -- the sum of the heights of children block boxes
+                                            else (toInt $ unPixelUsedValue $ snd @loc.cbSize) + he)
+                  "inline" -> case @fcontext of
+                                "inline"
+                                    -> if @amireplaced
+                                       then let (we,he) = getExternalSizeBox @props
+                                            in case (mapTuple (\v -> compareKeyPropertyValue (usedValue v) "auto") @loc.cbSize) of
+                                                (False, False) -> ( (toInt $ unPixelUsedValue $ fst @loc.cbSize) + we
+                                                                  , (toInt $ unPixelUsedValue $ snd @loc.cbSize) + he)
+                                                (True , True ) -> let (w,h) = getImageSize (getAttribute "src" @attributes)
+                                                                  in (w+we, h+he)
+                                                (False, True ) -> let (w,h) = getImageSize (getAttribute "src" @attributes)
+                                                                  in (w+we, h+he)
+                                                {-
+                                                (True , False) -> 
+                                                -}
+                                       else -- I am doing this because all inline non-replaced elements have width and height of "auto"
+                                            let (w ,h)  = ( foldr (\t v -> (fst t) + v) 0 @boxes.sizes      -- the sum of the widths of the children
+                                                          , foldr (\t v -> (snd t) `max` v) 0 @boxes.sizes) -- the max height of all the children
+                                                     -- ============ corregir este error, el height no deberia considerarlo, sino que deberia ser line-height
+                                                (we,he) = let (wl,wr,ht,hb) = getExternalSizeBox4Tuple @props     -- el height no se considera en elementos inline
+                                                          in case (@typeContinuation) of
+                                                                Full   -> (wl+wr,ht+hb)
+                                                                Init   -> (wl   ,ht+hb)
+                                                                End    -> (   wr,ht+hb)
+                                                                Medium -> (0    ,ht+hb)
+                                                widthSpace = 6 * (length @boxes.sizes - 1)
+                                            in (w+we+widthSpace,h+he)
+                                "block" -- need to be analized
+                                    -> let (we,he) = getExternalSizeBox @props
+                                       in ( (toInt $ unPixelUsedValue $ fst @loc.cbSize) +we    -- the width of the containing block
+                                          , foldr (\t v -> (snd t) + v) 0 @boxes.sizes + he)    -- the sum of the heights of children block boxes
+        lhs.size = @loc.size
+
+SEM Line
+    | Line lhs.size = ( foldr (\t v -> (fst t) + v) 0 @boxes.sizes      -- the sum of the widths of the children
+                      , foldr (\t v -> (snd t) `max` v) 0 @boxes.sizes) -- the max height of all the children
+                                       
+ATTR BoxesF2 Lines [|| sizes: {[(Int,Int)]}]
+SEM BoxesF2
+    | Cons lhs.sizes = @hd.size : @tl.sizes
+    | Nil  lhs.sizes = []
+
+SEM Lines
+    | Cons lhs.sizes = @hd.size : @tl.sizes
+    | Nil  lhs.sizes = []
+
+-- Generating an x and y position for all BoxTree elements
+ATTR BoxF2Root BoxF2Tree BoxesF2 Lines Line [statePos: {(String,(Int,Int))} ||]
+SEM BoxF2Tree
+    | F2Container loc.position = let cposition = computedValue $ @props Map.! "position"
+                                     (x,y)     = snd @lhs.statePos
+                                 in case cposition of
+                                        KeyValue "static"   -> (x,y)
+                                        KeyValue "relative" -> let (xdespl, ydespl) = getDesplazamiento @props
+                                                               in (x + xdespl, y + ydespl)
+                                        otherwise           -> error $ "[fstree fase 2] I am not considering this value: " ++ show cposition
+                  boxes.statePos = let pointContent = getTopLeftContentPoint @typeContinuation @props
+                                   in (@fcontext, pointContent)
+                  lines.statePos = let pointContent = getTopLeftContentPoint @typeContinuation @props
+                                   in (@fcontext, pointContent) 
+    | F2ContainerText
+                  loc.position = let cposition = computedValue $ @props Map.! "position"
+                                     (x,y)     = snd @lhs.statePos
+                                 in case cposition of
+                                        KeyValue "static"   -> (x,y)
+                                        KeyValue "relative" -> let (xdespl, ydespl) = getDesplazamiento @props
+                                                               in (x + xdespl, y + ydespl)
+                                        otherwise           -> error $ "[fstree fase 2] I am not considering this value: " ++ show cposition
+
+SEM BoxesF2
+    | Cons hd.statePos = @lhs.statePos
+           tl.statePos = case fst @lhs.statePos of
+                            "inline" -> let (x,y) = snd @lhs.statePos
+                                        in ("inline", ((fst @hd.size) + x + 6 , y))  -- 6 es la cantidad de un space en pixels
+                            "block"  -> let (x,y) = snd @lhs.statePos
+                                        in ("block" , (x, (snd @hd.size) + y))
+
+SEM Lines
+    | Cons hd.statePos = @lhs.statePos
+           tl.statePos = let (x,y) = snd @lhs.statePos
+                         in ( fst @lhs.statePos,(x, y + (snd @hd.size)))
+
+-- Distributing the initial contaning block (icb), url function and baseurl
+ATTR BoxF2Root BoxF2Tree BoxesF2 Lines Line [ cb: {WX.Window a}
+                                              goToURL: {\url -> IO()}
+                                              baseurl: String
+                                            ||]
+
+ATTR BoxF2Tree BoxesF2 Lines Line [linkURL: {Maybe String} ||]
+SEM BoxF2Root
+    | BoxF2Root boxF2Tree.linkURL = Nothing
+
+SEM BoxF2Tree
+    | F2Container 
+            loc.linkURL = case Map.lookup "href" @attributes of
+                            Just url -> Just url
+                            Nothing  -> case @lhs.linkURL of
+                                            Just url -> Just url
+                                            Nothing  -> Nothing
+            boxes.linkURL = @loc.linkURL
+            lines.linkURL = @loc.linkURL
+    | F2ContainerText 
+            loc.linkURL = case Map.lookup "href" @attributes of
+                            Just url -> Just url
+                            Nothing  -> case @lhs.linkURL of
+                                            Just url -> Just url
+                                            Nothing  -> Nothing
+
+-- Building the tree of windows
+ATTR BoxF2Root BoxF2Tree [|| result    : {WX.Window a -> IO()}]
+SEM BoxF2Tree
+    | F2Container 
+            lhs.result = if ((@loc.vdisplay == "block") && (@fcontext == "inline"))
+                         then \cb -> do cbox <- boxContainer cb @loc.position @loc.size @typeContinuation @props @attributes @amireplaced
+                                        mapM_ (\f -> f cbox) @lines.results
+                         else \cb -> do cbox <- boxContainer cb @loc.position @loc.size @typeContinuation @props @attributes @amireplaced
+                                        mapM_ (\f -> f cbox) @boxes.results
+    | F2ContainerText
+            lhs.result = \cb -> do cbox <- box @content cb @loc.position @loc.size @typeContinuation @props @attributes @amireplaced
+                                   case @loc.linkURL of
+                                        Just url -> let url' = if isAbsolute url
+                                                               then url
+                                                               else if isHostRelative url
+                                                                    then @lhs.baseurl        ++ url
+                                                                    else @lhs.baseurl ++ "/" ++ url
+                                                    in WX.set cbox [WX.on WX.focus WX.:= onClick @lhs.goToURL url']
+                                        Nothing   -> return ()
+
+ATTR BoxesF2 Lines Line [|| results : {[WX.Window a -> IO()]}]
+
+SEM BoxesF2
+    | Cons lhs.results = (\cb -> @hd.result cb) : @tl.results
+    | Nil  lhs.results = []
+
+SEM Lines
+    | Cons lhs.results = @hd.results ++ @tl.results
+    | Nil  lhs.results = []
+
+{
+onClick function url bool
+    = if bool
+      then function url
+      else return ()
+}
+
+-- Generating the Tree-Box Formatting Structure
+ATTR BoxF2Root BoxF2Tree Line [|| outbox: {FSBox}]
+SEM BoxF2Tree
+    | F2Container 
+        lhs.outbox = case @loc.vdisplay of
+                        "block"
+                            -> case @fcontext of
+                                "block"
+                                    -> FSBox "box b b" @props @boxes.outbox
+                                "inline"
+                                    -> FSBox "box b i" @props @lines.outbox
+                        "inline"
+                            -> case @fcontext of
+                                "block"
+                                    -> FSBox "box i b" @props @boxes.outbox
+                                "inline"
+                                    -> FSBox "box i i" @props @boxes.outbox
+            
+    | F2ContainerText
+        lhs.outbox = case @loc.vdisplay of
+                        "block"
+                            -> case @fcontext of
+                                "block"
+                                    -> FSBox "text b b" @props []
+                                "inline"
+                                    -> FSBox "text b i" @props []
+                        "inline"
+                            -> case @fcontext of
+                                "block"
+                                    -> FSBox "text i b" @props []
+                                "inline"
+                                    -> FSBox "text i i" @props []
+
+SEM Line
+    | Line lhs.outbox = FSBox "line" Map.empty @boxes.outbox
+
+ATTR BoxesF2 Lines [|| outbox USE {:} {[]}: {[FSBox]}]
+
+{
+-- Pretty Printing for the Formatting Structure Tree
+instance PP BoxF2Root where
+    pp (BoxF2Root bt) = pp bt
+
+instance PP BoxF2Tree where
+    pp (F2Container fcxt props attr continuation tp bxs lns)
+                       =  text "BoxContainer Inline-Inline"
+                     -- >-< ppProperties props
+                      >-< text (show continuation)
+                      >-< indent 5 (text "Boxes:" >-< vlist (map pp bxs))
+                      >-< indent 5 (text "Lines:" >-< vlist (map pp lns))
+    pp (F2ContainerText fcxt props attr continuation tp cnt)
+                      =  text "BoxText" >#< text "content: \"" >|< text cnt >|< text "\""
+                     -- >-< ppProperties props
+                      >-< text (show continuation)
+
+instance PP Line where
+    pp (Line bxs) =  text "Line:"
+                 >-< vlist (map pp bxs)
+
+-- get the desplazamiento
+getDesplazamiento props = let top    = toInt $ unPixelComputedValue $ props Map.! "top"
+                              right  = toInt $ unPixelComputedValue $ props Map.! "right"
+                              bottom = toInt $ unPixelComputedValue $ props Map.! "bottom"
+                              left   = toInt $ unPixelComputedValue $ props Map.! "left"
+                          in (despl left right, despl top bottom)
+    where despl first second = if (((&&) `on` (== 0)) first second)
+                               then 0
+                               else if first /= 0         
+                                    then first                -- I suppose direction = ltr, this agree with (first && second /= 0)
+                                    else (-1) * second        -- left = -right, top = -bottom
+}
+

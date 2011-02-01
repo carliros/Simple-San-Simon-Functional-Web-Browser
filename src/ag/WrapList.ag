@@ -1,0 +1,114 @@
+
+-- datatypes for making a flat tree
+DATA RootList
+    | RootList Elements
+
+TYPE Elements = [ElementList]
+
+DATA ElementList
+    | ReplacedContainer code : Code
+                        type : {TypeContinuation}
+                        props: {Map.Map String PropertyValue}
+                        attrs: {Map.Map String String}
+                        width,height: Int
+    | ElementContainer code : Code 
+                       type : {TypeContinuation}
+                       props: {Map.Map String PropertyValue}
+                       attrs: {Map.Map String String}
+                       width,height : Int
+                       element: ElementList
+    | ElementText      code : Code 
+                       type : {TypeContinuation}
+                       props: {Map.Map String PropertyValue}
+                       attrs: {Map.Map String String}
+                       width, height : Int
+                       content: String
+DATA Code
+    | Code codeFather, codeChild: Int
+
+DERIVING Code: Eq
+
+-- auxiliar functions
+{
+-- build an in value from a code
+getCode (Code fht chd) = toInt fht chd
+    where toInt :: Int -> Int -> Int
+          toInt fht chd = let fht' = show fht
+                              chd' = show chd
+                          in read $ fht' ++ chd'
+
+-- transform back a list of elementlist into a Tree
+list2tree :: [ElementList] -> BoxesF2
+list2tree [] = error "[wraplist] empty element list"
+list2tree lst = let lgroup = groupBy fcmp lst
+                in map toBoxF2Tree lgroup
+    where fcmp (ElementText cod1 _ _ _ _ _ _) 
+               (ElementText cod2 _ _ _ _ _ _) = cod1 == cod2
+          fcmp (ElementContainer cod1 _ _ _ _ _ _)
+               (ElementContainer cod2 _ _ _ _ _ _) = cod1 == cod2
+          fcmp (ReplacedContainer cod1 _ _ _ _ _)
+               (ReplacedContainer cod2 _ _ _ _ _) = cod1 == cod2
+          fcmp _ _ = False
+          toBoxF2Tree lst@((ElementText _ _ props attrs _ _ _):_) 
+                = let etype  = getElementType lst
+                      strs   = map (\(ElementText _ _ _ _ _ _ str) -> str) lst
+                  in F2ContainerText "inline" props attrs etype False (unwords strs)
+          toBoxF2Tree lst@((ElementContainer _ _ props attrs _ _ _):_) 
+                = let list  = map (\(ElementContainer _ _ _ _ _ _ e) -> e) lst
+                      etype = getElementType lst
+                      boxes = list2tree list
+                  in F2Container "inline" props attrs etype False boxes []
+          toBoxF2Tree lst@((ReplacedContainer _ _ props attrs _ _):_) 
+                = let etype = getElementType lst
+                  in F2Container "inline" props attrs etype True [] []
+
+getElementType lst = let boolInit = any (isThere Init) lst
+                         boolEnd  = any (isThere End)  lst
+                         boolFull = any (isThere Full) lst
+                     in if boolFull || (boolInit && boolEnd)    -- is full or has init and end
+                        then Full
+                        else if boolInit                        -- has init but not end
+                             then Init
+                             else if boolEnd                    -- has end but not init
+                                  then End
+                                  else Medium
+
+isThere tp (ElementText       _ tp' _ _ _ _ _) = tp == tp'
+isThere tp (ElementContainer  _ tp' _ _ _ _ _) = tp == tp'
+isThere tp (ReplacedContainer _ tp' _ _ _ _  ) = tp == tp'
+
+instance Show Code where
+    show (Code fht chd) = show fht ++ show chd
+
+
+{- ======================================================================================
+    second version of wrod wrapping
+        it is written in pure haskell
+        and is more fast (because I don't use reverse,concat functions)
+        and more understandable
+   ======================================================================================-}
+
+applyWrap2 :: Int -> Int -> [ElementList] -> Lines
+applyWrap2 _     _     []     = []
+applyWrap2 width space dwords = let result = inlineFormatting dwords width space
+                                in map (\l -> Line (list2tree l)) result
+
+inlineFormatting :: [ElementList] -> Int -> Int -> [[ElementList]]
+inlineFormatting []  _     _     = []
+inlineFormatting lst width space = let width' = foldr (\e w -> (getLength e) `max` w) 0 lst
+                                   in if width >= width'
+                                      then doInline width  space lst
+                                      else doInline width' space lst
+    where doInline w s []   = []
+          doInline w s list = let (line, rest) = buildLine list (w + s) 0 s
+                              in line: doInline w s rest
+          getLength (ReplacedContainer _ _ _ _ w _  ) = w
+          getLength (ElementContainer  _ _ _ _ w _ _) = w
+          getLength (ElementText       _ _ _ _ w _ _) = w
+          buildLine []         _ _  _     = ([],[])
+          buildLine lst@(e:es) w wt space = let len = wt + getLength e + space
+                                            in if len <= w
+                                               then let (ln,rs) = buildLine es w len space
+                                                    in (e:ln, rs)
+                                               else ([],lst)
+}

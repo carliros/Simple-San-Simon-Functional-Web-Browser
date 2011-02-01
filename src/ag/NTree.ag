@@ -1,0 +1,117 @@
+PRAGMA genlinepragmas
+
+imports{
+-- libraries
+import Data.List
+import qualified Data.Map as Map
+import Data.Maybe
+import Data.Function
+
+-- datatypes
+import CSSParser (parseStyleString, parseStyleInline)
+import PropertyValue
+import PropertiesCSS
+import DataTreeCSS
+import FSBox
+import FSTreeFase1
+}
+
+INCLUDE "DataTreeHTML.ag"
+INCLUDE "GetStyleSheets.ag"
+INCLUDE "MatchSelector.ag"
+INCLUDE "DoSpecifiedValue.ag"
+INCLUDE "DoComputedValue.ag"
+
+-- Generating the Formatting Structure of a web page
+ATTR NTrees [|| fstrees:{[Maybe BoxTree]}]
+SEM NTrees
+    | Cons lhs.fstrees = @hd.fstree : @tl.fstrees
+    | Nil  lhs.fstrees = []
+
+ATTR Root NTree [|| fstree: {Maybe BoxTree}]
+SEM NTree
+    | NTree lhs.fstree 
+                = case @node.myself of
+                    NTag nm iamreplaced attrs
+                        -> if verifyProperty "display" "none" @loc.computedValueProps
+                           then Nothing
+                           else if iamreplaced
+                                then Just $ BoxContainer "inline" @loc.computedValueProps True attrs []
+                                else let boxes      = catMaybes @ntrees.fstrees
+                                         (bool,str) = doIContainOnlyText boxes
+                                     in if bool && (verifyProperty "display" "inline" @loc.computedValueProps)
+                                        then Just $ BoxContainerText "inline" @loc.computedValueProps False attrs str
+                                        else if any isThereBlockDisplay boxes
+                                             then let listGrouped = groupBy funGroupCompare boxes
+                                                      listBCnt    = map (toBoxContainer @lhs.iamtheroot @loc.computedValueProps Nothing) listGrouped
+                                                  in if (   verifyProperty "display" "inline-block" @loc.computedValueProps
+                                                         || verifyProperty "display" "block" @loc.computedValueProps)
+                                                     then Just $ BoxContainer "block" @loc.computedValueProps False attrs listBCnt
+                                                     else error "[ntree] there is an inline element that contains block elements"
+                                             else Just $ BoxContainer "inline" @loc.computedValueProps False attrs boxes
+                    NText str   -- a simple text is never affected by an style rule
+                        -> Just $ BoxContainerText "inline" @loc.computedValueProps False Map.empty str
+
+-- Generating the Tree-Box Formatting Structure
+ATTR NTrees [|| outbox:{[Maybe FSBox]}]
+SEM NTrees
+    | Cons lhs.outbox = @hd.outbox : @tl.outbox
+    | Nil  lhs.outbox = []
+
+ATTR NTree [|| outbox: {Maybe FSBox} ]
+SEM NTree
+    | NTree lhs.outbox = case @node.myself of
+                            NTag  str _ _ -> if verifyProperty "display" "none" @loc.computedValueProps
+                                             then Nothing
+                                             else Just $ FSBox str @loc.computedValueProps (catMaybes @ntrees.outbox)
+                            NText str     -> if verifyProperty "display" "none" @loc.computedValueProps
+                                             then Nothing
+                                             else Just $ FSBox "text" @loc.computedValueProps []
+
+ATTR Root [|| outbox: FSBox ]
+SEM Root
+    | Root lhs.outbox = fromJust @ntree.outbox
+
+
+-- auxiliar functions
+{
+doIContainOnlyText [BoxContainerText _ _ _ _ str] = (True ,str)
+doIContainOnlyText _                              = (False," ")
+
+getAttributes (NTag _ _ ats) = ats
+getAttributes _              = Map.empty
+
+isThereBlockDisplay bx
+    = case bx of 
+        BoxContainer     _ props _ _ _ -> verifyProperty "display" "block" props
+        BoxContainerText _ props _ _ _ -> verifyProperty "display" "block" props
+
+-- This function build a group just for display=inline, and the others is a list of one element
+funGroupCompare = (&&) `on` (\bx -> verifyProperty "display" "inline" (getProps bx))
+
+getProps bx 
+    = case bx of
+        BoxContainer     _ props _ _ _ -> props
+        BoxContainerText _ props _ _ _ -> props
+
+-- function that transform an inline element into a block container
+toBoxContainer iamtheroot sprops iamreplaced lst@(bx:bxs) 
+    = case bx of
+        BoxContainer     ct props tb at _ -> if verifyProperty "display" "block" props
+                                             then bx
+                                             else BoxContainer "inline" (applyInheritance iamtheroot propertiesCSS sprops iamreplaced) tb at lst
+        BoxContainerText ct props tb at _ -> if verifyProperty "display" "block" props
+                                             then bx
+                                             else BoxContainer "inline" (applyInheritance iamtheroot propertiesCSS sprops iamreplaced) tb at lst
+
+-- this function build the specified value and the computed value
+applyInheritance iamtheroot list fatherProps iamreplaced = 
+    let inhprops              = Map.fromList (map fun list)
+        mapWithSpecifiedValue = Map.adjust (\_ -> keyValue "block") "display" inhprops
+    in Map.mapWithKey (doComputedValue iamtheroot fatherProps mapWithSpecifiedValue iamreplaced) mapWithSpecifiedValue
+    where fun (nm,inh,def) = if inh
+                             then (nm, fatherProps Map.! nm)
+                             else (nm, def)
+
+}
+

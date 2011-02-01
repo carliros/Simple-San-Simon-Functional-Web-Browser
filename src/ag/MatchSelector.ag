@@ -1,0 +1,99 @@
+
+-- Selector's Stuff
+ATTR Node [|| myself:SELF ]
+ATTR NTree [|| nd:Node ]
+SEM NTree
+    | NTree lhs.nd = @node.myself
+
+ATTR NTrees NTree [ fathers: {[(Node, [Node])]} ||]
+SEM NTree
+    | NTree ntrees.fathers = @loc.nfs : @lhs.fathers
+            loc.fathers    = @lhs.fathers
+            loc.nfs        = (@node.myself, @loc.siblings)
+
+SEM Root
+    | Root ntree.fathers  = []
+           ntree.siblings = []
+
+ATTR NTrees NTree [ siblings: {[Node]} ||]
+SEM NTrees
+    | Cons tl.siblings = @hd.nd : @lhs.siblings
+           hd.siblings = @lhs.siblings
+
+SEM NTree
+    | NTree ntrees.siblings = []
+            loc.siblings    = @lhs.siblings
+
+-- build my rule declarations for each tree's element
+SEM NTree
+    | NTree loc.myRuleDecls = filter (\(selectors, _, _) -> matchSelector @node.myself @loc.fathers (reverse @loc.siblings) [] 0 selectors) @loc.myStyleRules
+
+{
+-- apply the list of selector to each html tag element, and returns true if the selectors apply.
+matchSelector ::   Node -> [(Node,[Node])] -> [Node] -> [(Node,[Node])] -> Int -> [Selector]  -> Bool
+matchSelector      _       _                  _         _                  _      []
+    = True
+matchSelector      nd      fathers            siblings  before             count  (sel:nextSel)
+    = case sel of
+        SimpSelector s -> applySimplSelector nd fathers siblings before count s nextSel
+        DescSelector s -> applyDescdSelector nd fathers siblings before count s nextSel
+        ChilSelector s -> applyChildSelector nd fathers siblings before count s nextSel
+        SiblSelector s -> applySiblnSelector nd fathers siblings before count s nextSel
+
+applySimplSelector nd fathers siblings before count s nextSel
+    = testSimpleSelector s nd && matchSelector nd fathers siblings before (count+1) nextSel
+
+applyDescdSelector _  []     _        _      _     _ _
+    = False
+applyDescdSelector nd (f:fs) siblings before count s nextSel
+    =    (testSimpleSelector s (fst f) && matchSelector nd fs siblings (f:before) (count+1) nextSel) 
+      || applyDescdSelector nd fs siblings before count s nextSel
+
+applyChildSelector _  []     _        _      _     _ _
+    = False
+applyChildSelector nd (f:fs) siblings before count s nextSel
+    = testSimpleSelector s (fst f) && matchSelector nd fs siblings (f:before) (count+1) nextSel
+
+applySiblnSelector nd fathers siblings before count s nextSel
+    = let brothers = if count<=1 then siblings else snd $ head before
+      in let ntest = case s of
+                        TypeSelector nm _ -> let (bool,ts) = getNextValidTag brothers
+                                             in if bool
+                                                then (NTag nm False Map.empty == head ts, tail ts)
+                                                else (False, [])  -- the empty list it's not important because I won't use it any more
+                        UnivSelector _    -> let (bool,ts) = getNextValidTag brothers
+                                             in if bool
+                                                then (True, tail ts)
+                                                else (False, [])  -- the empty list it's not important because I won't use it any more
+         in (fst ntest && (if count<=1
+                           then matchSelector nd fathers (snd ntest) before count nextSel
+                           else matchSelector nd fathers siblings (let (f,_)=head before in (f,snd ntest): tail before) count nextSel))
+
+getNextValidTag []               = (False, [])
+getNextValidTag l@(NTag _ _ _:_) = (True, l)
+getNextValidTag (_:xs)           = getNextValidTag xs
+
+testSimpleSelector s nd = case s of
+                            TypeSelector nm1 atsel 
+                                -> case nd of
+                                        NTag nm2 _ attrs -> nm1 == nm2 && testAttributes atsel attrs
+                                        otherwise      -> False
+                            UnivSelector    atsel 
+                                -> case nd of
+                                        NTag _ _ attrs -> testAttributes atsel attrs
+                                        otherwise      -> False     -- I just select tag elements, i don't consider text elements
+    where testAttributes []       _     
+                = True
+          testAttributes (at:ats) attrs 
+                = case at of
+                    ID  value   -> maybe False (==value) (Map.lookup value attrs)
+                    ATName name -> Map.member name attrs
+                    ATOperator name op value
+                                -> case Map.lookup name attrs of
+                                        Nothing  -> False
+                                        Just src -> case op of
+                                                        "="  -> value == src
+                                                        "~=" -> any (==value) $ words src
+
+
+}
