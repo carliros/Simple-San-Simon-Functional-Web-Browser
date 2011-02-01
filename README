@@ -1,5 +1,26 @@
 
 Simple San Simon Functional Web Browser
 =======================================
+I'm developing a web browser with a funcional programming languaje, Haskell.
 
+To Compile:
+    make browser
 
+In order to get installed, you will need:
+    - wxhaskell
+    - uulib
+    - uuagc
+    - ...
+
+Then you can execute with:  ./3swbrowser
+
+There are some html examples that you can try from 
+    http://comunidadhaskell.org/files/fpbrowser_test/test1.html
+    http://comunidadhaskell.org/files/fpbrowser_test/test2.html
+    http://comunidadhaskell.org/files/fpbrowser_test/test3.html
+    http://comunidadhaskell.org/files/fpbrowser_test/test4.html
+    ...
+    http://comunidadhaskell.org/files/fpbrowser_test/test16.html
+
+For more information visit
+    http://hsbrowser.wordpress.com/3s-functional-web-browser/
