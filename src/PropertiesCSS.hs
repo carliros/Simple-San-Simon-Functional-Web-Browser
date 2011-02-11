@@ -37,7 +37,8 @@ cssProperties = [
                 , ("border-right-style"    , False , keyValue "none"  , compute_asSpecified     , used_asComputed)
                 , ("border-bottom-style"   , False , keyValue "none"  , compute_asSpecified     , used_asComputed)
                 , ("border-left-style"     , False , keyValue "none"  , compute_asSpecified     , used_asComputed)
-                , ("font-weight"           , True  , keyValue "normal", compute_asSpecified     , used_asComputed)  --css2.1 doesn't specify how computed value are represented, so I leave it as specified.
+                , ("font-weight"           , True  , keyValue "normal", compute_asSpecified     , used_asComputed)  
+                    --css2.1 doesn't specify how computed value for font-weight are represented, so I leave it as specified.
                 , ("font-style"            , True  , keyValue "normal", compute_asSpecified     , used_asComputed)
                 , ("position"              , False , keyValue "static", compute_asSpecified     , used_asComputed)
                 , ("top"                   , False , keyValue "auto"  , compute_offset          , used_asComputed)

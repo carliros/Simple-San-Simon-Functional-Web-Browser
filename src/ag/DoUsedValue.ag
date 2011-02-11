@@ -10,9 +10,9 @@ SEM BoxTree
 -- build the used value
 SEM BoxTree
     | BoxContainer 
-        loc.usedValueProps = Map.mapWithKey (doUsedValue @lhs.iamtheroot (toTupleFloat @lhs.cbSize) @lhs.propsFather @props @attributes @amireplaced) @props
-    | BoxContainerText
-        loc.usedValueProps = Map.mapWithKey (doUsedValue @lhs.iamtheroot (toTupleFloat @lhs.cbSize) @lhs.propsFather @props @attributes @amireplaced) @props
+        loc.usedValueProps = Map.mapWithKey (doUsedValue @lhs.iamtheroot (toTupleFloat @lhs.cbSize) @lhs.propsFather @props @attrs @bRepl) @props
+    | BoxText
+        loc.usedValueProps = Map.mapWithKey (doUsedValue @lhs.iamtheroot (toTupleFloat @lhs.cbSize) @lhs.propsFather @props @attrs  False) @props
 
 -- Downloading the father property throughout the fstree
 ATTR BoxTree Boxes [propsFather: {Map.Map String PropertyValue} ||]

@@ -38,10 +38,10 @@ getCode (Code fht chd) = toInt fht chd
                           in read $ fht' ++ chd'
 
 -- transform back a list of elementlist into a Tree
-list2tree :: [ElementList] -> BoxesF2
+list2tree :: [ElementList] -> WindowTrees
 list2tree [] = error "[wraplist] empty element list"
 list2tree lst = let lgroup = groupBy fcmp lst
-                in map toBoxF2Tree lgroup
+                in map toWindowTree lgroup
     where fcmp (ElementText cod1 _ _ _ _ _ _) 
                (ElementText cod2 _ _ _ _ _ _) = cod1 == cod2
           fcmp (ElementContainer cod1 _ _ _ _ _ _)
@@ -49,18 +49,18 @@ list2tree lst = let lgroup = groupBy fcmp lst
           fcmp (ReplacedContainer cod1 _ _ _ _ _)
                (ReplacedContainer cod2 _ _ _ _ _) = cod1 == cod2
           fcmp _ _ = False
-          toBoxF2Tree lst@((ElementText _ _ props attrs _ _ _):_) 
+          toWindowTree lst@((ElementText _ _ props attrs _ _ _):_) 
                 = let etype  = getElementType lst
                       strs   = map (\(ElementText _ _ _ _ _ _ str) -> str) lst
-                  in F2ContainerText "inline" props attrs etype False (unwords strs)
-          toBoxF2Tree lst@((ElementContainer _ _ props attrs _ _ _):_) 
+                  in WindowText props attrs etype (unwords strs)
+          toWindowTree lst@((ElementContainer _ _ props attrs _ _ _):_) 
                 = let list  = map (\(ElementContainer _ _ _ _ _ _ e) -> e) lst
                       etype = getElementType lst
                       boxes = list2tree list
-                  in F2Container "inline" props attrs etype False boxes []
-          toBoxF2Tree lst@((ReplacedContainer _ _ props attrs _ _):_) 
+                  in WindowContainer "inline" props attrs etype False (EWinds boxes)
+          toWindowTree lst@((ReplacedContainer _ _ props attrs _ _):_) 
                 = let etype = getElementType lst
-                  in F2Container "inline" props attrs etype True [] []
+                  in WindowContainer "inline" props attrs etype True (ENothing)
 
 getElementType lst = let boolInit = any (isThere Init) lst
                          boolEnd  = any (isThere End)  lst

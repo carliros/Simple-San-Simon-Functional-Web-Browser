@@ -15,7 +15,10 @@ toTupleFloat (x,y) = (toFloat x, toFloat y)
 -- map for tuples
 mapTuple f (a,b) = (f a, f b)
 
--- functions for cuad-tuple
+-- apply a function to a tuple
+funTuple f (a,b) = f a b
+
+-- functions for a cuad-tuple
 cfst (a,_,_,_) = a
 csnd (_,b,_,_) = b
 cthd (_,_,c,_) = c

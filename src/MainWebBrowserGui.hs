@@ -33,7 +33,7 @@ gui = do -- variables
 
          -- gui
          f   <- frame [text := "Simple San Simon Functional Web Browser (3SF-WebBrowser)"]
-         inp <- entry  f [text := "http://comunidadhaskell.org/files/fpbrowser_test/test1.html"]
+         inp <- entry  f [text := "file:///home/carlos/fwb/test1.html"]
          pnl <- scrolledWindow f [virtualSize := sz 800 600]
          go  <- button f [text := "Get"]
          up  <- button f [text := "Upt"]
@@ -70,11 +70,11 @@ updateInitialContainer icb inp varfstree varzipper defaultcss4html varbaseurl = 
     result <- get varfstree value
     case result of
         (Just fstree) -> do let boxtree     = sem_BoxRoot (BoxRoot fstree) icb (w,h)
-                                (_,fresult) = sem_BoxF2Root (BoxF2Root boxtree) 
-                                                            baseurl 
-                                                            icb 
-                                                            (goToURL icb inp varfstree varzipper defaultcss4html varbaseurl) 
-                                                            ("default", (0,0))
+                                (_,fresult) = sem_WindowRoot (WindowRoot boxtree) 
+                                                              baseurl 
+                                                              icb 
+                                                              (goToURL icb inp varfstree varzipper defaultcss4html varbaseurl) 
+                                                              ("default", (0,0))
                             fresult icb
                             --UP.render (UP.pp boxtree) 200
                             return ()

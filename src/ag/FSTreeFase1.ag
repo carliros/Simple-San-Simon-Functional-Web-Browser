@@ -25,17 +25,16 @@ DATA BoxRoot
     | BoxRoot boxtree: BoxTree
 
 DATA BoxTree
-    | BoxContainer fcontext   : String
-                   props      : {Map.Map String PropertyValue}
-                   amireplaced: Bool
-                   attributes : {Map.Map String String}
-                   boxes      : Boxes
-    | BoxContainerText 
-                   fcontext   : String
-                   props      : {Map.Map String PropertyValue}
-                   amireplaced: Bool
-                   attributes : {Map.Map String String}
-                   content    : String
+    | BoxContainer
+        fcnxt: String
+        props: {Map.Map String PropertyValue}
+        bRepl: Bool
+        attrs: {Map.Map String String}
+        boxes: Boxes
+    | BoxText 
+        props: {Map.Map String PropertyValue}
+        attrs: {Map.Map String String}
+        text : String
 
 TYPE Boxes = [BoxTree]
 
@@ -47,24 +46,24 @@ INCLUDE "DoUsedValue.ag"
 INCLUDE "BuildLines.ag"
 
 -- Going from Fase 1 to the Fase 2
-ATTR BoxRoot BoxTree [|| boxtree: {BoxF2Tree} ]
+ATTR BoxRoot BoxTree [|| boxtree: {WindowTree} ]
 SEM BoxTree
     | BoxContainer 
-            lhs.boxtree = let vdisplay = unKeyComputedValue $ @loc.usedValueProps Map.! "display"
-                          in case vdisplay of
-                                "block"  -> case @fcontext of
-                                                "block"  -> F2Container "block"  @loc.usedValueProps @attributes Full @amireplaced @boxes.boxtrees []
-                                                "inline" -> F2Container "inline" @loc.usedValueProps @attributes Full @amireplaced []              @loc.lines
-                                "inline" -> case @fcontext of
-                                                "inline" -> F2Container "inline" @loc.usedValueProps @attributes Full @amireplaced @boxes.boxtrees []
-                                                _        -> error $ "[fstree fase 1] unexpected fcontext value: " ++ @fcontext
-                                _        -> error $ "[fstree fase 1] unexpected display value: " ++ vdisplay
-    | BoxContainerText
-            lhs.boxtree = F2ContainerText @fcontext @loc.usedValueProps @attributes Full @amireplaced @content
+        lhs.boxtree 
+            = let vdisplay = unKeyComputedValue $ @loc.usedValueProps Map.! "display"
+              in case vdisplay of
+                    "block"  -> case @fcnxt of
+                                    "block"  -> WindowContainer "block"  @loc.usedValueProps @attrs Full @bRepl (EWinds @boxes.boxtrees)
+                                    "inline" -> WindowContainer "inline" @loc.usedValueProps @attrs Full @bRepl (ELines @loc.lines)
+                    "inline" -> case @fcnxt of
+                                    "inline" -> WindowContainer "inline" @loc.usedValueProps @attrs Full @bRepl (EWinds @boxes.boxtrees)
+                                    _        -> error $ "[fstree fase 1] unexpected fcontext value: " ++ @fcnxt
+                    _        -> error $ "[fstree fase 1] unexpected display value: " ++ vdisplay
+    | BoxText
+        lhs.boxtree = WindowText @loc.usedValueProps @attrs Full @text
 
-ATTR Boxes [|| boxtrees: {[BoxF2Tree]}]
+ATTR Boxes [|| boxtrees: {[WindowTree]}]
 SEM Boxes
     | Cons lhs.boxtrees = @hd.boxtree : @tl.boxtrees
     | Nil  lhs.boxtrees = []
-
 

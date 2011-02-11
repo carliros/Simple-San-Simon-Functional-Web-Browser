@@ -76,21 +76,25 @@ getNextValidTag (_:xs)           = getNextValidTag xs
 testSimpleSelector s nd = case s of
                             TypeSelector nm1 atsel 
                                 -> case nd of
-                                        NTag nm2 _ attrs -> nm1 == nm2 && testAttributes atsel attrs
+                                        NTag nm2 _ attrs -> if null atsel
+                                                            then nm1 == nm2
+                                                            else nm1 == nm2 && testAttributes atsel attrs
                                         otherwise      -> False
-                            UnivSelector    atsel 
+                            UnivSelector     atsel 
                                 -> case nd of
-                                        NTag _ _ attrs -> testAttributes atsel attrs
+                                        NTag _ _ attrs -> if null atsel
+                                                          then True
+                                                          else testAttributes atsel attrs
                                         otherwise      -> False     -- I just select tag elements, i don't consider text elements
     where testAttributes []       _     
-                = True
+                = False
           testAttributes (at:ats) attrs 
                 = case at of
                     ID  value   -> maybe False (==value) (Map.lookup value attrs)
                     ATName name -> Map.member name attrs
                     ATOperator name op value
                                 -> case Map.lookup name attrs of
-                                        Nothing  -> False
+                                        Nothing  -> testAttributes ats attrs
                                         Just src -> case op of
                                                         "="  -> value == src
                                                         "~=" -> any (==value) $ words src

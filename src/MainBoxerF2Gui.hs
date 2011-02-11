@@ -84,7 +84,7 @@ onButtonCommand icb inp lines defaultcss4html l = do
     case result of
         Nothing       -> return ()
         (Just fstree) -> do let boxtree   = sem_BoxRoot (BoxRoot fstree) icb (w,h)
-                                (fsbox,_) = sem_BoxF2Root (BoxF2Root boxtree) "" icb goToUrl ("default", (0,0))
+                                (fsbox,_) = sem_WindowRoot (WindowRoot boxtree) "" icb goToUrl ("default", (0,0))
                             let res    = sem_FSRoot (FSRoot fsbox)
                             -- deleting list of lines
                             set lines [value := []]

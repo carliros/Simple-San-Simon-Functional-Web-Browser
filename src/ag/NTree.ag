@@ -40,7 +40,7 @@ SEM NTree
                                 else let boxes      = catMaybes @ntrees.fstrees
                                          (bool,str) = doIContainOnlyText boxes
                                      in if bool && (verifyProperty "display" "inline" @loc.computedValueProps)
-                                        then Just $ BoxContainerText "inline" @loc.computedValueProps False attrs str
+                                        then Just $ BoxText @loc.computedValueProps attrs str
                                         else if any isThereBlockDisplay boxes
                                              then let listGrouped = groupBy funGroupCompare boxes
                                                       listBCnt    = map (toBoxContainer @lhs.iamtheroot @loc.computedValueProps Nothing) listGrouped
@@ -50,7 +50,7 @@ SEM NTree
                                                      else error "[ntree] there is an inline element that contains block elements"
                                              else Just $ BoxContainer "inline" @loc.computedValueProps False attrs boxes
                     NText str   -- a simple text is never affected by an style rule
-                        -> Just $ BoxContainerText "inline" @loc.computedValueProps False Map.empty str
+                        -> Just $ BoxText @loc.computedValueProps Map.empty str
 
 -- Generating the Tree-Box Formatting Structure
 ATTR NTrees [|| outbox:{[Maybe FSBox]}]
@@ -75,34 +75,34 @@ SEM Root
 
 -- auxiliar functions
 {
-doIContainOnlyText [BoxContainerText _ _ _ _ str] = (True ,str)
-doIContainOnlyText _                              = (False," ")
+doIContainOnlyText [BoxText _ _ str] = (True ,str)
+doIContainOnlyText _                          = (False," ")
 
 getAttributes (NTag _ _ ats) = ats
 getAttributes _              = Map.empty
 
 isThereBlockDisplay bx
     = case bx of 
-        BoxContainer     _ props _ _ _ -> verifyProperty "display" "block" props
-        BoxContainerText _ props _ _ _ -> verifyProperty "display" "block" props
+        BoxContainer _ props _ _ _ -> verifyProperty "display" "block" props
+        BoxText        props _ _   -> verifyProperty "display" "block" props
 
 -- This function build a group just for display=inline, and the others is a list of one element
 funGroupCompare = (&&) `on` (\bx -> verifyProperty "display" "inline" (getProps bx))
 
 getProps bx 
     = case bx of
-        BoxContainer     _ props _ _ _ -> props
-        BoxContainerText _ props _ _ _ -> props
+        BoxContainer _ props _ _ _ -> props
+        BoxText        props _ _   -> props
 
 -- function that transform an inline element into a block container
 toBoxContainer iamtheroot sprops iamreplaced lst@(bx:bxs) 
     = case bx of
-        BoxContainer     ct props tb at _ -> if verifyProperty "display" "block" props
-                                             then bx
-                                             else BoxContainer "inline" (applyInheritance iamtheroot propertiesCSS sprops iamreplaced) tb at lst
-        BoxContainerText ct props tb at _ -> if verifyProperty "display" "block" props
-                                             then bx
-                                             else BoxContainer "inline" (applyInheritance iamtheroot propertiesCSS sprops iamreplaced) tb at lst
+        BoxContainer _ props tb at _ -> if verifyProperty "display" "block" props
+                                        then bx
+                                        else BoxContainer "inline" (applyInheritance iamtheroot propertiesCSS sprops iamreplaced) tb at lst
+        BoxText         props at   _ -> if verifyProperty "display" "block" props
+                                        then bx
+                                        else BoxContainer "inline" (applyInheritance iamtheroot propertiesCSS sprops iamreplaced) False at lst
 
 -- this function build the specified value and the computed value
 applyInheritance iamtheroot list fatherProps iamreplaced = 

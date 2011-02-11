@@ -1,0 +1,59 @@
+
+-- Generating an x and y position for all BoxTree elements
+ATTR All [statePos: {(String,(Int,Int))} ||]
+SEM WindowTree
+    | WindowContainer
+        loc.position = let cposition = computedValue $ @props Map.! "position"
+                           (x,y)     = let (x,y1) = snd @lhs.statePos
+                                           y2     = case @loc.vdisplay of
+                                                        "inline"  -> if @bRepl
+                                                                     then (fst @lhs.maxLogicalMetrics) - (@loc.verticalAlign + (snd @loc.size))
+                                                                     else (fst @lhs.maxLogicalMetrics) - (@loc.verticalAlign + @loc.fontTop + (cthd @loc.extSize))
+                                                        otherwise -> 0
+                                       in (x,y1+y2) 
+                       in case cposition of
+                            KeyValue "static"   -> (x,y)
+                            KeyValue "relative" -> let (xdespl, ydespl) = getDesplazamiento @props
+                                                   in (x + xdespl, y + ydespl)
+                            otherwise           -> error $ "[fstree fase 2] I am not considering this value: " ++ show cposition
+        elem.statePos = let pointContent = getTopLeftContentPoint @tCont @props
+                        in (@fcnxt, pointContent)
+    | WindowText
+        loc.position = let cposition = computedValue $ @props Map.! "position"
+                           (x,y)     = let (x,y1) = snd @lhs.statePos
+                                           y2     = case @loc.vdisplay of
+                                                        "inline"  -> (fst @lhs.maxLogicalMetrics) - (@loc.verticalAlign + @loc.fontTop + (cthd @loc.extSize))
+                                                        otherwise -> 0
+                                       in (x,y1+y2)
+                       in case cposition of
+                            KeyValue "static"   -> (x,y)
+                            KeyValue "relative" -> let (xdespl, ydespl) = getDesplazamiento @props
+                                                   in (x + xdespl, y + ydespl)
+                            otherwise           -> error $ "[fstree fase 2] I am not considering this value: " ++ show cposition
+
+SEM WindowTrees
+    | Cons hd.statePos = @lhs.statePos
+           tl.statePos = case fst @lhs.statePos of
+                            "inline" -> let (x,y) = snd @lhs.statePos
+                                        in ("inline", ((fst @hd.size) + x + 6 , y))  -- 6 es la cantidad de un espacio en pixels
+                            "block"  -> let (x,y) = snd @lhs.statePos
+                                        in ("block" , (x, (snd @hd.size) + y))
+
+SEM Lines
+    | Cons hd.statePos = @lhs.statePos
+           tl.statePos = let (x,y) = snd @lhs.statePos
+                         in ( fst @lhs.statePos,(x, y + @hd.lineHeight))    -- avanzamos de acuerdo al height de la linea, y no su size
+
+{
+-- get the desplazamiento
+getDesplazamiento props = let top    = toInt $ unPixelComputedValue $ props Map.! "top"
+                              right  = toInt $ unPixelComputedValue $ props Map.! "right"
+                              bottom = toInt $ unPixelComputedValue $ props Map.! "bottom"
+                              left   = toInt $ unPixelComputedValue $ props Map.! "left"
+                          in (despl left right, despl top bottom)
+    where despl first second = if (((&&) `on` (== 0)) first second)
+                               then 0
+                               else if first /= 0         
+                                    then first                -- I suppose direction = ltr, this agree with (first && second /= 0)
+                                    else (-1) * second        -- left = -right, top = -bottom
+}
