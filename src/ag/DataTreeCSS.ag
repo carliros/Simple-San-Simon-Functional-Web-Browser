@@ -51,7 +51,12 @@ DATA Value
     | KeyValue    String
     | KeyColor    String
     | StringValue String
+    | Counter     String
+    | ListValue    values: {[Value]}
+    | CounterValue String int:{Maybe Int}
     | NotSpecified
+
+TYPE Values = [Value]
 
 DERIVING Origin Value: Eq
 DERIVING *: Show

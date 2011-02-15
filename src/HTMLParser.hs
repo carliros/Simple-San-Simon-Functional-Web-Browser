@@ -42,15 +42,16 @@ pBodyTagAttributes = Map.fromList <$> pList pCoreAttr
 pHtmlElems = pListSep_ng pStuff pElem
 
 pElem = foldr1 (<|>) [ pEHead
-                     , buildNTree "p"      pEAttr pHtmlElems
-                     , buildNTree "big"    pEAttr pHtmlElems
-                     , buildNTree "small"  pEAttr pHtmlElems
-                     , buildNTree "div"    pEAttr pHtmlElems
-                     , buildNTree "span"   pEAttr pHtmlElems
-                     , buildNTree "em"     pEAttr pHtmlElems
-                     , buildNTree "strong" pEAttr pHtmlElems
-                     , buildSpecialNTree "img" pImgAttr
-                     , buildNTree "a"      pAnchorAttr pHtmlElems
+                     , buildNTree "p"           pEAttr      pHtmlElems
+                     , buildNTree "q"           pEAttr      pHtmlElems
+                     , buildNTree "big"         pEAttr      pHtmlElems
+                     , buildNTree "small"       pEAttr      pHtmlElems
+                     , buildNTree "div"         pEAttr      pHtmlElems
+                     , buildNTree "span"        pEAttr      pHtmlElems
+                     , buildNTree "em"          pEAttr      pHtmlElems
+                     , buildNTree "strong"      pEAttr      pHtmlElems
+                     , buildSpecialNTree "img"  pImgAttr
+                     , buildNTree "a"           pAnchorAttr pHtmlElems
                      , pText
                      ]
 
@@ -75,7 +76,7 @@ pAnchorAttr = Map.fromList <$> pList (pCoreAttr <|> pHRef)
 
 -- Auxiliar Parsers
 pTextContent      = pList1 (pAlphaNum <|> (pAnySym " \r\t\n.,:;_-!/(){}[]\"\'"))
-pTextStyleContent = pList1 (pAlphaNum <|> (pAnySym " \r\t\n,{}*#[]~=.>+;-\":!%"))
+pTextStyleContent = pList1 (pAlphaNum <|> (pAnySym " \r\t\n,(){}*#[]~=.>+;-\":!%"))
 pStyleAttrString  = pList1 (pAlphaNum <|> (pAnySym " \r\t\n;-+:!%"))
 pStringAttr       = pList1 (pAlphaNum <|> (pAnySym " "))    -- strings with spaces
 pStringURI        = pList1 (pAlphaNum <|> (pAnySym ".:/_-%"))

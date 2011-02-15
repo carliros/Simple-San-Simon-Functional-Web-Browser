@@ -52,6 +52,8 @@ cssProperties = [
                 , ("line-height"           , True  , emValue 1.2      , compute_toPixel         , used_toPixelValue)
                 , ("vertical-align"        , False , keyValue "baseline", compute_vertical_align , used_vertical_align)
                 , ("content"               , False , keyValue "normal"  , compute_content        , used_asComputed)
+                , ("counter-increment"     , False , keyValue "none"    , compute_counter        , used_asComputed)
+                , ("counter-reset"         , False , keyValue "none"    , compute_counter        , used_asComputed)
                 ]
 
 propertiesCSS = map (\(nm,inh,val,_,_) -> (nm,inh,val)) cssProperties
@@ -457,6 +459,14 @@ compute_content iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop
       else if iamPseudo
            then prop{computedValue = specifiedValue prop}
            else prop{computedValue = KeyValue "none"}   -- if it is a simple elemento, then always it computes to none
+
+compute_counter iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop
+    = if (/=) (computedValue prop) NotSpecified
+      then prop
+      else let vcontent = computedValue $ locProps Map.! "content"
+           in if compareKeyPropertyValue vcontent "none"
+              then prop{computedValue = KeyValue "none"}
+              else prop{computedValue = specifiedValue prop}
 
 -- auxiliar functions
 toPixelValue iamtheroot fatherProps locProps iamreplaced iamPseudo prop

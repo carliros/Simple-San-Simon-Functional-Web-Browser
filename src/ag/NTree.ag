@@ -21,6 +21,7 @@ INCLUDE "GetStyleSheets.ag"
 INCLUDE "MatchSelector.ag"
 INCLUDE "DoSpecifiedValue.ag"
 INCLUDE "DoComputedValue.ag"
+INCLUDE "CounterProcess.ag"
 
 -- Generating the Formatting Structure of a web page
 ATTR NTrees [|| fstrees:{[Maybe BoxTree]}]
@@ -31,15 +32,15 @@ SEM NTrees
 ATTR Root NTree [|| fstree: {Maybe BoxTree}]
 SEM NTree
     | NTree lhs.fstree 
-                = let boxBefore = generateBoxContent (fst @loc.computedContentValueProps)
-                      boxAfter  = generateBoxContent (snd @loc.computedContentValueProps)
+                = let boxesBefore = generateBoxContent (fst @loc.computedContentValueProps) @loc.myCounterScope
+                      boxesAfter  = generateBoxContent (snd @loc.computedContentValueProps) @loc.myCounterScope
                   in case @node.myself of
                        NTag nm iamreplaced attrs
                         -> if verifyProperty "display" "none" @loc.computedValueProps
                            then Nothing
                            else if iamreplaced
                                 then Just $ BoxContainer "inline" @loc.computedValueProps True attrs []
-                                else let boxes      = catMaybes $ (boxBefore : @ntrees.fstrees) ++ [boxAfter]
+                                else let boxes      = catMaybes $ boxesBefore ++ @ntrees.fstrees ++ boxesAfter
                                          (bool,str) = doIContainOnlyText boxes
                                      in if bool && (verifyProperty "display" "inline" @loc.computedValueProps)
                                         then Just $ BoxText @loc.computedValueProps attrs str
@@ -77,11 +78,23 @@ SEM Root
 
 -- auxiliar functions
 {
-generateBoxContent props 
+generateBoxContent props scope 
     = case computedValue (props Map.! "content") of
-            StringValue str   -> Just $ BoxText props Map.empty str
-            KeyValue "none"   -> Nothing
-            KeyValue "normal" -> Nothing
+            ListValue list    -> genBoxes list
+            KeyValue "none"   -> [Nothing]
+            KeyValue "normal" -> [Nothing]
+    where genBoxes []     = []
+          genBoxes (e:es) 
+            = case e of
+                StringValue str           -> (Just $ BoxText props Map.empty str) : genBoxes es
+                Counter key               -> if Map.member key scope
+                                             then let value = scope Map.! key
+                                                  in (Just $ BoxText props Map.empty (show value)) : genBoxes es
+                                             else genBoxes es
+                KeyValue "open-quote"     -> (Just $ BoxText props Map.empty "{") : genBoxes es
+                KeyValue "close-quote"    -> (Just $ BoxText props Map.empty "}") : genBoxes es
+                KeyValue "no-open-quote"  -> (Just $ BoxText props Map.empty "" ) : genBoxes es
+                KeyValue "no-close-quote" -> (Just $ BoxText props Map.empty "" ) : genBoxes es
 
 doIContainOnlyText [BoxText _ _ str] = (True ,str)
 doIContainOnlyText _                 = (False," ")

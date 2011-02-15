@@ -21,6 +21,8 @@ parseStyleInline tag str = let props = unsafePerformIO (parseIO pInlineStyle str
                                rules = [(True, [SimpSelector (TypeSelector tag [] Nothing)], props)]
                            in sem_SRoot (SRoot rules)
 
+parseString str p = parseIO p str
+
 pInlineStyle = pProperties
 
 pRules = concat <$ pStuff <*> pList pRule <* pStuff
@@ -37,18 +39,18 @@ pSelector =  (\ssel -> [SimpSelector ssel]) <$> pSSelector
                                 " " -> (DescSelector ssel) : sel)
             <$> pSSelector <*> pCombinator <*> pSelector
 
-pSSelector =  TypeSelector    <$> pSimpleString <*> pList  pATSelector <*> pMaybePseudo
-          <|> UnivSelector    <$  pToks "*"     <*> pList  pATSelector <*> pMaybePseudo
-          <|> UnivSelector    <$>                   pList1 pATSelector <*> pMaybePseudo
-          <|> UnivSelector [] <$>                                          pMaybeJustPseudo
+pSSelector =  TypeSelector    <$> pSimpleContent <*> pList  pATSelector <*> pMaybePseudo
+          <|> UnivSelector    <$  pToks "*"      <*> pList  pATSelector <*> pMaybePseudo
+          <|> UnivSelector    <$>                    pList1 pATSelector <*> pMaybePseudo
+          <|> UnivSelector [] <$>                                           pMaybeJustPseudo
 
-pATSelector =  ID         <$ pSym '#' <*> pSimpleString
-           <|> ATName     <$ pSym '[' <* pStuff <*> pSimpleString <* pStuff <* pSym ']'
+pATSelector =  ID         <$ pSym '#' <*> pSimpleContent
+           <|> ATName     <$ pSym '[' <* pStuff <*> pSimpleContent <* pStuff <* pSym ']'
            <|> ATOperator "class" "~="
-                          <$ pSym '.' <*> pSimpleString
+                          <$ pSym '.' <*> pSimpleContent
            <|> ATOperator <$ pSym '[' 
                                 <* pStuff 
-                                    <*> pSimpleString <*> pAtOperator <*> pString
+                                    <*> pSimpleContent <*> pAtOperator <*> pSimpleString
                                 <* pStuff 
                           <* pSym ']'
 
@@ -80,6 +82,7 @@ pProperty =  pDisplay
          <|> pLineHeight 
          <|> pVerticalAlign
          <|> pContent
+         <|> pCounters
 
 pDisplay = buildProperties $ tmap pDisplayValue ["display"]
 pDisplayValue = pKeyValues ["inline", "block", "list-item", "run-in", "inline-block", "none", "inherit"]
@@ -152,7 +155,20 @@ pLineHeight = buildProperties [("line-height", pPositiveLength <|> pPositivePerc
 
 pVerticalAlign = buildProperties [("vertical-align", pLength <|> pPercentage <|> pKeyValues ["baseline", "sub", "super", "top", "text-top", "middle", "bottom", "text-bottom", "inherit"])]
 
-pContent = buildProperties [("content", pStringValue <|> pKeyValues ["normal", "none", "inherited"])]
+pContent = buildProperties [("content", pListContent <|> pKeyValues ["normal", "none", "inherit"])]
+pListContent = ListValue <$> pList1Sep_ng pStuff (pStringValue <|> pCounter <|> pKeyValues ["open-quote", "close-quote", "no-open-quote", "no-close-quote"])
+pCounter = Counter <$ pKeyword "counter" <* pSymbol "(" <*> pSimpleContent <* pSymbol ")"
+
+pCounters = buildProperties [ ("counter-reset"    , pListCounter <|> pKeyValues ["none", "inherit"])
+                            , ("counter-increment", pListCounter <|> pKeyValues ["none", "inherit"])
+                            ]
+
+pListCounter  = ListValue    <$> pList1Sep_ng pStuff pCounterValue
+
+pCounterValue = CounterValue <$> pSimpleContent <* pStuff <*> pMaybeInteger
+
+pMaybeInteger =  Just <$> pInteger --) `opt` Nothing
+             <|> pSucceed Nothing
 
 pImportant = (True <$ pSymbol "!" <* pKeyword "important") <|> pSucceed False
 
@@ -201,7 +217,8 @@ pPercentage =  Percentage  <$> pNumber <* pSym  '%'
 
 pStringValue = StringValue <$> pString
 
-pString = pSym '\"' *> pSimpleString <* pSym '\"'
+pString       = pSym '\"' *> pStringContent <* pSym '\"'
+pSimpleString = pSym '\"' *> pSimpleContent <* pSym '\"'
 
 pLength =  PixelNumber <$> pNumber <* pToks "px"
        <|> PointNumber <$> pNumber <* pToks "pt"
@@ -212,6 +229,8 @@ pPositiveLength =  PixelNumber <$> pPositiveNumber <* pToks "px"
                <|> EmNumber    <$> pPositiveNumber <* pToks "em"
 
 -- Auxiliar Parsers
+pInteger = (\sg n -> toInt (sg++n)) <$> pSign <*> pList1 pDigit
+
 pNumber =  (\sg n       -> toFloat (sg++n)         ) <$> pSign <*> pList1 pDigit
        <|> (\sg n1 d n2 -> toFloat (sg++n1 ++d++n2)) <$> pSign <*> pList pDigit <*> pToks "." <*> pList1 pDigit
        <|> (\sg    d n2 -> toFloat (sg++"0"++d++n2)) <$> pSign                  <*> pToks "." <*> pList1 pDigit
@@ -228,17 +247,22 @@ pSignMas = "" <$ (pSym '+') `opt` ""
 toFloat :: String -> Float
 toFloat = read
 
-pSimpleString = pList1 pAlphaNum
+toInt :: String -> Int
+toInt = read
+
+pStringContent = pList1 (pAlphaNum <|> (pAnySym " .-:"))
+pSimpleContent = pList1 pAlphaNum
 pL        = 'a' <..> 'z'
 pU        = 'A' <..> 'Z'
 pLetter   = pL <|> pU
 pDigit    = '0' <..> '9'
 pAlphaNum = pLetter <|> pDigit
 
-pSymbol str   = pStuff *> pToks str <* pStuff
-pKeyword str  = pToks str
+pSymbol  str = pStuff *> pToks str <* pStuff
+pKeyword str = pToks str
 
-pStuff = pList (pAnySym " \t\r\n")
+pStuff  = pList  (pAnySym " \t\r\n")
+--pStuff1 = pList1 (pAnySym " \t\r\n")
 
 -- Special parser combinators
 pListN 0 sep p = pSucceed []
@@ -246,5 +270,7 @@ pListN n sep p = (:) <$> sep *> p <*> pListN (n-1) sep p
               <|> pSucceed []
 
 -- Parser Instances
-instance Symbol Char
+instance Symbol Char where
+    symBefore = pred
+    symAfter  = succ
 
