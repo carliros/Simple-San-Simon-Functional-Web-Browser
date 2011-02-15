@@ -51,18 +51,19 @@ cssProperties = [
                 , ("height"                , False , keyValue "auto"  , compute_dimention       , used_height)
                 , ("line-height"           , True  , emValue 1.2      , compute_toPixel         , used_toPixelValue)
                 , ("vertical-align"        , False , keyValue "baseline", compute_vertical_align , used_vertical_align)
+                , ("content"               , False , keyValue "normal"  , compute_content        , used_asComputed)
                 ]
 
 propertiesCSS = map (\(nm,inh,val,_,_) -> (nm,inh,val)) cssProperties
 
-doComputedValue iamtheroot fatherProps locProps iamreplaced nm prop
-    = doComputedValue' iamtheroot fatherProps locProps iamreplaced nm prop cssProperties
-    where doComputedValue' iamtheroot fatherProps locProps iamreplaced nm prop []
+doComputedValue iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop
+    = doComputedValue' iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop cssProperties
+    where doComputedValue' iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop []
                 = error $ "[PropertiesCSS] No matching option on computed value fuction with the property name: " ++ nm
-          doComputedValue' iamtheroot fatherProps locProps iamreplaced nm prop ((np,_,_,fn,_):pps)
+          doComputedValue' iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop ((np,_,_,fn,_):pps)
                 = if nm==np 
-                  then fn iamtheroot fatherProps locProps iamreplaced nm prop
-                  else doComputedValue' iamtheroot fatherProps locProps iamreplaced nm prop pps
+                  then fn iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop
+                  else doComputedValue' iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop pps
 
 doUsedValue iamtheroot icbsize fatherProps locProps attrs iamreplaced nm prop
     = doUsedValue' iamtheroot icbsize fatherProps locProps attrs iamreplaced nm prop cssProperties
@@ -352,10 +353,10 @@ used_toPixelImgValue iamtheroot icbsize fatherProps locProps attrs iamreplaced n
         otherwise      -> error $ "[PropertiesCSS] error on used value for pixel/percentage at property name: " ++ nm
 
 -- for computed value
-compute_asSpecified iamtheroot fatherProps locProps iamreplaced nm prop
+compute_asSpecified iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop
     = prop{computedValue = specifiedValue prop}
 
-compute_display iamtheroot fatherProps locProps iamreplaced nm prop
+compute_display iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop
     = if (/=) (computedValue prop) NotSpecified
       then prop  
       else let vdisplay  = specifiedValue prop
@@ -376,7 +377,7 @@ compute_display iamtheroot fatherProps locProps iamreplaced nm prop
                              then table4ComputedValue
                              else prop{computedValue = vdisplay}
 
-compute_offset iamtheroot fatherProps locProps iamreplaced nm prop
+compute_offset iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop
     = if (/=) (computedValue prop) NotSpecified
       then prop
       else let vposition = specifiedValue $ locProps Map.! "position"
@@ -385,12 +386,12 @@ compute_offset iamtheroot fatherProps locProps iamreplaced nm prop
                         KeyValue "relative" -> let svalue = specifiedValue prop
                                                in if svalue == (KeyValue "auto")
                                                   then prop{computedValue = PixelNumber 0}
-                                                  else toPixelValue iamtheroot fatherProps locProps iamreplaced prop
+                                                  else toPixelValue iamtheroot fatherProps locProps iamreplaced iamPseudo prop
                         otherwise           -> if isLengthOrPercentage (specifiedValue prop)
-                                               then toPixelValue iamtheroot fatherProps locProps iamreplaced prop
+                                               then toPixelValue iamtheroot fatherProps locProps iamreplaced iamPseudo prop
                                                else prop{computedValue = KeyValue "auto"}
 
-compute_float iamtheroot fatherProps locProps iamreplaced nm prop
+compute_float iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop
     = if (/=) (computedValue prop) NotSpecified
       then prop
       else let vposition = specifiedValue $ locProps Map.! "position"
@@ -398,24 +399,24 @@ compute_float iamtheroot fatherProps locProps iamreplaced nm prop
               then prop{computedValue = KeyValue "none"}
               else prop{computedValue = specifiedValue prop}
 
-compute_margin iamtheroot fatherProps locProps iamreplaced nm prop
+compute_margin iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop
     = if (/=) (computedValue prop) NotSpecified
       then prop
       else case specifiedValue prop of
                 KeyValue "auto" -> prop{computedValue = KeyValue "auto"}
-                _               -> toPixelValue iamtheroot fatherProps locProps iamreplaced prop
+                _               -> toPixelValue iamtheroot fatherProps locProps iamreplaced iamPseudo prop
 
-compute_toPixel iamtheroot fatherProps locProps iamreplaced nm prop
-    = toPixelValue iamtheroot fatherProps locProps iamreplaced prop
+compute_toPixel iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop
+    = toPixelValue iamtheroot fatherProps locProps iamreplaced iamPseudo prop
 
-compute_border_color iamtheroot fatherProps locProps iamreplaced nm prop
+compute_border_color iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop
     = if (/=) (computedValue prop) NotSpecified
       then prop
       else case specifiedValue prop of
                 NotSpecified -> prop{computedValue = (specifiedValue (locProps Map.! "color"))} 
                 KeyColor cl  -> prop{computedValue = KeyColor cl} -- the color is the same as specified and computed
 
-compute_font_size iamtheroot fatherProps locProps iamreplaced nm prop
+compute_font_size iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop
     = if (/=) (computedValue prop) NotSpecified
       then prop
       else let pxval = case specifiedValue prop of
@@ -429,7 +430,7 @@ compute_font_size iamtheroot fatherProps locProps iamreplaced nm prop
                                             in PixelNumber (num*val)
            in prop{computedValue = pxval}
 
-compute_dimention iamtheroot fatherProps locProps iamreplaced nm prop
+compute_dimention iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop
     = if (/=) (computedValue prop) NotSpecified
       then prop
       else let vdisplay = specifiedValue $ locProps Map.! "display"
@@ -438,26 +439,33 @@ compute_dimention iamtheroot fatherProps locProps iamreplaced nm prop
                       ((&&) ((&&) (isJust iamreplaced) (not (fromJust iamreplaced)))
                             (compareKeyPropertyValue vdisplay "inline"))
               then prop{computedValue = KeyValue "auto"}
-              else toPixelValue iamtheroot fatherProps locProps iamreplaced prop
+              else toPixelValue iamtheroot fatherProps locProps iamreplaced iamPseudo prop
 
-compute_vertical_align iamtheroot fatherProps locProps iamreplaced nm prop
+compute_vertical_align iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop
     = if (/=) (computedValue prop) NotSpecified
       then prop
       else let vdisplay = specifiedValue $ locProps Map.! "display"
            in if (compareKeyPropertyValue vdisplay "inline")
               then if isLengthOrPercentage (specifiedValue prop)
-                   then toPixelValue iamtheroot fatherProps locProps iamreplaced prop
+                   then toPixelValue iamtheroot fatherProps locProps iamreplaced iamPseudo prop
                    else prop{computedValue = specifiedValue prop}
               else prop{computedValue = specifiedValue prop}
 
+compute_content iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop
+    = if (/=) (computedValue prop) NotSpecified
+      then prop
+      else if iamPseudo
+           then prop{computedValue = specifiedValue prop}
+           else prop{computedValue = KeyValue "none"}   -- if it is a simple elemento, then always it computes to none
+
 -- auxiliar functions
-toPixelValue iamtheroot fatherProps locProps iamreplaced prop
+toPixelValue iamtheroot fatherProps locProps iamreplaced iamPseudo prop
     = case specifiedValue prop of
         Percentage  fl  -> prop{computedValue = Percentage fl}
         PixelNumber num -> prop{computedValue = PixelNumber num}
         PointNumber num -> prop{computedValue = PixelNumber (num*1.6)} -- 1.6 is the constant value in a monitor with 1/72 point/inch
         EmNumber   num1 -> let font_size = locProps Map.! "font-size"
-                               (PixelNumber num2) = computedValue $ compute_font_size iamtheroot fatherProps locProps iamreplaced "font-size" font_size
+                               (PixelNumber num2) = computedValue $ compute_font_size iamtheroot fatherProps locProps iamreplaced iamPseudo "font-size" font_size
                            in prop{computedValue = PixelNumber (num1*num2)}
 
 isLengthOrPercentage val = case val of

@@ -17,8 +17,8 @@ DATA Selector
     -- | CombSelector SSelector String -- combinators: ' ', >, +
 
 DATA SSelector
-    | TypeSelector String atselectors: ATSelectors
-    | UnivSelector        atselectors: ATSelectors
+    | TypeSelector String atselectors: ATSelectors pseudo: MaybePseudo
+    | UnivSelector        atselectors: ATSelectors pseudo: MaybePseudo
 
 TYPE ATSelectors = [ATSelector]
 
@@ -26,6 +26,14 @@ DATA ATSelector
     | ID         value: String              -- id selector (#)
     | ATName     name : String
     | ATOperator name, op, value: String    -- op: =, ~=, |=    it includes the class selector (.)
+
+TYPE MaybePseudo = MAYBE PseudoElement
+
+DATA PseudoElement
+    | PseudoBefore
+    | PseudoAfter
+   -- | PseudoFirstLetter
+   -- | PseudoFirstLine
 
 DATA Property
     | Property Origin prop: String Value important:Bool
@@ -42,6 +50,7 @@ DATA Value
     | Percentage  Float
     | KeyValue    String
     | KeyColor    String
+    | StringValue String
     | NotSpecified
 
 DERIVING Origin Value: Eq

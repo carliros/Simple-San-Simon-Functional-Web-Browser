@@ -6,13 +6,13 @@ import DataTreeCSS
 }
 
 -- Selector's specifycity
-ATTR Rules Rule Selectors Selector SSelector ATSelectors ATSelector Property Origin Value [|| myself: SELF]
+ATTR Rules Rule Selectors Selector SSelector ATSelectors ATSelector MaybePseudo PseudoElement Property Origin Value [|| myself: SELF]
 
 -- calculate the specifycity, counting
 ATTR Selector SSelector [|| counter: {(Int, Int, Int, Int)}]
 SEM SSelector
-    | TypeSelector lhs.counter = (0, @atselectors.ids, @atselectors.ats, 1)
-    | UnivSelector lhs.counter = (0, @atselectors.ids, @atselectors.ats, 0)
+    | TypeSelector lhs.counter = (0, @atselectors.ids, @atselectors.ats, 1 + @pseudo.count)
+    | UnivSelector lhs.counter = (0, @atselectors.ids, @atselectors.ats,     @pseudo.count)
 
 ATTR Selectors [|| counter USE {`ftp`} {(0,0,0,0)} : {(Int, Int, Int, Int)}]
 
@@ -24,6 +24,15 @@ SEM ATSelector
                  lhs.ats = 1
     | ATOperator lhs.ids = 0
                  lhs.ats = 1
+
+ATTR MaybePseudo PseudoElement [|| count: Int ]
+SEM MaybePseudo
+    | Just    lhs.count = @just.count
+    | Nothing lhs.count = 0
+
+SEM PseudoElement
+    | PseudoBefore lhs.count = 1
+    | PseudoAfter  lhs.count = 1
 
 -- generating output
 ATTR Rule [|| output: {([Selector], [Property], Int)}]
@@ -45,9 +54,10 @@ SEM SRoot
                           in map (\(sel,prop,i) -> (reverse sel,prop,i)) drules
 
 {
--- function that transform to a flat list of rules where each rule has one selector and one property. And not a list of properties.
+-- function that transform into a flat list of rules where each rule has one selector and one property. And not a list of properties.
 distributeDeclarations = concat . map (\(sel, lprop, spe) -> map (\prop -> (sel, prop, spe)) lprop)
 
+-- sum 2 cuad tuples
 ftp :: (Int, Int, Int, Int) -> (Int, Int, Int, Int) -> (Int, Int, Int, Int)
 ftp (_,b1,c1,d1) (_,b2,c2,d2) = (0, b1+b2, c1+c2, d1+d2)
 }

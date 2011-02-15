@@ -27,17 +27,19 @@ ATTR NTrees [|| fstrees:{[Maybe BoxTree]}]
 SEM NTrees
     | Cons lhs.fstrees = @hd.fstree : @tl.fstrees
     | Nil  lhs.fstrees = []
-
+            
 ATTR Root NTree [|| fstree: {Maybe BoxTree}]
 SEM NTree
     | NTree lhs.fstree 
-                = case @node.myself of
-                    NTag nm iamreplaced attrs
+                = let boxBefore = generateBoxContent (fst @loc.computedContentValueProps)
+                      boxAfter  = generateBoxContent (snd @loc.computedContentValueProps)
+                  in case @node.myself of
+                       NTag nm iamreplaced attrs
                         -> if verifyProperty "display" "none" @loc.computedValueProps
                            then Nothing
                            else if iamreplaced
                                 then Just $ BoxContainer "inline" @loc.computedValueProps True attrs []
-                                else let boxes      = catMaybes @ntrees.fstrees
+                                else let boxes      = catMaybes $ (boxBefore : @ntrees.fstrees) ++ [boxAfter]
                                          (bool,str) = doIContainOnlyText boxes
                                      in if bool && (verifyProperty "display" "inline" @loc.computedValueProps)
                                         then Just $ BoxText @loc.computedValueProps attrs str
@@ -49,7 +51,7 @@ SEM NTree
                                                      then Just $ BoxContainer "block" @loc.computedValueProps False attrs listBCnt
                                                      else error "[ntree] there is an inline element that contains block elements"
                                              else Just $ BoxContainer "inline" @loc.computedValueProps False attrs boxes
-                    NText str   -- a simple text is never affected by an style rule
+                       NText str   -- a simple text is never affected by an style rule
                         -> Just $ BoxText @loc.computedValueProps Map.empty str
 
 -- Generating the Tree-Box Formatting Structure
@@ -75,8 +77,14 @@ SEM Root
 
 -- auxiliar functions
 {
+generateBoxContent props 
+    = case computedValue (props Map.! "content") of
+            StringValue str   -> Just $ BoxText props Map.empty str
+            KeyValue "none"   -> Nothing
+            KeyValue "normal" -> Nothing
+
 doIContainOnlyText [BoxText _ _ str] = (True ,str)
-doIContainOnlyText _                          = (False," ")
+doIContainOnlyText _                 = (False," ")
 
 getAttributes (NTag _ _ ats) = ats
 getAttributes _              = Map.empty
@@ -105,10 +113,10 @@ toBoxContainer iamtheroot sprops iamreplaced lst@(bx:bxs)
                                         else BoxContainer "inline" (applyInheritance iamtheroot propertiesCSS sprops iamreplaced) False at lst
 
 -- this function build the specified value and the computed value
-applyInheritance iamtheroot list fatherProps iamreplaced = 
-    let inhprops              = Map.fromList (map fun list)
+applyInheritance iamtheroot listProps fatherProps iamreplaced = 
+    let inhprops              = Map.fromList (map fun listProps)
         mapWithSpecifiedValue = Map.adjust (\_ -> keyValue "block") "display" inhprops
-    in Map.mapWithKey (doComputedValue iamtheroot fatherProps mapWithSpecifiedValue iamreplaced) mapWithSpecifiedValue
+    in Map.mapWithKey (doComputedValue iamtheroot fatherProps mapWithSpecifiedValue iamreplaced False) mapWithSpecifiedValue
     where fun (nm,inh,def) = if inh
                              then (nm, fatherProps Map.! nm)
                              else (nm, def)

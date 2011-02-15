@@ -18,7 +18,7 @@ parseStyleString str = let ast = unsafePerformIO (parseIO pRules str)
                        in sem_SRoot (SRoot ast)
 
 parseStyleInline tag str = let props = unsafePerformIO (parseIO pInlineStyle str)
-                               rules = [(True, [SimpSelector (TypeSelector tag [])], props)]
+                               rules = [(True, [SimpSelector (TypeSelector tag [] Nothing)], props)]
                            in sem_SRoot (SRoot rules)
 
 pInlineStyle = pProperties
@@ -37,9 +37,10 @@ pSelector =  (\ssel -> [SimpSelector ssel]) <$> pSSelector
                                 " " -> (DescSelector ssel) : sel)
             <$> pSSelector <*> pCombinator <*> pSelector
 
-pSSelector =  TypeSelector <$> pSimpleString <*> pList pATSelector
-          <|> UnivSelector <$  pToks "*"     <*> pList pATSelector
-          <|> UnivSelector <$> pList1 pATSelector
+pSSelector =  TypeSelector    <$> pSimpleString <*> pList  pATSelector <*> pMaybePseudo
+          <|> UnivSelector    <$  pToks "*"     <*> pList  pATSelector <*> pMaybePseudo
+          <|> UnivSelector    <$>                   pList1 pATSelector <*> pMaybePseudo
+          <|> UnivSelector [] <$>                                          pMaybeJustPseudo
 
 pATSelector =  ID         <$ pSym '#' <*> pSimpleString
            <|> ATName     <$ pSym '[' <* pStuff <*> pSimpleString <* pStuff <* pSym ']'
@@ -47,7 +48,7 @@ pATSelector =  ID         <$ pSym '#' <*> pSimpleString
                           <$ pSym '.' <*> pSimpleString
            <|> ATOperator <$ pSym '[' 
                                 <* pStuff 
-                                    <*> pSimpleString <*> pAtOperator <* pSym '\"' <*> pSimpleString <* pSym '\"'
+                                    <*> pSimpleString <*> pAtOperator <*> pString
                                 <* pStuff 
                           <* pSym ']'
 
@@ -57,19 +58,28 @@ pCombinator = pSymbol ">" <|> pSymbol "+" <|> pSpecialSpace
 pSpecialSpace =  " " <$ pList  (pAnySym "\t\r\n") <* pList1 (pSym ' ') <* pList (pAnySym "\t\r\n")
              <|> " " <$ pList1 (pAnySym "\t\r\n") <* pList  (pSym ' ') <* pList (pAnySym "\t\r\n")
 
+pMaybePseudo =  Just <$ pSym ':' <*> pPseudoElement
+            <|> pSucceed Nothing
+
+pMaybeJustPseudo = Just <$ pSym ':' <*> pPseudoElement
+
+pPseudoElement =  PseudoBefore <$ pKeyword "before"
+              <|> PseudoAfter  <$ pKeyword "after"
+
 pProperties = concat <$> pList1Sep_ng (pSymbol ";") pProperty
 
-pProperty = pDisplay <|> 
-            pPosition <|> 
-            pOffset <|>
-            pMargin <|> 
-            pPadding <|> 
-            pBorder <|> 
-            pFont <|> 
-            pColorProperty <|>
-            pDimentions <|>
-            pLineHeight <|>
-            pVerticalAlign
+pProperty =  pDisplay 
+         <|> pPosition 
+         <|> pOffset 
+         <|> pMargin 
+         <|> pPadding 
+         <|> pBorder 
+         <|> pFont 
+         <|> pColorProperty 
+         <|> pDimentions 
+         <|> pLineHeight 
+         <|> pVerticalAlign
+         <|> pContent
 
 pDisplay = buildProperties $ tmap pDisplayValue ["display"]
 pDisplayValue = pKeyValues ["inline", "block", "list-item", "run-in", "inline-block", "none", "inherit"]
@@ -142,6 +152,8 @@ pLineHeight = buildProperties [("line-height", pPositiveLength <|> pPositivePerc
 
 pVerticalAlign = buildProperties [("vertical-align", pLength <|> pPercentage <|> pKeyValues ["baseline", "sub", "super", "top", "text-top", "middle", "bottom", "text-bottom", "inherit"])]
 
+pContent = buildProperties [("content", pStringValue <|> pKeyValues ["normal", "none", "inherited"])]
+
 pImportant = (True <$ pSymbol "!" <* pKeyword "important") <|> pSucceed False
 
 -- Properties' builders
@@ -186,6 +198,10 @@ pColor = pAny (\cl -> KeyColor <$> pToks cl) ["red", "yellow", "darkgrey", "grey
 pPositivePercentage =  Percentage  <$> pPositiveNumber <* pSym  '%'
 
 pPercentage =  Percentage  <$> pNumber <* pSym  '%'
+
+pStringValue = StringValue <$> pString
+
+pString = pSym '\"' *> pSimpleString <* pSym '\"'
 
 pLength =  PixelNumber <$> pNumber <* pToks "px"
        <|> PointNumber <$> pNumber <* pToks "pt"
