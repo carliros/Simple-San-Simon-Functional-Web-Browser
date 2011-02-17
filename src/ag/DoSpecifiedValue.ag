@@ -13,7 +13,7 @@ SEM NTree
                     = let funGenKeyValues (pn,inh,def) = (pn, doSpecifiedValue pn inh def @lhs.propsFather @lhs.iamtheroot @loc.myRuleDecls)
                       in  Map.fromList $ map funGenKeyValues propertiesCSS
             loc.specifiedContentValueProps
-                    = let funGenKeyValues decl (pn,inh,def) = (pn, doSpecifiedValue pn inh def @lhs.propsFather @lhs.iamtheroot decl)
+                    = let funGenKeyValues decl (pn,inh,def) = (pn, doSpecifiedValue pn inh def @loc.computedValueProps False decl)
                       in  ( Map.fromList $ map (funGenKeyValues (fst @loc.myContentRules)) propertiesCSS
                           , Map.fromList $ map (funGenKeyValues (snd @loc.myContentRules)) propertiesCSS )
 

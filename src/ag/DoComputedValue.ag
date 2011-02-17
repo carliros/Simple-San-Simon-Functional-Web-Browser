@@ -15,10 +15,10 @@ SEM NTree
                                         @node.iamReplacedElement False) @loc.specifiedValueProps
             loc.computedContentValueProps
                     = let func props = Map.mapWithKey ( doComputedValue 
-                                                        @lhs.iamtheroot 
-                                                        @lhs.propsFather 
-                                                        props
-                                                        @node.iamReplacedElement True) props
+                                                            @lhs.iamtheroot 
+                                                            @lhs.propsFather
+                                                            props
+                                                            @node.iamReplacedElement True) props
                       in ( func (fst @loc.specifiedContentValueProps)
                          , func (snd @loc.specifiedContentValueProps))
 

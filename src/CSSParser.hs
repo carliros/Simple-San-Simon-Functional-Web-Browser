@@ -83,6 +83,7 @@ pProperty =  pDisplay
          <|> pVerticalAlign
          <|> pContent
          <|> pCounters
+         <|> pQuotes
 
 pDisplay = buildProperties $ tmap pDisplayValue ["display"]
 pDisplayValue = pKeyValues ["inline", "block", "list-item", "run-in", "inline-block", "none", "inherit"]
@@ -164,11 +165,13 @@ pCounters = buildProperties [ ("counter-reset"    , pListCounter <|> pKeyValues 
                             ]
 
 pListCounter  = ListValue    <$> pList1Sep_ng pStuff pCounterValue
-
 pCounterValue = CounterValue <$> pSimpleContent <* pStuff <*> pMaybeInteger
-
 pMaybeInteger =  Just <$> pInteger --) `opt` Nothing
              <|> pSucceed Nothing
+
+pQuotes     = buildProperties [ ("quotes", pListQuote <|> pKeyValues ["none", "inherit"])]
+pListQuote  = ListValue  <$> pList1Sep_ng pStuff pQuoteValue
+pQuoteValue = QuoteValue <$> pString <* pStuff <*> pString
 
 pImportant = (True <$ pSymbol "!" <* pKeyword "important") <|> pSucceed False
 
@@ -217,8 +220,11 @@ pPercentage =  Percentage  <$> pNumber <* pSym  '%'
 
 pStringValue = StringValue <$> pString
 
-pString       = pSym '\"' *> pStringContent <* pSym '\"'
-pSimpleString = pSym '\"' *> pSimpleContent <* pSym '\"'
+pString       =  pSym '\"' *> pString1Content <* pSym '\"'
+             <|> pSym '\'' *> pString2Content <* pSym '\''
+
+pSimpleString =  pSym '\"' *> pSimpleContent <* pSym '\"'
+             <|> pSym '\'' *> pSimpleContent <* pSym '\''
 
 pLength =  PixelNumber <$> pNumber <* pToks "px"
        <|> PointNumber <$> pNumber <* pToks "pt"
@@ -250,8 +256,9 @@ toFloat = read
 toInt :: String -> Int
 toInt = read
 
-pStringContent = pList1 (pAlphaNum <|> (pAnySym " .-:"))
-pSimpleContent = pList1 pAlphaNum
+pString1Content = pList1 (pAlphaNum <|> (pAnySym " ,(){}*#[]~=.><+;-\':!%|"))
+pString2Content = pList1 (pAlphaNum <|> (pAnySym " ,(){}*#[]~=.><+;-\":!%|"))
+pSimpleContent  = pList1 pAlphaNum
 pL        = 'a' <..> 'z'
 pU        = 'A' <..> 'Z'
 pLetter   = pL <|> pU

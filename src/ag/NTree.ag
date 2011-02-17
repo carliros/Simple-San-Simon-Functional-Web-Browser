@@ -32,8 +32,8 @@ SEM NTrees
 ATTR Root NTree [|| fstree: {Maybe BoxTree}]
 SEM NTree
     | NTree lhs.fstree 
-                = let boxesBefore = generateBoxContent (fst @loc.computedContentValueProps) @loc.myCounterScope
-                      boxesAfter  = generateBoxContent (snd @loc.computedContentValueProps) @loc.myCounterScope
+                = let boxesBefore = generateBoxContent (fst @loc.computedContentValueProps) @loc.computedValueProps @loc.myCounterScope @loc.myQuoteScope
+                      boxesAfter  = generateBoxContent (snd @loc.computedContentValueProps) @loc.computedValueProps @loc.myCounterScope @loc.myQuoteScope
                   in case @node.myself of
                        NTag nm iamreplaced attrs
                         -> if verifyProperty "display" "none" @loc.computedValueProps
@@ -78,23 +78,40 @@ SEM Root
 
 -- auxiliar functions
 {
-generateBoxContent props scope 
+generateBoxContent props srcProps varScope (open,close)
     = case computedValue (props Map.! "content") of
             ListValue list    -> genBoxes list
             KeyValue "none"   -> [Nothing]
             KeyValue "normal" -> [Nothing]
-    where genBoxes []     = []
+    where getQuote lst
+            = let depth = open - close
+                  len   = length lst
+              in if ((depth >= 1) && (depth <= len))
+                 then Just $ lst !! (depth - 1)
+                 else if depth > len
+                      then Just $ last lst
+                      else Nothing
+          genBoxes []
+            = []
           genBoxes (e:es) 
             = case e of
                 StringValue str           -> (Just $ BoxText props Map.empty str) : genBoxes es
-                Counter key               -> if Map.member key scope
-                                             then let value = scope Map.! key
+                Counter key               -> if Map.member key varScope
+                                             then let value = varScope Map.! key
                                                   in (Just $ BoxText props Map.empty (show value)) : genBoxes es
                                              else genBoxes es
-                KeyValue "open-quote"     -> (Just $ BoxText props Map.empty "{") : genBoxes es
-                KeyValue "close-quote"    -> (Just $ BoxText props Map.empty "}") : genBoxes es
-                KeyValue "no-open-quote"  -> (Just $ BoxText props Map.empty "" ) : genBoxes es
-                KeyValue "no-close-quote" -> (Just $ BoxText props Map.empty "" ) : genBoxes es
+                KeyValue "open-quote"     -> case computedValue (srcProps Map.! "quotes") of
+                                                ListValue lst  -> case getQuote lst of
+                                                                     Just (QuoteValue str _) -> (Just $ BoxText props Map.empty str) : genBoxes es
+                                                                     Nothing                 -> Nothing : genBoxes es
+                                                KeyValue "none" -> (Just $ BoxText props Map.empty "\"") : genBoxes es
+                KeyValue "close-quote"    -> case computedValue (srcProps Map.! "quotes") of
+                                                ListValue lst  -> case getQuote lst of
+                                                                     Just (QuoteValue _ str) -> (Just $ BoxText props Map.empty str) : genBoxes es
+                                                                     Nothing                 -> Nothing : genBoxes es
+                                                KeyValue "none" -> (Just $ BoxText props Map.empty "\"") : genBoxes es
+                KeyValue "no-open-quote"  -> Nothing : genBoxes es
+                KeyValue "no-close-quote" -> Nothing : genBoxes es
 
 doIContainOnlyText [BoxText _ _ str] = (True ,str)
 doIContainOnlyText _                 = (False," ")

@@ -54,6 +54,7 @@ DATA Value
     | Counter     String
     | ListValue    values: {[Value]}
     | CounterValue String int:{Maybe Int}
+    | QuoteValue   open,close: String
     | NotSpecified
 
 TYPE Values = [Value]

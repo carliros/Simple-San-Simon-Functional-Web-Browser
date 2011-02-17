@@ -54,6 +54,7 @@ cssProperties = [
                 , ("content"               , False , keyValue "normal"  , compute_content        , used_asComputed)
                 , ("counter-increment"     , False , keyValue "none"    , compute_counter        , used_asComputed)
                 , ("counter-reset"         , False , keyValue "none"    , compute_counter        , used_asComputed)
+                , ("quotes"                , True  , keyValue "none"    , compute_asSpecified    , used_asComputed)
                 ]
 
 propertiesCSS = map (\(nm,inh,val,_,_) -> (nm,inh,val)) cssProperties
@@ -422,14 +423,15 @@ compute_font_size iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop
     = if (/=) (computedValue prop) NotSpecified
       then prop
       else let pxval = case specifiedValue prop of
-                    Percentage  per -> let (PixelNumber val) = computedValue $ fatherProps Map.! "font-size"
-                                       in PixelNumber ((per*val)/100)
-                    PixelNumber num -> PixelNumber num
-                    PointNumber num -> PixelNumber (num*1.6) -- 1.6 is the constant value in a monitor with 1/72 point/inch
-                    EmNumber    num -> if iamtheroot
-                                       then PixelNumber (12*1.6)  -- this is the default value when it is the root
-                                       else let (PixelNumber val) = computedValue $ fatherProps Map.! "font-size"
-                                            in PixelNumber (num*val)
+                        Percentage  per -> let (PixelNumber val) = computedValue $ fatherProps Map.! "font-size"
+                                           in PixelNumber ((per*val)/100)
+                        PixelNumber num -> PixelNumber num
+                        PointNumber num -> PixelNumber (num*1.6) -- 1.6 is the constant value in a monitor with 1/72 point/inch
+                        EmNumber    num -> if iamtheroot
+                                           then PixelNumber (12*1.6)  -- this is the default value when it is the root
+                                           else let (PixelNumber val) = computedValue $ fatherProps Map.! "font-size"
+                                                in PixelNumber (num*val)
+                        otherwise       -> error $ show fatherProps
            in prop{computedValue = pxval}
 
 compute_dimention iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop

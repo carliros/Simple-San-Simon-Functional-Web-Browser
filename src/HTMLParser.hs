@@ -44,6 +44,7 @@ pHtmlElems = pListSep_ng pStuff pElem
 pElem = foldr1 (<|>) [ pEHead
                      , buildNTree "p"           pEAttr      pHtmlElems
                      , buildNTree "q"           pEAttr      pHtmlElems
+                     , buildNTree "blockquote"  pEAttr      pHtmlElems
                      , buildNTree "big"         pEAttr      pHtmlElems
                      , buildNTree "small"       pEAttr      pHtmlElems
                      , buildNTree "div"         pEAttr      pHtmlElems
@@ -76,7 +77,7 @@ pAnchorAttr = Map.fromList <$> pList (pCoreAttr <|> pHRef)
 
 -- Auxiliar Parsers
 pTextContent      = pList1 (pAlphaNum <|> (pAnySym " \r\t\n.,:;_-!/(){}[]\"\'"))
-pTextStyleContent = pList1 (pAlphaNum <|> (pAnySym " \r\t\n,(){}*#[]~=.>+;-\":!%"))
+pTextStyleContent = pList1 (pAlphaNum <|> (pAnySym " \r\t\n,(){}*#[]~=.>+;-\"\':!%|"))
 pStyleAttrString  = pList1 (pAlphaNum <|> (pAnySym " \r\t\n;-+:!%"))
 pStringAttr       = pList1 (pAlphaNum <|> (pAnySym " "))    -- strings with spaces
 pStringURI        = pList1 (pAlphaNum <|> (pAnySym ".:/_-%"))
@@ -91,7 +92,7 @@ pString = pList1 pAlphaNum
 ezip pAt pEl = map (\tag -> (tag, pAt, pEl))
 buildNTrees = pAny (_uncurry buildNTree)
 buildNTree tag pAttr pElems =  (\attr ntrees -> NTree (NTag tag False attr) ntrees)
-                           <$> pOpenWithAttributes tag pAttr <*> (pStuff *> pElems <* pStuff <* pClose tag)
+                           <$> pOpenWithAttributes tag pAttr <* pStuff <*> pElems <* pStuff <* pClose tag
 
 buildSpecialNTree tag pAttr =  (\attr -> NTree (NTag tag True attr) [])
                            <$> pOpenCloseWithAttributes tag pAttr
@@ -112,6 +113,4 @@ _curry f a b c = f (a,b,c)
 _uncurry :: (a -> b -> c -> d) -> (a,b,c) -> d
 _uncurry f (a,b,c) = f a b c
 
--- Parser Instances
---instance Symbol Char
 

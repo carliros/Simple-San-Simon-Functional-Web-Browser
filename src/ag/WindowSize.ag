@@ -67,7 +67,7 @@ ATTR Element WindowTree [|| logicalMetrics: {(Int,Int)}]
 SEM WindowTree
     | WindowText
         lhs.logicalMetrics = let line_height = toInt $ unPixelUsedValue $ @props Map.! "line-height"
-                                 halfleading = line_height - (csnd @loc.fontMetrics)
+                                 halfleading = (line_height - (csnd @loc.fontMetrics)) `div` 2
                                  logTop      = @loc.fontTop    + halfleading + @loc.verticalAlign
                                  logBottom   = @loc.fontBottom + halfleading - @loc.verticalAlign
                              in (logTop, logBottom)
