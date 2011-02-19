@@ -32,8 +32,8 @@ SEM NTrees
 ATTR Root NTree [|| fstree: {Maybe BoxTree}]
 SEM NTree
     | NTree lhs.fstree 
-                = let boxesBefore = generateBoxContent (fst @loc.computedContentValueProps) @loc.computedValueProps @loc.myCounterScope @loc.myQuoteScope
-                      boxesAfter  = generateBoxContent (snd @loc.computedContentValueProps) @loc.computedValueProps @loc.myCounterScope @loc.myQuoteScope
+                = let boxesBefore = generateBoxContent (fst @loc.computedContentValueProps) @loc.computedValueProps (fst @loc.myCounterScope) @loc.myQuoteScope
+                      boxesAfter  = generateBoxContent (snd @loc.computedContentValueProps) @loc.computedValueProps (fst @loc.myCounterScope) @loc.myQuoteScope
                   in case @node.myself of
                        NTag nm iamreplaced attrs
                         -> if verifyProperty "display" "none" @loc.computedValueProps
@@ -78,7 +78,7 @@ SEM Root
 
 -- auxiliar functions
 {
-generateBoxContent props srcProps varScope (open,close)
+generateBoxContent props srcProps counterScope (open,close)
     = case computedValue (props Map.! "content") of
             ListValue list    -> genBoxes list
             KeyValue "none"   -> [Nothing]
@@ -96,9 +96,13 @@ generateBoxContent props srcProps varScope (open,close)
           genBoxes (e:es) 
             = case e of
                 StringValue str           -> (Just $ BoxText props Map.empty str) : genBoxes es
-                Counter key               -> if Map.member key varScope
-                                             then let value = varScope Map.! key
-                                                  in (Just $ BoxText props Map.empty (show value)) : genBoxes es
+                Counter key               -> if Map.member key counterScope
+                                             then let value = show $ getHead $ counterScope Map.! key
+                                                  in (Just $ BoxText props Map.empty value) : genBoxes es
+                                             else genBoxes es
+                Counters key sep          -> if Map.member key counterScope
+                                             then let value = reverse $ concat $ intersperse sep $ mapShow $ counterScope Map.! key
+                                                  in (Just $ BoxText props Map.empty value) : genBoxes es
                                              else genBoxes es
                 KeyValue "open-quote"     -> case computedValue (srcProps Map.! "quotes") of
                                                 ListValue lst  -> case getQuote lst of

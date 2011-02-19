@@ -1,4 +1,8 @@
 
+imports{
+import CounterScope
+}
+
 -- counter's quotes
 ATTR NTree NTrees [| quoteScope : {(Int,Int)} |]
 SEM NTree
@@ -15,17 +19,23 @@ SEM NTrees
 SEM Root
     | Root ntree.quoteScope = (0,0)
 
--- counter's scope
-ATTR NTree NTrees [ | counterScope: {Map.Map String Int} | ]
+{-
+    counter's scope
+    The scope of a counter starts at the first element in the document that has a counter-reset fot that counter
+    and includes the element's descendants and its following siblings with their descendants. However, it does not
+    include any elements in the scope of a counter with the same name created by a counter-reset on a later sibling
+    or by a later counter-reset on the same element.
+-}
+ATTR NTree [ | counterScope: {Map.Map String Scope} | ]
 SEM NTree
     | NTree loc.myCounterScope  = updateScope @lhs.counterScope @loc.computedContentValueProps @loc.computedValueProps
-            ntrees.counterScope = @loc.myCounterScope
-            lhs.counterScope    = @ntrees.counterScope
+            ntrees.counterScope = fst @loc.myCounterScope
+            lhs.counterScope    = snd @loc.myCounterScope
+
+ATTR NTrees [ counterScope: {Map.Map String Scope} || ]
 SEM NTrees
     | Cons hd.counterScope  = @lhs.counterScope
            tl.counterScope  = @hd.counterScope
-           lhs.counterScope = @tl.counterScope
-    | Nil  lhs.counterScope = @lhs.counterScope
 
 SEM Root
     | Root ntree.counterScope = Map.empty
@@ -44,32 +54,11 @@ updateQuotes (open,close) props
                 otherwise                 -> (0,0)
 
 updateScope scope (propsBefore, propsAfter) props
-    = let resetScope1 = resetValue scope       $ computedValue $ propsBefore Map.! "counter-reset"
-          resetScope2 = resetValue resetScope1 $ computedValue $ propsAfter  Map.! "counter-reset"
-          resetScope3 = resetValue resetScope2 $ computedValue $ props       Map.! "counter-reset"
-          increScope1 = incrementValue resetScope3 $ computedValue $ propsBefore Map.! "counter-increment"
-          increScope2 = incrementValue increScope1 $ computedValue $ propsAfter  Map.! "counter-increment"
-          increScope3 = incrementValue increScope2 $ computedValue $ props       Map.! "counter-increment"
+    = let resetScope1 = resetScope (scope,scope) $ computedValue $ propsBefore Map.! "counter-reset"
+          resetScope2 = resetScope resetScope1   $ computedValue $ propsAfter  Map.! "counter-reset"
+          resetScope3 = resetScope resetScope2   $ computedValue $ props       Map.! "counter-reset"
+          increScope1 = incrScope  resetScope3   $ computedValue $ propsBefore Map.! "counter-increment"
+          increScope2 = incrScope  increScope1   $ computedValue $ propsAfter  Map.! "counter-increment"
+          increScope3 = incrScope  increScope2   $ computedValue $ props       Map.! "counter-increment"
       in increScope3
-    where incrementValue env vincrement
-                = case vincrement of
-                    KeyValue "none" -> env
-                    ListValue lst   -> foldr updateIncrement env lst
-               where updateIncrement (CounterValue str mb) newEnv
-                        = case mb of
-                            Just val -> Map.adjust (val +) str newEnv
-                            Nothing  -> Map.adjust (1   +) str newEnv
-          resetValue env vreset
-                = case vreset of
-                    KeyValue "none" -> env
-                    ListValue lst   -> foldr updateReset env lst
-              where updateReset (CounterValue str mb) newEnv 
-                        = case mb of
-                            Just val -> setup newEnv str val
-                            Nothing  -> setup newEnv str 0
-                    setup myMap key value 
-                        = if Map.member key myMap
-                          then Map.adjust (const value) key myMap
-                          else Map.insert key value myMap
-
 }

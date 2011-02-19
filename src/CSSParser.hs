@@ -158,7 +158,8 @@ pVerticalAlign = buildProperties [("vertical-align", pLength <|> pPercentage <|>
 
 pContent = buildProperties [("content", pListContent <|> pKeyValues ["normal", "none", "inherit"])]
 pListContent = ListValue <$> pList1Sep_ng pStuff (pStringValue <|> pCounter <|> pKeyValues ["open-quote", "close-quote", "no-open-quote", "no-close-quote"])
-pCounter = Counter <$ pKeyword "counter" <* pSymbol "(" <*> pSimpleContent <* pSymbol ")"
+pCounter =  Counter  <$ pKeyword "counter"  <* pSymbol "(" <*> pSimpleContent                            <* pSymbol ")"
+        <|> Counters <$ pKeyword "counters" <* pSymbol "(" <*> pSimpleContent <* pSymbol "," <*> pString <* pSymbol ")"
 
 pCounters = buildProperties [ ("counter-reset"    , pListCounter <|> pKeyValues ["none", "inherit"])
                             , ("counter-increment", pListCounter <|> pKeyValues ["none", "inherit"])

@@ -53,6 +53,8 @@ pElem = foldr1 (<|>) [ pEHead
                      , buildNTree "strong"      pEAttr      pHtmlElems
                      , buildSpecialNTree "img"  pImgAttr
                      , buildNTree "a"           pAnchorAttr pHtmlElems
+                     , buildNTree "ol"          pEAttr      pHtmlElems
+                     , buildNTree "li"          pEAttr      pHtmlElems
                      , pText
                      ]
 
