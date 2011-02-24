@@ -8,7 +8,8 @@ SEM BoxRoot
     | BoxRoot boxtree.codChild = 1
 
 SEM BoxTree
-    | BoxContainer boxes.codChild = 1
+    | BoxItemContainer boxes.codChild = 1
+    | BoxContainer     boxes.codChild = 1
 
 SEM Boxes
     | Cons hd.codChild = @lhs.codChild
@@ -20,10 +21,13 @@ SEM BoxRoot
     | BoxRoot boxtree.codFather = 1
 
 SEM BoxTree
-    | BoxContainer boxes.codFather = getCode @loc.code
+    | BoxItemContainer boxes.codFather = getCode @loc.code
+    | BoxContainer     boxes.codFather = getCode @loc.code
 
 -- building a code for each ntree
 SEM BoxTree
+    | BoxItemContainer
+        loc.code = Code @lhs.codFather @lhs.codChild
     | BoxContainer
         loc.code = Code @lhs.codFather @lhs.codChild
     | BoxText
@@ -41,6 +45,8 @@ SEM BoxTree
 -- building a plain tree for inline formating
 ATTR BoxTree Boxes [|| elements USE {++} {[]}: {[ElementList]}]
 SEM BoxTree
+    | BoxItemContainer
+        lhs.elements = []   -- always block, I dont' need to separate into lines
     | BoxContainer 
         lhs.elements 
             = if @bRepl
@@ -94,8 +100,8 @@ ATTR BoxRoot BoxTree Boxes [cbSize:{(Int,Int)} ||]
 SEM BoxTree
     | BoxContainer 
         loc.width  = toInt $ unPixelUsedValue $ @loc.usedValueProps Map.! "width"
-    | BoxText 
-        loc.width  = toInt $ unPixelUsedValue $ @loc.usedValueProps Map.! "width"
+--    | BoxText 
+--        loc.width  = toInt $ unPixelUsedValue $ @loc.usedValueProps Map.! "width"
 
 -- building lines of BoxTrees
 SEM BoxTree

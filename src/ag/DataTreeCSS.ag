@@ -51,8 +51,8 @@ DATA Value
     | KeyValue    String
     | KeyColor    String
     | StringValue String
-    | Counter     item: String
-    | Counters    item, sep: String
+    | Counter     item: String      style: {Maybe Value}
+    | Counters    item, sep: String style: {Maybe Value}
     | ListValue    values: {[Value]}
     | CounterValue String int:{Maybe Int}
     | QuoteValue   open,close: String

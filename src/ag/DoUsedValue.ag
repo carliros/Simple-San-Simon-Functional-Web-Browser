@@ -5,10 +5,15 @@ SEM BoxRoot
     | BoxRoot boxtree.iamtheroot = True
 
 SEM BoxTree
-    | BoxContainer boxes.iamtheroot = False
+    | BoxItemContainer boxes.iamtheroot = False
+    | BoxContainer     boxes.iamtheroot = False
 
 -- build the used value
 SEM BoxTree
+    | BoxItemContainer
+        loc.usedValueProps = let myFatherProps = modifyWidth (toFloat (fst @lhs.maxMarkerDim) + 6.0) @lhs.propsFather
+                             in Map.mapWithKey (doUsedValue @lhs.iamtheroot (toTupleFloat @lhs.cbSize) myFatherProps @props @attrs  False) @props
+                             -- esto es para list-style-position: outside
     | BoxContainer 
         loc.usedValueProps = Map.mapWithKey (doUsedValue @lhs.iamtheroot (toTupleFloat @lhs.cbSize) @lhs.propsFather @props @attrs @bRepl) @props
     | BoxText
@@ -17,9 +22,15 @@ SEM BoxTree
 -- Downloading the father property throughout the fstree
 ATTR BoxTree Boxes [propsFather: {Map.Map String PropertyValue} ||]
 SEM BoxTree
-    | BoxContainer boxes.propsFather = @loc.usedValueProps
+    | BoxItemContainer boxes.propsFather = @loc.usedValueProps
+    | BoxContainer     boxes.propsFather = @loc.usedValueProps
 
 SEM BoxRoot
     | BoxRoot boxtree.propsFather = Map.empty
 
-
+{
+modifyWidth n props = Map.adjust fun "width" props
+    where fun prop = case usedValue prop of
+                        PixelNumber m -> prop {usedValue = PixelNumber (m-n)}
+                        otherwise     -> error $ "[DoUsedValue] :: unexpected value at:" ++ show prop
+}

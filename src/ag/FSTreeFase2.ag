@@ -23,6 +23,12 @@ DATA WindowRoot
     | WindowRoot WindowTree
 
 DATA WindowTree
+    | WindowItemContainer
+        marker    : {ListMarker}
+        sizeMarker: {(Int,Int)}
+        elem      : Element
+        props     : {Map.Map String PropertyValue}
+        attrs     : {Map.Map String String}
     | WindowContainer
         fcnxt: String
         props: {Map.Map String PropertyValue}
@@ -47,7 +53,14 @@ TYPE Lines       = [Line]
 DATA Line
     | Line winds: WindowTrees
 
+DATA ListMarker
+    | Glyph      name : String
+    | Numering   value: String
+    | Alphabetic value: String
+    | NoMarker
+
 INCLUDE "WindowSize.ag"
 INCLUDE "WindowPosition.ag"
 INCLUDE "GenWindowTree.ag"
 INCLUDE "GenBoxTree.ag"
+

@@ -1,10 +1,12 @@
 
 -- distribuiting the width and height of the containing block
 SEM WindowTree
+    | WindowItemContainer
+        loc.cbSize = (@props Map.! "width", @props Map.! "height")
     | WindowContainer
-            loc.cbSize = (@props Map.! "width", @props Map.! "height")
+        loc.cbSize = (@props Map.! "width", @props Map.! "height")
     | WindowText 
-            loc.cbSize = (@props Map.! "width", @props Map.! "height")
+        loc.cbSize = (@props Map.! "width", @props Map.! "height")
 
 -- vertical align
 SEM WindowTree
@@ -54,6 +56,11 @@ SEM WindowTree
         loc.fontTop     = fst @loc.fontMetrics
         loc.fontBottom  = snd @loc.fontMetrics
         lhs.fontMetrics = @loc.fontMetrics
+    | WindowItemContainer
+        loc.fontMetrics = @elem.fontMetrics
+        loc.fontTop     = fst @loc.fontMetrics
+        loc.fontBottom  = snd @loc.fontMetrics
+        lhs.fontMetrics = @loc.fontMetrics
 
 ATTR WindowTrees [|| fontMetrics USE {:} {[]}: {[(Int,Int)]}]
 
@@ -77,6 +84,8 @@ SEM WindowTree
                                       logBottom = 0             - @loc.verticalAlign
                                   in (logTop, logBottom)
                              else @elem.logicalMetrics
+    | WindowItemContainer
+        lhs.logicalMetrics = @elem.logicalMetrics
 
 ATTR WindowTrees [|| logicalMetrics USE {:} {[]}: {[(Int,Int)]}]
 
@@ -176,8 +185,29 @@ SEM WindowTree
                                in ( (toInt $ unPixelUsedValue $ fst @loc.cbSize) +we    -- the width of the containing block
                                   , foldr (\t v -> (snd t) + v) 0 @elem.size + he       -- the sum of the heights of children block boxes
                                   )
+                  {-"inline-block"
+                    -> let (we,he) = (cfst @loc.extSize + csnd @loc.extSize, cthd @loc.extSize + cfth @loc.extSize)
+                       in ( (toInt $ unPixelUsedValue $ fst @loc.cbSize) + we       -- the width of the containing block
+                          , if (compareKeyPropertyValue (usedValue (snd @loc.cbSize)) "auto")
+                            then case @fcnxt of
+                                    "block"  -> foldr (\t v -> (snd t) + v) 0 @elem.size + he   -- sum of heights of size
+                                    "inline" -> (sum @elem.lineHeights) + he                      -- sum of height of each line
+                            else (toInt $ unPixelUsedValue $ snd @loc.cbSize) + he  -- the specified height
+                          )
+                  -}
         lhs.size = @loc.size
-
+    | WindowItemContainer
+        loc.extSize  = getExternalSizeBox4Tuple @props
+        loc.size 
+           = let (we,he) = (cfst @loc.extSize + csnd @loc.extSize, cthd @loc.extSize + cfth @loc.extSize)
+             in ( (toInt $ unPixelUsedValue $ fst @loc.cbSize) + we       -- the width of the containing block
+                , if (compareKeyPropertyValue (usedValue (snd @loc.cbSize)) "auto")
+                  then foldr (\t v -> (snd t) + v) 0 @elem.size + he        -- sum of heights of size
+                  else (toInt $ unPixelUsedValue $ snd @loc.cbSize) + he    -- the specified height
+                )
+        lhs.size = ( (fst @sizeMarker) + fst @loc.size  -- al width del block "li" le sumamos el width del marker, pero por ahora no considero el height del marker
+                   , snd @loc.size    
+                   )
 SEM Line
     | Line lhs.size = ( foldr (\t v -> (fst t)   +   v) 0 @winds.size
                       , foldr (\t v -> (snd t) `max` v) 0 @winds.size

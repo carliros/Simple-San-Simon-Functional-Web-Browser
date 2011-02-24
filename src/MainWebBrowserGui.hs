@@ -71,10 +71,10 @@ updateInitialContainer icb inp varfstree varzipper defaultcss4html varbaseurl = 
     case result of
         (Just fstree) -> do let boxtree     = sem_BoxRoot (BoxRoot fstree) icb (w,h)
                                 (_,fresult) = sem_WindowRoot (WindowRoot boxtree) 
-                                                              baseurl 
-                                                              icb 
-                                                              (goToURL icb inp varfstree varzipper defaultcss4html varbaseurl) 
-                                                              ("default", (0,0))
+                                                             baseurl 
+                                                             icb 
+                                                             (goToURL icb inp varfstree varzipper defaultcss4html varbaseurl) 
+                                                             ("default", (0,0))
                             fresult icb
                             --UP.render (UP.pp boxtree) 200
                             return ()

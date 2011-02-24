@@ -13,23 +13,38 @@ SEM WindowRoot
     | WindowRoot windowTree.linkURL = Nothing
 
 SEM WindowTree
+    | WindowItemContainer
+        loc.linkURL = case Map.lookup "href" @attrs of
+                        Just url -> Just url
+                        Nothing  -> case @lhs.linkURL of
+                                        Just url -> Just url
+                                        Nothing  -> Nothing
+        elem.linkURL = @loc.linkURL
     | WindowContainer 
-            loc.linkURL = case Map.lookup "href" @attrs of
-                            Just url -> Just url
-                            Nothing  -> case @lhs.linkURL of
-                                            Just url -> Just url
-                                            Nothing  -> Nothing
-            elem.linkURL = @loc.linkURL
+        loc.linkURL = case Map.lookup "href" @attrs of
+                        Just url -> Just url
+                        Nothing  -> case @lhs.linkURL of
+                                        Just url -> Just url
+                                        Nothing  -> Nothing
+        elem.linkURL = @loc.linkURL
     | WindowText 
-            loc.linkURL = case Map.lookup "href" @attrs of
-                            Just url -> Just url
-                            Nothing  -> case @lhs.linkURL of
-                                            Just url -> Just url
-                                            Nothing  -> Nothing
+        loc.linkURL = case Map.lookup "href" @attrs of
+                        Just url -> Just url
+                        Nothing  -> case @lhs.linkURL of
+                                        Just url -> Just url
+                                        Nothing  -> Nothing
 
 -- Building the tree of windows
 ATTR WindowRoot WindowTree [|| result: {WX.Window a -> IO()}]
 SEM WindowTree
+    | WindowItemContainer
+        lhs.result = \cb -> do case @marker of
+                                    Numering str -> box str cb @loc.markerPosition @sizeMarker Full @props @attrs False
+                                    Glyph   name -> let attrs' = Map.insert "src" (name ++ ".png") @attrs
+                                                    in box "" cb @loc.markerPosition @sizeMarker Full @props attrs' True
+                                    --NoMarker     -> return ()
+                               cbox <- boxContainer cb @loc.position @loc.size Full @props @attrs False
+                               mapM_ (\f -> f cbox) @elem.results
     | WindowContainer 
         lhs.result = \cb -> do cbox <- boxContainer cb @loc.position @loc.size @tCont @props @attrs @bRepl
                                mapM_ (\f -> f cbox) @elem.results

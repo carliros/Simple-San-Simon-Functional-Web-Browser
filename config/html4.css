@@ -41,10 +41,17 @@ big { font-size: 1.17em }
 
 small, sub, sup { font-size: .83em }
 
+sub {vertical-align: sub }
+sup {vertical-align: super }
+
 ol, ul, dir,
 menu, dd { margin-left: 40px }
 
 ol ul, ul ol,
 ul ul, ol ol { margin-top: 0px
              ; margin-bottom: 0px }
+
+li { display: list-item }
+
+ol {list-style-type: decimal }
 

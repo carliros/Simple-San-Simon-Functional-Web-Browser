@@ -84,9 +84,10 @@ pProperty =  pDisplay
          <|> pContent
          <|> pCounters
          <|> pQuotes
+         <|> pListProps
 
 pDisplay = buildProperties $ tmap pDisplayValue ["display"]
-pDisplayValue = pKeyValues ["inline", "block", "list-item", "run-in", "inline-block", "none", "inherit"]
+pDisplayValue = pKeyValues ["inline", "block", "list-item", "none", "inherit"]    -- no support for: run-in, inline-block
 
 pPosition = buildProperties $ tmap pPositionValue ["position"]
 pPositionValue = pKeyValues ["static", "relative", "absolute", "fixed", "inherit"]
@@ -158,8 +159,15 @@ pVerticalAlign = buildProperties [("vertical-align", pLength <|> pPercentage <|>
 
 pContent = buildProperties [("content", pListContent <|> pKeyValues ["normal", "none", "inherit"])]
 pListContent = ListValue <$> pList1Sep_ng pStuff (pStringValue <|> pCounter <|> pKeyValues ["open-quote", "close-quote", "no-open-quote", "no-close-quote"])
-pCounter =  Counter  <$ pKeyword "counter"  <* pSymbol "(" <*> pSimpleContent                            <* pSymbol ")"
-        <|> Counters <$ pKeyword "counters" <* pSymbol "(" <*> pSimpleContent <* pSymbol "," <*> pString <* pSymbol ")"
+pCounter =  Counter  <$ pKeyword "counter"  <*  pSymbol "(" <*> pSimpleContent
+                                            <*> pCounterStyle
+                                            <*  pSymbol ")"
+        <|> Counters <$ pKeyword "counters" <*  pSymbol "(" <*> pSimpleContent 
+                                            <*  pSymbol "," <*> pString 
+                                            <*> pCounterStyle
+                                            <*  pSymbol ")"
+pCounterStyle = Just <$ pSymbol "," <*> pListStyleType
+             <|> pSucceed Nothing
 
 pCounters = buildProperties [ ("counter-reset"    , pListCounter <|> pKeyValues ["none", "inherit"])
                             , ("counter-increment", pListCounter <|> pKeyValues ["none", "inherit"])
@@ -173,6 +181,10 @@ pMaybeInteger =  Just <$> pInteger --) `opt` Nothing
 pQuotes     = buildProperties [ ("quotes", pListQuote <|> pKeyValues ["none", "inherit"])]
 pListQuote  = ListValue  <$> pList1Sep_ng pStuff pQuoteValue
 pQuoteValue = QuoteValue <$> pString <* pStuff <*> pString
+
+pListProps = buildProperties [ ("list-style-position", pKeyValues ["outside","inherit"])
+                             , ("list-style-type", pListStyleType <|> pKeyValues ["none", "inherit"])]
+pListStyleType = pKeyValues ["disc", "circle", "square", "decimal", "lower-roman", "upper-roman"]
 
 pImportant = (True <$ pSymbol "!" <* pKeyword "important") <|> pSucceed False
 

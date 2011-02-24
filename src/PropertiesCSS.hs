@@ -55,6 +55,8 @@ cssProperties = [
                 , ("counter-increment"     , False , keyValue "none"    , compute_counter        , used_asComputed)
                 , ("counter-reset"         , False , keyValue "none"    , compute_counter        , used_asComputed)
                 , ("quotes"                , True  , keyValue "none"    , compute_asSpecified    , used_asComputed)
+                , ("list-style-position"   , True  , keyValue "outside" , compute_asSpecified    , used_asComputed)
+                , ("list-style-type"       , True  , keyValue "disc"    , compute_asSpecified    , used_asComputed)
                 ]
 
 propertiesCSS = map (\(nm,inh,val,_,_) -> (nm,inh,val)) cssProperties

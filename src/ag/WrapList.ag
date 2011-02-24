@@ -82,7 +82,7 @@ instance Show Code where
 
 
 {- ======================================================================================
-    second version of wrod wrapping
+    second version of word wrapping
         it is written in pure haskell
         and is more fast (because I don't use reverse,concat functions)
         and more understandable

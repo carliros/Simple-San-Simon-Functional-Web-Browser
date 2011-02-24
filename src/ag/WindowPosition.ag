@@ -2,6 +2,21 @@
 -- Generating an x and y position for all BoxTree elements
 ATTR All [statePos: {(String,(Int,Int))} ||]
 SEM WindowTree
+    | WindowItemContainer
+        loc.markerPosition
+            = let (x,y) = snd @lhs.statePos
+              in (x,y + 2) -- para nivelar los bordes
+        loc.position 
+            = let cposition = computedValue $ @props Map.! "position"
+                  (x,y)     = let pos = snd @lhs.statePos
+                              in (fst @sizeMarker + fst pos + 6, snd pos)
+              in case cposition of
+                    KeyValue "static"   -> (x,y)
+                    KeyValue "relative" -> let (xdespl, ydespl) = getDesplazamiento @props
+                                           in (x + xdespl, y + ydespl)
+                    otherwise           -> error $ "[fstree fase 2] I am not considering this value: " ++ show cposition
+        elem.statePos = let pointContent = getTopLeftContentPoint Full @props
+                        in ("block", pointContent)
     | WindowContainer
         loc.position = let cposition = computedValue $ @props Map.! "position"
                            (x,y)     = let (x,y1) = snd @lhs.statePos
@@ -10,6 +25,7 @@ SEM WindowTree
                                                                      then (fst @lhs.maxLogicalMetrics) - (@loc.verticalAlign + (snd @loc.size))
                                                                      else (fst @lhs.maxLogicalMetrics) - (@loc.verticalAlign + @loc.fontTop + (cthd @loc.extSize))
                                                         otherwise -> 0
+                                                        -- no hay vertical align para block, solo para inline elements
                                        in (x,y1+y2) 
                        in case cposition of
                             KeyValue "static"   -> (x,y)

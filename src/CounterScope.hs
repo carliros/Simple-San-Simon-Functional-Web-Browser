@@ -48,5 +48,5 @@ incrScope scopes value
 getHead (ChildScope lst)   = head lst
 getHead (SiblingScope lst) = head lst
 
-mapShow (ChildScope lst)   = map show lst
-mapShow (SiblingScope lst) = map show lst
+mapScope f (ChildScope lst)   = map f lst
+mapScope f (SiblingScope lst) = map f lst

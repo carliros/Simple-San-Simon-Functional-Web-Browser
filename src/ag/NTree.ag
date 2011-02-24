@@ -14,6 +14,7 @@ import PropertiesCSS
 import DataTreeCSS
 import FSBox
 import FSTreeFase1
+import NumRomans
 }
 
 INCLUDE "DataTreeHTML.ag"
@@ -34,26 +35,33 @@ SEM NTree
     | NTree lhs.fstree 
                 = let boxesBefore = generateBoxContent (fst @loc.computedContentValueProps) @loc.computedValueProps (fst @loc.myCounterScope) @loc.myQuoteScope
                       boxesAfter  = generateBoxContent (snd @loc.computedContentValueProps) @loc.computedValueProps (fst @loc.myCounterScope) @loc.myQuoteScope
+                      boxes       = catMaybes $ boxesBefore ++ @ntrees.fstrees ++ boxesAfter
                   in case @node.myself of
                        NTag nm iamreplaced attrs
-                        -> if verifyProperty "display" "none" @loc.computedValueProps
-                           then Nothing
-                           else if iamreplaced
-                                then Just $ BoxContainer "inline" @loc.computedValueProps True attrs []
-                                else let boxes      = catMaybes $ boxesBefore ++ @ntrees.fstrees ++ boxesAfter
-                                         (bool,str) = doIContainOnlyText boxes
-                                     in if bool && (verifyProperty "display" "inline" @loc.computedValueProps)
-                                        then Just $ BoxText @loc.computedValueProps attrs str
-                                        else if any isThereBlockDisplay boxes
-                                             then let listGrouped = groupBy funGroupCompare boxes
-                                                      listBCnt    = map (toBoxContainer @lhs.iamtheroot @loc.computedValueProps Nothing) listGrouped
-                                                  in if (   verifyProperty "display" "inline-block" @loc.computedValueProps
-                                                         || verifyProperty "display" "block" @loc.computedValueProps)
-                                                     then Just $ BoxContainer "block" @loc.computedValueProps False attrs listBCnt
-                                                     else error "[ntree] there is an inline element that contains block elements"
-                                             else Just $ BoxContainer "inline" @loc.computedValueProps False attrs boxes
+                            -> case computedValue (@loc.computedValueProps Map.! "display") of
+                                    KeyValue "none"      
+                                        -> Nothing
+                                    KeyValue "list-item" 
+                                        -> let listGrouped = groupBy funGroupCompare boxes
+                                               listBCnt    = map (toBoxContainer @lhs.iamtheroot @loc.computedValueProps Nothing) listGrouped
+                                           in Just $ BoxItemContainer @loc.computedValueProps attrs listBCnt
+                                    KeyValue "inline"    
+                                        -> if iamreplaced
+                                           then Just $ BoxContainer "inline" @loc.computedValueProps iamreplaced attrs []
+                                           else let (bool,str) = doIContainOnlyText boxes
+                                                in if bool
+                                                then Just $ BoxText @loc.computedValueProps attrs str
+                                                else Just $ BoxContainer "inline" @loc.computedValueProps iamreplaced attrs boxes
+                                    KeyValue "block"     
+                                        -> if iamreplaced
+                                           then Just $ BoxContainer "inline" @loc.computedValueProps iamreplaced attrs []
+                                           else if any isThereBlockDisplay boxes
+                                                then let listGrouped = groupBy funGroupCompare boxes
+                                                         listBCnt    = map (toBoxContainer @lhs.iamtheroot @loc.computedValueProps Nothing) listGrouped
+                                                     in Just $ BoxContainer "block" @loc.computedValueProps iamreplaced attrs listBCnt
+                                                else Just $ BoxContainer "inline" @loc.computedValueProps iamreplaced attrs boxes
                        NText str   -- a simple text is never affected by an style rule
-                        -> Just $ BoxText @loc.computedValueProps Map.empty str
+                            -> Just $ BoxText @loc.computedValueProps Map.empty str
 
 -- Generating the Tree-Box Formatting Structure
 ATTR NTrees [|| outbox:{[Maybe FSBox]}]
@@ -96,13 +104,57 @@ generateBoxContent props srcProps counterScope (open,close)
           genBoxes (e:es) 
             = case e of
                 StringValue str           -> (Just $ BoxText props Map.empty str) : genBoxes es
-                Counter key               -> if Map.member key counterScope
-                                             then let value = show $ getHead $ counterScope Map.! key
-                                                  in (Just $ BoxText props Map.empty value) : genBoxes es
+                Counter key style         -> if Map.member key counterScope
+                                             then case style of
+                                                    Nothing 
+                                                        -> let value = show $ getHead $ counterScope Map.! key
+                                                           in (Just $ BoxText props Map.empty value) : genBoxes es
+                                                    Just val 
+                                                        -> case val of
+                                                                KeyValue "disc"
+                                                                    -> let attrs = Map.singleton "src" "disc.png"
+                                                                       in (Just $ BoxContainer "inline" props True attrs []) : genBoxes es
+                                                                KeyValue "circle"
+                                                                    -> let attrs = Map.singleton "src" "circle.png"
+                                                                       in (Just $ BoxContainer "inline" props True attrs []) : genBoxes es
+                                                                KeyValue "square"
+                                                                    -> let attrs = Map.singleton "src" "square.png"
+                                                                       in (Just $ BoxContainer "inline" props True attrs []) : genBoxes es
+                                                                KeyValue "decimal"
+                                                                    -> let value = show $ getHead $ counterScope Map.! key
+                                                                       in (Just $ BoxText props Map.empty value) : genBoxes es
+                                                                KeyValue "lower-roman"
+                                                                    -> let value = toRomanLower $ getHead $ counterScope Map.! key
+                                                                       in (Just $ BoxText props Map.empty value) : genBoxes es
+                                                                KeyValue "upper-roman"
+                                                                    -> let value = toRomanUpper $ getHead $ counterScope Map.! key
+                                                                       in (Just $ BoxText props Map.empty value) : genBoxes es
                                              else genBoxes es
-                Counters key sep          -> if Map.member key counterScope
-                                             then let value = reverse $ concat $ intersperse sep $ mapShow $ counterScope Map.! key
-                                                  in (Just $ BoxText props Map.empty value) : genBoxes es
+                Counters key sep style    -> if Map.member key counterScope
+                                             then case style of
+                                                    Nothing 
+                                                        -> let value = reverse $ concat $ intersperse sep $ mapScope show $ counterScope Map.! key
+                                                           in (Just $ BoxText props Map.empty value) : genBoxes es
+                                                    Just val 
+                                                        -> case val of
+                                                                KeyValue "disc"
+                                                                    -> let attrs = Map.singleton "src" "disc.png"
+                                                                       in (Just $ BoxContainer "inline" props True attrs []) : genBoxes es
+                                                                KeyValue "circle"
+                                                                    -> let attrs = Map.singleton "src" "circle.png"
+                                                                       in (Just $ BoxContainer "inline" props True attrs []) : genBoxes es
+                                                                KeyValue "square"
+                                                                    -> let attrs = Map.singleton "src" "square.png"
+                                                                       in (Just $ BoxContainer "inline" props True attrs []) : genBoxes es
+                                                                KeyValue "decimal"
+                                                                    -> let value = reverse $ concat $ intersperse sep $ mapScope show $ counterScope Map.! key
+                                                                       in (Just $ BoxText props Map.empty value) : genBoxes es
+                                                                KeyValue "lower-roman"
+                                                                    -> let value = reverse $ concat $ intersperse sep $ mapScope toRomanLower $ counterScope Map.! key
+                                                                       in (Just $ BoxText props Map.empty value) : genBoxes es
+                                                                KeyValue "upper-roman"
+                                                                    -> let value = reverse $ concat $ intersperse sep $ mapScope toRomanUpper $ counterScope Map.! key
+                                                                       in (Just $ BoxText props Map.empty value) : genBoxes es
                                              else genBoxes es
                 KeyValue "open-quote"     -> case computedValue (srcProps Map.! "quotes") of
                                                 ListValue lst  -> case getQuote lst of
@@ -118,33 +170,35 @@ generateBoxContent props srcProps counterScope (open,close)
                 KeyValue "no-close-quote" -> Nothing : genBoxes es
 
 doIContainOnlyText [BoxText _ _ str] = (True ,str)
-doIContainOnlyText _                 = (False," ")
+doIContainOnlyText _                 = (False,"error")
 
 getAttributes (NTag _ _ ats) = ats
 getAttributes _              = Map.empty
 
 isThereBlockDisplay bx
-    = case bx of 
+    = case bx of
+        BoxItemContainer     _ _ _ -> True
         BoxContainer _ props _ _ _ -> verifyProperty "display" "block" props
         BoxText        props _ _   -> verifyProperty "display" "block" props
 
 -- This function build a group just for display=inline, and the others is a list of one element
 funGroupCompare = (&&) `on` (\bx -> verifyProperty "display" "inline" (getProps bx))
-
-getProps bx 
-    = case bx of
-        BoxContainer _ props _ _ _ -> props
-        BoxText        props _ _   -> props
+    where getProps bx 
+            = case bx of
+                BoxItemContainer props _ _ -> props
+                BoxContainer _ props _ _ _ -> props
+                BoxText        props _ _   -> props
 
 -- function that transform an inline element into a block container
 toBoxContainer iamtheroot sprops iamreplaced lst@(bx:bxs) 
     = case bx of
-        BoxContainer _ props tb at _ -> if verifyProperty "display" "block" props
-                                        then bx
-                                        else BoxContainer "inline" (applyInheritance iamtheroot propertiesCSS sprops iamreplaced) tb at lst
-        BoxText         props at   _ -> if verifyProperty "display" "block" props
-                                        then bx
-                                        else BoxContainer "inline" (applyInheritance iamtheroot propertiesCSS sprops iamreplaced) False at lst
+        BoxItemContainer     _ _ _ -> bx
+        BoxContainer _ props _ _ _ -> if verifyProperty "display" "block" props
+                                      then bx
+                                      else BoxContainer "inline" (applyInheritance iamtheroot propertiesCSS sprops iamreplaced) False Map.empty lst
+        BoxText         props _  _ -> if verifyProperty "display" "block" props
+                                      then bx
+                                      else BoxContainer "inline" (applyInheritance iamtheroot propertiesCSS sprops iamreplaced) False Map.empty lst
 
 -- this function build the specified value and the computed value
 applyInheritance iamtheroot listProps fatherProps iamreplaced = 
