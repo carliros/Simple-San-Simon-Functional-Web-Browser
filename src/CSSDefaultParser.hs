@@ -21,10 +21,21 @@ ppRule =  (\lsel lpr -> map (\sel -> (False, sel,lpr)) lsel)
 
 ppProperties = concat <$> pList1Sep_ng (pSymbol ";") ppProperty
 
-ppProperty = ppDisplay <|> ppPosition <|> ppOffset <|>
-             ppMargin <|> ppPadding <|> ppBorder <|> 
-             ppFont <|> ppColorProperty <|>
-             ppDimentions <|> ppLineHeight <|> ppVerticalAlign
+ppProperty =  ppDisplay 
+          <|> ppPosition 
+          <|> ppOffset 
+          <|> ppMargin 
+          <|> ppPadding 
+          <|> ppBorder 
+          <|> ppFont 
+          <|> ppColorProperty 
+          <|> ppDimentions 
+          <|> ppLineHeight 
+          <|> ppVerticalAlign
+          <|> ppContent
+          <|> ppCounters
+          <|> ppQuotes
+          <|> ppListProps
 
 ppDisplay = buildUserAgentProperties $ tmap pDisplayValue ["display"]
 
@@ -84,4 +95,15 @@ ppDimentions = buildUserAgentProperties $ tmap pDimentionsValue ["width", "heigh
 
 ppLineHeight = buildUserAgentProperties [("line-height", pPositiveLength <|> pPositivePercentage <|> pKeyValues ["inherit"])]
 
-ppVerticalAlign = buildProperties [("vertical-align", pLength <|> pPercentage <|> pKeyValues ["baseline", "sub", "super", "top", "text-top", "middle", "bottom", "text-bottom", "inherit"])]
+ppVerticalAlign = buildUserAgentProperties [("vertical-align", pLength <|> pPercentage <|> pKeyValues ["baseline", "sub", "super", "top", "text-top", "middle", "bottom", "text-bottom", "inherit"])]
+
+ppContent = buildUserAgentProperties [("content", pListContent <|> pKeyValues ["normal", "none", "inherit"])]
+
+ppCounters = buildUserAgentProperties [ ("counter-reset"    , pListCounter <|> pKeyValues ["none", "inherit"])
+                                      , ("counter-increment", pListCounter <|> pKeyValues ["none", "inherit"])
+                                      ]
+
+ppQuotes = buildUserAgentProperties [ ("quotes", pListQuote <|> pKeyValues ["none", "inherit"])]
+
+ppListProps = buildUserAgentProperties [ ("list-style-position", pKeyValues ["outside","inherit"])
+                                       , ("list-style-type", pListStyleType <|> pKeyValues ["none", "inherit"])]
