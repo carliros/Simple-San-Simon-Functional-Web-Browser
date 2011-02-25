@@ -7,21 +7,40 @@ import Data.Maybe
 import TextExtend
 import PropertyValue
 import ImageProcess
+import DataTreeCSS
 
 -- build a font from the list of css properties
-buildFont props = let fsze = toNumber  $ (\vp -> vp/1.6) $ maybe 12 unPixelUsedValue (Map.lookup "font-size" props)
-                      fwgt = toFontWeight $ maybe "normal" unKeyComputedValue (Map.lookup "font-weight" props)
-                      fstl = toFontStyle  $ maybe "normal" unKeyComputedValue (Map.lookup "font-style"  props)
+buildFont props = let fsze = toNumber $ (\vp -> vp/1.6) $ unPixelUsedValue (props Map.! "font-size")
+                             -- la funcion que le aplico es porque wxwidgets trabaja con points
+                      fwgt = toFontWeight $ computedValue (props Map.! "font-weight")
+                      fstl = toFontStyle  $ computedValue (props Map.! "font-style")
+                      (family, face) = getFont_Family_Face (computedValue (props Map.! "font-family"))
                   in fontDefault { _fontSize   = fsze
                                  , _fontWeight = fwgt
                                  , _fontShape  = fstl
+                                 , _fontFamily = family
+                                 , _fontFace   = face
                                  }
-    where toFontWeight w = case w of
-                            "bold"   -> WeightBold
-                            "normal" -> WeightNormal
-          toFontStyle s  = case s of
-                            "italic" -> ShapeItalic	
-                            "normal" -> ShapeNormal
+    where toFontWeight w 
+            = case w of
+                KeyValue "bold" -> WeightBold
+                otherwise       -> WeightNormal
+          toFontStyle s
+            = case s of
+                KeyValue "italic"  -> ShapeItalic
+                KeyValue "oblique" -> ShapeSlant
+                otherwise          -> ShapeNormal
+          getFont_Family_Face fn 
+            = case fn of
+                ListValue list -> case head list of
+                                    StringValue str       -> (FontDefault,str)
+                                    KeyValue "serif"      -> (FontRoman,"")
+                                    KeyValue "sans-serif" -> (FontSwiss,"")
+                                    KeyValue "cursive"    -> (FontScript,"")
+                                    KeyValue "fantasy"    -> (FontDecorative,"")
+                                    KeyValue "monospace"  -> (FontModern,"")
+                                    otherwise             -> (FontDefault,"")   -- por si acaso
+                otherwise      -> (FontDefault,"")  -- por si acaso
 
 -- get the size(width and height) of a string with the list of css properties
 getSizeBox cnt wn props = do pnl <- window wn []
@@ -116,6 +135,13 @@ onBoxPaint cnt tp props attrs amireplaced dc (Rect x y w h) = do
 
     -- text color
     let txtColor = toColor $ maybe (0,0,0) unKeyComputedColor (Map.lookup "color" props)
+    
+    -- background color, brush
+    let bkgBrush = case Map.lookup "background-color" props of
+                        Just p -> case computedValue p of
+                                    KeyValue "transparent" -> brushTransparent
+                                    KeyColor value         -> brushSolid (toColor value)
+                        Nothing -> error "as I expect, I don't understand this error"
 
     -- border style and border widths
     let toPenStyle s = case s of
@@ -134,6 +160,10 @@ onBoxPaint cnt tp props attrs amireplaced dc (Rect x y w h) = do
     -- obtaining border points
     let (bx1,bx2) = (ml,w-mr-1)
     let (by1,by2) = (mt,h-mb-1)
+
+    -- painting the background-color
+    let bkgRect = rect (pt bx1 by1) (sz (bx2 - bx1 + 1) (by2 - by1 + 1))
+    drawRect dc bkgRect [brush := bkgBrush, pen := penTransparent]
    
     -- painting the borders
     paintLine dc (bx1,by1) (bx2,by1) bt True  True  [penWidth := 1, penColor := bct, penKind := toPenStyle bst]

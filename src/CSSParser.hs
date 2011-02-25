@@ -85,6 +85,7 @@ pProperty =  pDisplay
          <|> pCounters
          <|> pQuotes
          <|> pListProps
+         <|> pBackgroundColor
 
 pDisplay = buildProperties $ tmap pDisplayValue ["display"]
 pDisplayValue = pKeyValues ["inline", "block", "list-item", "none", "inherit"]    -- no support for: run-in, inline-block
@@ -142,10 +143,25 @@ pBorderStyle = let names = ["border-top-style", "border-right-style", "border-bo
 pShorthandBorderStyle names = buildShorthandProperty "border-style" names pBorderStyleValue
 pBorderStyleValue = pKeyValues ["hidden", "dotted", "dashed", "solid", "none", "inherit"]
 
-pFont = buildProperties [ ("font-size"  , pLength <|> pPositivePercentage <|> pKeyValues ["inherit"])
+pFont = buildProperties [ ("font-size"  , pFontSizeValue <|> pKeyValues ["inherit"])
                         , ("font-weight", pKeyValues ["normal", "bold", "inherit"])
-                        , ("font-style" , pKeyValues ["normal", "italic", "inherit"])
+                        , ("font-style" , pKeyValues ["normal", "italic", "oblique", "inherit"])
+                        , ("font-family", pFontFamilyList <|> pKeyValues ["inherit"])
                         ]
+pFontSizeValue = pAbosoluteFontSize <|> pRelativeFontSize <|> pLength <|> pPositivePercentage
+pAbosoluteFontSize = KeyValue <$> (    pKeyword "xx-small" 
+                                   <|> pKeyword "x-small" 
+                                   <|> pKeyword "small" 
+                                   <|> pKeyword "medium" 
+                                   <|> pKeyword "large" 
+                                   <|> pKeyword "x-large" 
+                                   <|> pKeyword "xx-large"
+                                  )
+pRelativeFontSize = KeyValue <$> (pKeyword "smaller" <|> pKeyword "larger")
+
+pFontFamilyList = ListValue <$> pList1Sep_ng (pSymbol ",") pFontFamilyValue
+pFontFamilyValue = pStringValue <|> pGenericFamily
+pGenericFamily =  KeyValue <$> (pKeyword "serif" <|> pKeyword "sans-serif" <|> pKeyword "cursive" <|> pKeyword "fantasy" <|> pKeyword "monospace")
 
 pColorProperty = buildProperties $ tmap pColorPropertyValue ["color"]
 pColorPropertyValue = pColor <|> pKeyValues ["inherit"]
@@ -185,6 +201,8 @@ pQuoteValue = QuoteValue <$> pString <* pStuff <*> pString
 pListProps = buildProperties [ ("list-style-position", pKeyValues ["outside","inherit"])
                              , ("list-style-type", pListStyleType <|> pKeyValues ["inherit"])]
 pListStyleType = pKeyValues ["disc", "circle", "square", "decimal", "lower-roman", "upper-roman", "none"]
+
+pBackgroundColor = buildProperties [("background-color", pColor <|> pKeyValues ["transparent", "inherit"])]
 
 pImportant = (True <$ pSymbol "!" <* pKeyword "important") <|> pSucceed False
 

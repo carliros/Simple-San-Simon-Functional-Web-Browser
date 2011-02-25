@@ -11,53 +11,56 @@ import PropertyValue
 import DataTreeCSS
 import ImageProcess
 
--- Propeties that we are supporting
---              Property Name           Is Inherited  Default Value      Computed Value             Used Value
---              =================       ============  =============      ==============             ==========
+
 cssProperties = [ 
-                  ("font-size"             , True  , pointValue 12    , compute_font_size       , used_asComputed)
-                , ("display"               , False , keyValue "inline", compute_display         , used_asComputed)
-                , ("margin-top"            , False , pixelValue 0     , compute_margin          , used_toPixelWidthValue)
-                , ("margin-bottom"         , False , pixelValue 0     , compute_margin          , used_toPixelWidthValue)
-                , ("margin-right"          , False , pixelValue 0     , compute_margin          , used_margin_right)
-                , ("margin-left"           , False , pixelValue 0     , compute_margin          , used_margin_left)
-                , ("padding-top"           , False , pixelValue 0     , compute_toPixel         , used_toPixelValue)
-                , ("padding-right"         , False , pixelValue 0     , compute_toPixel         , used_toPixelValue)
-                , ("padding-bottom"        , False , pixelValue 0     , compute_toPixel         , used_toPixelValue)
-                , ("padding-left"          , False , pixelValue 0     , compute_toPixel         , used_toPixelValue)
-                , ("border-top-width"      , False , pixelValue 1     , compute_toPixel         , used_toPixelValue)
-                , ("border-right-width"    , False , pixelValue 1     , compute_toPixel         , used_toPixelValue)
-                , ("border-bottom-width"   , False , pixelValue 1     , compute_toPixel         , used_toPixelValue)
-                , ("border-left-width"     , False , pixelValue 1     , compute_toPixel         , used_toPixelValue)
-                , ("border-top-color"      , False , notSpecified     , compute_border_color    , used_asComputed)
-                , ("border-right-color"    , False , notSpecified     , compute_border_color    , used_asComputed)
-                , ("border-bottom-color"   , False , notSpecified     , compute_border_color    , used_asComputed)
-                , ("border-left-color"     , False , notSpecified     , compute_border_color    , used_asComputed)
-                , ("border-top-style"      , False , keyValue "none"  , compute_asSpecified     , used_asComputed)
-                , ("border-right-style"    , False , keyValue "none"  , compute_asSpecified     , used_asComputed)
-                , ("border-bottom-style"   , False , keyValue "none"  , compute_asSpecified     , used_asComputed)
-                , ("border-left-style"     , False , keyValue "none"  , compute_asSpecified     , used_asComputed)
-                , ("font-weight"           , True  , keyValue "normal", compute_asSpecified     , used_asComputed)  
-                    --css2.1 doesn't specify how computed value for font-weight are represented, so I leave it as specified.
-                , ("font-style"            , True  , keyValue "normal", compute_asSpecified     , used_asComputed)
-                , ("position"              , False , keyValue "static", compute_asSpecified     , used_asComputed)
-                , ("top"                   , False , keyValue "auto"  , compute_offset          , used_asComputed)
-                , ("right"                 , False , keyValue "auto"  , compute_offset          , used_asComputed)
-                , ("bottom"                , False , keyValue "auto"  , compute_offset          , used_asComputed)
-                , ("left"                  , False , keyValue "auto"  , compute_offset          , used_asComputed)
-                , ("float"                 , False , keyValue "none"  , compute_float           , used_asComputed)
-                , ("color"                 , True  , keyColor 0 0 0   , compute_asSpecified     , used_asComputed)
-                , ("width"                 , False , keyValue "auto"  , compute_dimention       , used_width)
-                , ("height"                , False , keyValue "auto"  , compute_dimention       , used_height)
-                , ("line-height"           , True  , emValue 1.2      , compute_toPixel         , used_toPixelValue)
-                , ("vertical-align"        , False , keyValue "baseline", compute_vertical_align , used_vertical_align)
-                , ("content"               , False , keyValue "normal"  , compute_content        , used_asComputed)
-                , ("counter-increment"     , False , keyValue "none"    , compute_counter        , used_asComputed)
-                , ("counter-reset"         , False , keyValue "none"    , compute_counter        , used_asComputed)
-                , ("quotes"                , True  , keyValue "none"    , compute_asSpecified    , used_asComputed)
-                , ("list-style-position"   , True  , keyValue "outside" , compute_asSpecified    , used_asComputed)
-                , ("list-style-type"       , True  , keyValue "disc"    , compute_asSpecified    , used_asComputed)
-                ]
+--  Propeties that we are supporting
+--  Property Name          Is Inherited  Default Value                  Computed Value             Used Value
+--  =================      ============  =============                  ==============             ==========
+      ("font-size"             , True  , keyValue "medium"           , compute_font_size       , used_asComputed)
+    , ("display"               , False , keyValue "inline"           , compute_display         , used_asComputed)
+    , ("margin-top"            , False , pixelValue 0                , compute_margin          , used_toPixelWidthValue)
+    , ("margin-bottom"         , False , pixelValue 0                , compute_margin          , used_toPixelWidthValue)
+    , ("margin-right"          , False , pixelValue 0                , compute_margin          , used_margin_right)
+    , ("margin-left"           , False , pixelValue 0                , compute_margin          , used_margin_left)
+    , ("padding-top"           , False , pixelValue 0                , compute_toPixel         , used_toPixelValue)
+    , ("padding-right"         , False , pixelValue 0                , compute_toPixel         , used_toPixelValue)
+    , ("padding-bottom"        , False , pixelValue 0                , compute_toPixel         , used_toPixelValue)
+    , ("padding-left"          , False , pixelValue 0                , compute_toPixel         , used_toPixelValue)
+    , ("border-top-width"      , False , pixelValue 1                , compute_toPixel         , used_toPixelValue)
+    , ("border-right-width"    , False , pixelValue 1                , compute_toPixel         , used_toPixelValue)
+    , ("border-bottom-width"   , False , pixelValue 1                , compute_toPixel         , used_toPixelValue)
+    , ("border-left-width"     , False , pixelValue 1                , compute_toPixel         , used_toPixelValue)
+    , ("border-top-color"      , False , notSpecified                , compute_border_color    , used_asComputed)
+    , ("border-right-color"    , False , notSpecified                , compute_border_color    , used_asComputed)
+    , ("border-bottom-color"   , False , notSpecified                , compute_border_color    , used_asComputed)
+    , ("border-left-color"     , False , notSpecified                , compute_border_color    , used_asComputed)
+    , ("border-top-style"      , False , keyValue "none"             , compute_asSpecified     , used_asComputed)
+    , ("border-right-style"    , False , keyValue "none"             , compute_asSpecified     , used_asComputed)
+    , ("border-bottom-style"   , False , keyValue "none"             , compute_asSpecified     , used_asComputed)
+    , ("border-left-style"     , False , keyValue "none"             , compute_asSpecified     , used_asComputed)
+    , ("font-weight"           , True  , keyValue "normal"           , compute_asSpecified     , used_asComputed)  
+        --css2.1 doesn't specify how computed value for font-weight are represented, so I leave it as specified.
+    , ("font-style"            , True  , keyValue "normal"           , compute_asSpecified     , used_asComputed)
+    , ("font-family"           , True  , listValue [KeyValue "serif"], compute_asSpecified     , used_asComputed)
+    , ("position"              , False , keyValue "static"           , compute_asSpecified     , used_asComputed)
+    , ("top"                   , False , keyValue "auto"             , compute_offset          , used_asComputed)
+    , ("right"                 , False , keyValue "auto"             , compute_offset          , used_asComputed)
+    , ("bottom"                , False , keyValue "auto"             , compute_offset          , used_asComputed)
+    , ("left"                  , False , keyValue "auto"             , compute_offset          , used_asComputed)
+    , ("float"                 , False , keyValue "none"             , compute_float           , used_asComputed)
+    , ("color"                 , True  , keyColor 0 0 0              , compute_asSpecified     , used_asComputed)
+    , ("width"                 , False , keyValue "auto"             , compute_dimention       , used_width)
+    , ("height"                , False , keyValue "auto"             , compute_dimention       , used_height)
+    , ("line-height"           , True  , emValue 1.2                 , compute_toPixel         , used_toPixelValue)
+    , ("vertical-align"        , False , keyValue "baseline"         , compute_vertical_align  , used_vertical_align)
+    , ("content"               , False , keyValue "normal"           , compute_content         , used_asComputed)
+    , ("counter-increment"     , False , keyValue "none"             , compute_counter         , used_asComputed)
+    , ("counter-reset"         , False , keyValue "none"             , compute_counter         , used_asComputed)
+    , ("quotes"                , True  , keyValue "none"             , compute_asSpecified     , used_asComputed)
+    , ("list-style-position"   , True  , keyValue "outside"          , compute_asSpecified     , used_asComputed)
+    , ("list-style-type"       , True  , keyValue "disc"             , compute_asSpecified     , used_asComputed)
+    , ("background-color"      , False , keyValue "transparent"      , compute_asSpecified     , used_asComputed)
+    ]
 
 propertiesCSS = map (\(nm,inh,val,_,_) -> (nm,inh,val)) cssProperties
 
@@ -433,7 +436,28 @@ compute_font_size iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop
                                            then PixelNumber (12*1.6)  -- this is the default value when it is the root
                                            else let (PixelNumber val) = computedValue $ fatherProps Map.! "font-size"
                                                 in PixelNumber (num*val)
-                        otherwise       -> error $ show fatherProps
+                        -- absolute sizes, factor scale = 1.2
+                        KeyValue "xx-small" -> PixelNumber 10
+                        KeyValue "x-small"  -> PixelNumber 12
+                        KeyValue "small"    -> PixelNumber 15
+                        KeyValue "medium"   -> PixelNumber 19
+                        KeyValue "large"    -> PixelNumber 23
+                        KeyValue "x-large"  -> PixelNumber 28
+                        KeyValue "xx-large" -> PixelNumber 34
+                        -- relative sizes
+                        KeyValue "smaller"  -> let father = if iamtheroot
+                                                            then 12  -- this is the default value when it is the root
+                                                            else let (PixelNumber val) = computedValue $ fatherProps Map.! "font-size"
+                                                                 in val
+                                                   scale  = father * 0.2
+                                               in PixelNumber $ father - scale
+                        KeyValue "larger"   -> let father = if iamtheroot
+                                                            then 12  -- this is the default value when it is the root
+                                                            else let (PixelNumber val) = computedValue $ fatherProps Map.! "font-size"
+                                                                 in val
+                                                   scale  = father * 0.2
+                                               in PixelNumber $ father + scale
+                        otherwise       -> error $ nm ++ " -> " ++ show prop
            in prop{computedValue = pxval}
 
 compute_dimention iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop

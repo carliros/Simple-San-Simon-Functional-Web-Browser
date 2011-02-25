@@ -36,6 +36,7 @@ ppProperty =  ppDisplay
           <|> ppCounters
           <|> ppQuotes
           <|> ppListProps
+          <|> ppBackgroundColor
 
 ppDisplay = buildUserAgentProperties $ tmap pDisplayValue ["display"]
 
@@ -84,9 +85,10 @@ ppBorderStyle = let names = ["border-top-style", "border-right-style", "border-b
                 in buildUserAgentProperties (tmap pBorderStyleValue names) <|> ppShorthandBorderStyle names
 ppShorthandBorderStyle names = buildUserAgentShorthandProperty "border-style" names pBorderStyleValue
 
-ppFont = buildUserAgentProperties [ ("font-size"  , pLength <|> pPositivePercentage <|> pKeyValues ["inherit"])
+ppFont = buildUserAgentProperties [ ("font-size"  , pFontSizeValue <|> pKeyValues ["inherit"])
                                   , ("font-weight", pKeyValues ["normal", "bold", "inherit"])
-                                  , ("font-style" , pKeyValues ["normal", "italic", "inherit"])
+                                  , ("font-style" , pKeyValues ["normal", "italic", "oblique", "inherit"])
+                                  , ("font-family", pFontFamilyList <|> pKeyValues ["inherit"])
                                   ]
 
 ppColorProperty = buildUserAgentProperties $ tmap pColorPropertyValue ["color"]
@@ -107,3 +109,5 @@ ppQuotes = buildUserAgentProperties [ ("quotes", pListQuote <|> pKeyValues ["non
 
 ppListProps = buildUserAgentProperties [ ("list-style-position", pKeyValues ["outside","inherit"])
                                        , ("list-style-type", pListStyleType <|> pKeyValues ["inherit"])]
+
+ppBackgroundColor = buildUserAgentProperties [("background-color", pColor <|> pKeyValues ["transparent", "inherit"])]

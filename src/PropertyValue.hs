@@ -36,6 +36,7 @@ buildPropertyValue val = defaultPropertyValue {specifiedValue = val}
 
 -- specific function builders for property values
 keyValue        str = defaultPropertyValue {specifiedValue = KeyValue str}
+listValue      list = defaultPropertyValue {specifiedValue = ListValue list}
 pixelValue      num = defaultPropertyValue {specifiedValue = PixelNumber num}
 pointValue      num = defaultPropertyValue {specifiedValue = PointNumber num}
 emValue         num = defaultPropertyValue {specifiedValue = EmNumber num}
