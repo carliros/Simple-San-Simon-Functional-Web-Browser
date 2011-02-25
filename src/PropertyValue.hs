@@ -40,7 +40,7 @@ pixelValue      num = defaultPropertyValue {specifiedValue = PixelNumber num}
 pointValue      num = defaultPropertyValue {specifiedValue = PointNumber num}
 emValue         num = defaultPropertyValue {specifiedValue = EmNumber num}
 percentageValue num = defaultPropertyValue {specifiedValue = Percentage num}
-keyColor        str = defaultPropertyValue {specifiedValue = KeyColor str}
+keyColor      r g b = defaultPropertyValue {specifiedValue = KeyColor (r,g,b)}
 notSpecified        = defaultPropertyValue {specifiedValue = NotSpecified}
 
 -- unwrap a property value
@@ -97,11 +97,11 @@ ppProperties props = let lst = Map.toList props
     where elemPP (nm, prop) = text nm >#< text "::" >#< (pp prop)
 
 instance PP Value where
-    pp (PixelNumber fl) = pp fl >|< text "px"
-    pp (PointNumber fl) = pp fl >|< text "pt"
-    pp (EmNumber    fl) = pp fl >|< text "em"
-    pp (Percentage  fl) = pp fl >|< text "%"
-    pp (KeyValue   str) = text str
-    pp (KeyColor    cl) = text "color:" >|< text cl
-    pp (NotSpecified  ) = text "???"
+    pp (PixelNumber fl)   = pp fl >|< text "px"
+    pp (PointNumber fl)   = pp fl >|< text "pt"
+    pp (EmNumber    fl)   = pp fl >|< text "em"
+    pp (Percentage  fl)   = pp fl >|< text "%"
+    pp (KeyValue   str)   = text str
+    pp (KeyColor (r,g,b)) = text "color:" >|< pp r >|< pp g >|< pp b
+    pp (NotSpecified    ) = text "???"
 

@@ -59,10 +59,10 @@ getBorderStyleProperties props = [ maybe "none" unKeyComputedValue (Map.lookup "
                                  , maybe "none" unKeyComputedValue (Map.lookup "border-left-style"   props)]
 
 -- get the border-color properties from a list of css properties
-getBorderColorProperties props = [ maybe "black" unKeyComputedColor (Map.lookup "border-top-color"    props)
-                                 , maybe "black" unKeyComputedColor (Map.lookup "border-right-color"  props)
-                                 , maybe "black" unKeyComputedColor (Map.lookup "border-bottom-color" props)
-                                 , maybe "black" unKeyComputedColor (Map.lookup "border-left-color"   props)]
+getBorderColorProperties props = [ maybe (0,0,0) unKeyComputedColor (Map.lookup "border-top-color"    props)
+                                 , maybe (0,0,0) unKeyComputedColor (Map.lookup "border-right-color"  props)
+                                 , maybe (0,0,0) unKeyComputedColor (Map.lookup "border-bottom-color" props)
+                                 , maybe (0,0,0) unKeyComputedColor (Map.lookup "border-left-color"   props)]
 
 -- get the length of the external boxes (margin, border and padding area) of a css box as a tuple
 getExternalSizeBox props = 
@@ -85,6 +85,11 @@ getTopLeftContentPoint tp props =
         [ppt,_,_,ppl] = checkWithTypeElement tp $ getPaddingProperties props
     in (ml+bl+ppl,mt+bt+ppt)
 
+-- build a marker
+boxMarker cnt wn (x,y) (w,h) continuation props attrs amireplaced
+    = do hb <- box cnt wn (x,y) (w,h) continuation props attrs amireplaced
+         return ()
+
 -- build a container box
 boxContainer = box ""
 
@@ -106,21 +111,11 @@ onBoxPaint cnt tp props attrs amireplaced dc (Rect x y w h) = do
     let [mt,mr,mb,ml] = checkWithTypeElement tp $ getMarginProperties props
  
     --border color
-    let toColor c = case c of
-                        "red"      -> red
-                        "yellow"   -> yellow
-                        "darkgrey" -> darkgrey
-                        "grey"     -> grey
-                        "white"    -> white
-                        "green"    -> green
-                        "blue"     -> blue
-                        "cyan"     -> cyan
-                        "magenta"  -> magenta
-                        _          -> black
+    let toColor (r,g,b) = rgb r g b
     let [bct,bcr,bcb,bcl] = map toColor $ getBorderColorProperties props
 
     -- text color
-    let txtColor = toColor $ maybe "black" unKeyComputedColor (Map.lookup "color" props)
+    let txtColor = toColor $ maybe (0,0,0) unKeyComputedColor (Map.lookup "color" props)
 
     -- border style and border widths
     let toPenStyle s = case s of

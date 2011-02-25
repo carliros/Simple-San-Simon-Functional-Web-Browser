@@ -106,4 +106,4 @@ ppCounters = buildUserAgentProperties [ ("counter-reset"    , pListCounter <|> p
 ppQuotes = buildUserAgentProperties [ ("quotes", pListQuote <|> pKeyValues ["none", "inherit"])]
 
 ppListProps = buildUserAgentProperties [ ("list-style-position", pKeyValues ["outside","inherit"])
-                                       , ("list-style-type", pListStyleType <|> pKeyValues ["none", "inherit"])]
+                                       , ("list-style-type", pListStyleType <|> pKeyValues ["inherit"])]

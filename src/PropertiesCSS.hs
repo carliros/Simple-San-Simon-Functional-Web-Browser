@@ -46,7 +46,7 @@ cssProperties = [
                 , ("bottom"                , False , keyValue "auto"  , compute_offset          , used_asComputed)
                 , ("left"                  , False , keyValue "auto"  , compute_offset          , used_asComputed)
                 , ("float"                 , False , keyValue "none"  , compute_float           , used_asComputed)
-                , ("color"                 , True  , keyColor "black" , compute_asSpecified     , used_asComputed)
+                , ("color"                 , True  , keyColor 0 0 0   , compute_asSpecified     , used_asComputed)
                 , ("width"                 , False , keyValue "auto"  , compute_dimention       , used_width)
                 , ("height"                , False , keyValue "auto"  , compute_dimention       , used_height)
                 , ("line-height"           , True  , emValue 1.2      , compute_toPixel         , used_toPixelValue)
@@ -418,8 +418,8 @@ compute_border_color iamtheroot fatherProps locProps iamreplaced iamPseudo nm pr
     = if (/=) (computedValue prop) NotSpecified
       then prop
       else case specifiedValue prop of
-                NotSpecified -> prop{computedValue = (specifiedValue (locProps Map.! "color"))} 
-                KeyColor cl  -> prop{computedValue = KeyColor cl} -- the color is the same as specified and computed
+                NotSpecified     -> prop{computedValue = (specifiedValue (locProps Map.! "color"))} 
+                KeyColor (r,g,b) -> prop{computedValue = KeyColor (r,g,b)} -- the color is the same as specified and computed
 
 compute_font_size iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop
     = if (/=) (computedValue prop) NotSpecified

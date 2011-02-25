@@ -39,10 +39,10 @@ ATTR WindowRoot WindowTree [|| result: {WX.Window a -> IO()}]
 SEM WindowTree
     | WindowItemContainer
         lhs.result = \cb -> do case @marker of
-                                    Numering str -> box str cb @loc.markerPosition @sizeMarker Full @props @attrs False
+                                    Numering str -> boxMarker str cb @loc.markerPosition @sizeMarker Full @props @attrs False
                                     Glyph   name -> let attrs' = Map.insert "src" (name ++ ".png") @attrs
-                                                    in box "" cb @loc.markerPosition @sizeMarker Full @props attrs' True
-                                    --NoMarker     -> return ()
+                                                    in boxMarker "" cb @loc.markerPosition @sizeMarker Full @props attrs' True
+                                    NoMarker     -> return ()
                                cbox <- boxContainer cb @loc.position @loc.size Full @props @attrs False
                                mapM_ (\f -> f cbox) @elem.results
     | WindowContainer 

@@ -183,8 +183,8 @@ pListQuote  = ListValue  <$> pList1Sep_ng pStuff pQuoteValue
 pQuoteValue = QuoteValue <$> pString <* pStuff <*> pString
 
 pListProps = buildProperties [ ("list-style-position", pKeyValues ["outside","inherit"])
-                             , ("list-style-type", pListStyleType <|> pKeyValues ["none", "inherit"])]
-pListStyleType = pKeyValues ["disc", "circle", "square", "decimal", "lower-roman", "upper-roman"]
+                             , ("list-style-type", pListStyleType <|> pKeyValues ["inherit"])]
+pListStyleType = pKeyValues ["disc", "circle", "square", "decimal", "lower-roman", "upper-roman", "none"]
 
 pImportant = (True <$ pSymbol "!" <* pKeyword "important") <|> pSucceed False
 
@@ -225,7 +225,40 @@ buildShorthandPropertyWith org prop names pProp
 
 
 -- Parsers for property values
-pColor = pAny (\cl -> KeyColor <$> pToks cl) ["red", "yellow", "darkgrey", "grey", "white", "green", "blue", "cyan", "magenta", "black", "transparent"]
+pColor = pCommonColor <|> pHexadecimalColor <|> pFunctionColor
+pHexadecimalColor =  (\r g b -> KeyColor (toInt r,toInt g,toInt b))
+                        <$ pSym '#' <*> pSimpleHex <*> pSimpleHex <*> pSimpleHex
+                 <|> (\r g b -> KeyColor (toInt r,toInt g,toInt b))
+                        <$ pSym '#' <*> pDoubleHex <*> pDoubleHex <*> pDoubleHex
+pFunctionColor = (\r g b -> KeyColor (r,g,b))
+                    <$ pKeyword "rgb" <* pSymbol "(" <*> pNumberColor 
+                                      <* pSymbol "," <*> pNumberColor
+                                      <* pSymbol "," <*> pNumberColor
+                                      <* pSymbol ")"
+pNumberColor =  fixedRange 0 255 <$> pPositiveInteger
+            <|> fixedRange 0 100 <$> pPositiveInteger <* pSym '%'
+    where fixedRange start end val = if val < start
+                                     then start
+                                     else if val > end
+                                          then end
+                                          else val
+pCommonColor =  KeyColor (0x80, 0x00, 0x00) <$ pKeyword "maroon"
+            <|> KeyColor (0xff, 0x00, 0x00) <$ pKeyword "red" 
+            <|> KeyColor (0xff, 0xa5, 0x00) <$ pKeyword "orange"
+            <|> KeyColor (0xff, 0xff, 0x00) <$ pKeyword "yellow"
+            <|> KeyColor (0x80, 0x80, 0x00) <$ pKeyword "olive"
+            <|> KeyColor (0x80, 0x00, 0x80) <$ pKeyword "purple"
+            <|> KeyColor (0xff, 0x00, 0xff) <$ pKeyword "fuchsia"
+            <|> KeyColor (0xff, 0xff, 0xff) <$ pKeyword "white"
+            <|> KeyColor (0x00, 0xff, 0x00) <$ pKeyword "lime"
+            <|> KeyColor (0x00, 0x80, 0x00) <$ pKeyword "green"
+            <|> KeyColor (0x00, 0x00, 0x80) <$ pKeyword "navy"
+            <|> KeyColor (0x00, 0x00, 0xff) <$ pKeyword "blue"
+            <|> KeyColor (0x00, 0xff, 0xff) <$ pKeyword "aqua"
+            <|> KeyColor (0x00, 0x80, 0x80) <$ pKeyword "teal"
+            <|> KeyColor (0x00, 0x00, 0x00) <$ pKeyword "black"
+            <|> KeyColor (0xc0, 0xc0, 0xc0) <$ pKeyword "silver"
+            <|> KeyColor (0x80, 0x80, 0x80) <$ pKeyword "gray"
 
 pPositivePercentage =  Percentage  <$> pPositiveNumber <* pSym  '%'
 
@@ -249,6 +282,7 @@ pPositiveLength =  PixelNumber <$> pPositiveNumber <* pToks "px"
 
 -- Auxiliar Parsers
 pInteger = (\sg n -> toInt (sg++n)) <$> pSign <*> pList1 pDigit
+pPositiveInteger = toInt <$ pSignMas <*> pList1 pDigit
 
 pNumber =  (\sg n       -> toFloat (sg++n)         ) <$> pSign <*> pList1 pDigit
        <|> (\sg n1 d n2 -> toFloat (sg++n1 ++d++n2)) <$> pSign <*> pList pDigit <*> pToks "." <*> pList1 pDigit
@@ -257,9 +291,9 @@ pNumber =  (\sg n       -> toFloat (sg++n)         ) <$> pSign <*> pList1 pDigit
 pSign =  "-" <$ pSym '-'
      <|> ""  <$ (pSym '+') `opt` ""
 
-pPositiveNumber =  (\sg n       -> toFloat (sg++n)         ) <$> pSignMas <*> pList1 pDigit
-               <|> (\sg n1 d n2 -> toFloat (sg++n1 ++d++n2)) <$> pSignMas <*> pList  pDigit <*> pToks "." <*> pList1 pDigit
-               <|> (\sg    d n2 -> toFloat (sg++"0"++d++n2)) <$> pSignMas                   <*> pToks "." <*> pList1 pDigit
+pPositiveNumber =  (\n       -> toFloat  n          ) <$ pSignMas <*> pList1 pDigit
+               <|> (\n1 d n2 -> toFloat (n1 ++d++n2)) <$ pSignMas <*> pList  pDigit <*> pToks "." <*> pList1 pDigit
+               <|> (\   d n2 -> toFloat ("0"++d++n2)) <$ pSignMas                   <*> pToks "." <*> pList1 pDigit
 
 pSignMas = "" <$ (pSym '+') `opt` ""
 
@@ -277,6 +311,12 @@ pU        = 'A' <..> 'Z'
 pLetter   = pL <|> pU
 pDigit    = '0' <..> '9'
 pAlphaNum = pLetter <|> pDigit
+pHexL     = 'a' <..> 'f'
+pHexU     = 'A' <..> 'F'
+pCharHex  = pHexL <|> pHexU
+pHex      = pCharHex <|> pDigit
+pSimpleHex = (\h -> "0x" ++ [h,h])       <$> pHex
+pDoubleHex = (\h1 h2 -> "0x" ++ [h1,h2]) <$> pHex <*> pHex
 
 pSymbol  str = pStuff *> pToks str <* pStuff
 pKeyword str = pToks str

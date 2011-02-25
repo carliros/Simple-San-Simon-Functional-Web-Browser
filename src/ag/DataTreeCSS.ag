@@ -49,7 +49,7 @@ DATA Value
     | EmNumber    Float
     | Percentage  Float
     | KeyValue    String
-    | KeyColor    String
+    | KeyColor    rgb: {(Int,Int,Int)}   -- fixed to [0,255]
     | StringValue String
     | Counter     item: String      style: {Maybe Value}
     | Counters    item, sep: String style: {Maybe Value}

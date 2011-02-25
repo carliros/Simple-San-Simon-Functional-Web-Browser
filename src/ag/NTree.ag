@@ -111,6 +111,8 @@ generateBoxContent props srcProps counterScope (open,close)
                                                            in (Just $ BoxText props Map.empty value) : genBoxes es
                                                     Just val 
                                                         -> case val of
+                                                                KeyValue "none"
+                                                                    -> genBoxes es
                                                                 KeyValue "disc"
                                                                     -> let attrs = Map.singleton "src" "disc.png"
                                                                        in (Just $ BoxContainer "inline" props True attrs []) : genBoxes es
@@ -137,6 +139,8 @@ generateBoxContent props srcProps counterScope (open,close)
                                                            in (Just $ BoxText props Map.empty value) : genBoxes es
                                                     Just val 
                                                         -> case val of
+                                                                KeyValue "none"
+                                                                    -> genBoxes es
                                                                 KeyValue "disc"
                                                                     -> let attrs = Map.singleton "src" "disc.png"
                                                                        in (Just $ BoxContainer "inline" props True attrs []) : genBoxes es
