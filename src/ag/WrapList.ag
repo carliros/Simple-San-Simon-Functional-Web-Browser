@@ -88,27 +88,28 @@ instance Show Code where
         and more understandable
    ======================================================================================-}
 
-applyWrap2 :: Int -> Int -> [ElementList] -> Lines
-applyWrap2 _     _     []     = []
-applyWrap2 width space dwords = let result = inlineFormatting dwords width space
-                                in map (\l -> Line (list2tree l)) result
+applyWrap2 :: Int -> Int -> Int -> [ElementList] -> Lines
+applyWrap2 _     _      _     []     = []
+applyWrap2 width indent space dwords = let result = inlineFormatting dwords width indent space
+                                       in map (\l -> Line (list2tree l)) result
 
-inlineFormatting :: [ElementList] -> Int -> Int -> [[ElementList]]
-inlineFormatting []  _     _     = []
-inlineFormatting lst width space = let width' = foldr (\e w -> (getLength e) `max` w) 0 lst
-                                   in if width >= width'
-                                      then doInline width  space lst
-                                      else doInline width' space lst
-    where doInline w s []   = []
-          doInline w s list = let (line, rest) = buildLine list (w + s) 0 s
-                              in line: doInline w s rest
+inlineFormatting :: [ElementList] -> Int -> Int -> Int -> [[ElementList]]
+inlineFormatting []  _     _      _     = []
+inlineFormatting lst width indent space = let width' = foldr (\e w -> (getLength e) `max` w) 0 lst
+                                          in if (width - indent) >= width'
+                                             then doInline width  indent space lst
+                                             else doInline width' indent space lst
+    where doInline w indent s []   = []
+          doInline w indent s list = let newWidth     = w - indent
+                                         (line, rest) = buildLine list (newWidth + s) 0 s
+                                     in line: doInline w 0 s rest   -- I apply indent only to the first line
           getLength (ReplacedContainer _ _ _ _ w _  ) = w
           getLength (ElementContainer  _ _ _ _ w _ _) = w
           getLength (ElementText       _ _ _ _ w _ _) = w
           buildLine []         _ _  _     = ([],[])
-          buildLine lst@(e:es) w wt space = let len = wt + getLength e + space
-                                            in if len <= w
-                                               then let (ln,rs) = buildLine es w len space
-                                                    in (e:ln, rs)
-                                               else ([],lst)
+          buildLine nlst@(e:es) w wt space = let len = wt + getLength e + space
+                                             in if len <= w
+                                                then let (ln,rs) = buildLine es w len space
+                                                     in (e:ln, rs)
+                                                else ([],nlst)
 }

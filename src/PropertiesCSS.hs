@@ -60,6 +60,7 @@ cssProperties = [
     , ("list-style-position"   , True  , keyValue "outside"          , compute_asSpecified     , used_asComputed)
     , ("list-style-type"       , True  , keyValue "disc"             , compute_asSpecified     , used_asComputed)
     , ("background-color"      , False , keyValue "transparent"      , compute_asSpecified     , used_asComputed)
+    , ("text-indent"           , True  , pixelValue 0                , compute_toPixel         , used_toPixelValue)
     ]
 
 propertiesCSS = map (\(nm,inh,val,_,_) -> (nm,inh,val)) cssProperties

@@ -56,9 +56,32 @@ SEM WindowTrees
                                         in ("block" , (x, (snd @hd.size) + y))
 
 SEM Lines
-    | Cons hd.statePos = @lhs.statePos
+    | Cons hd.statePos = let (x,y) = snd @lhs.statePos
+                             newX  = if @lhs.amifirstline
+                                     then x + @lhs.indent   -- aplicamos indent solo a la primera linea
+                                     else x
+                         in ( fst @lhs.statePos,(newX, y))
            tl.statePos = let (x,y) = snd @lhs.statePos
-                         in ( fst @lhs.statePos,(x, y + @hd.lineHeight))    -- avanzamos de acuerdo al height de la linea, y no su size
+                             newY  = y + @hd.lineHeight     -- avanzamos de acuerdo al height de la linea, y no su size
+                         in ( fst @lhs.statePos,(x, newY))
+
+-- who is the first line?
+ATTR Lines [amifirstline: Bool ||]
+SEM Element
+    | ELines lines.amifirstline = True
+
+SEM Lines
+    | Cons tl.amifirstline = False
+
+-- downloading the indent value
+ATTR Element Lines [indent: Int ||]
+SEM WindowTree
+    | WindowItemContainer
+        elem.indent = toInt $ unPixelUsedValue $ @props Map.! "text-indent"
+    | WindowContainer
+        elem.indent = toInt $ unPixelUsedValue $ @props Map.! "text-indent"
+SEM Element
+    | ELines lines.indent = @lhs.indent
 
 {
 -- get the desplazamiento

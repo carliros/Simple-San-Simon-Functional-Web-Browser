@@ -37,6 +37,7 @@ ppProperty =  ppDisplay
           <|> ppQuotes
           <|> ppListProps
           <|> ppBackgroundColor
+          <|> ppText
 
 ppDisplay = buildUserAgentProperties $ tmap pDisplayValue ["display"]
 
@@ -111,3 +112,5 @@ ppListProps = buildUserAgentProperties [ ("list-style-position", pKeyValues ["ou
                                        , ("list-style-type", pListStyleType <|> pKeyValues ["inherit"])]
 
 ppBackgroundColor = buildUserAgentProperties [("background-color", pColor <|> pKeyValues ["transparent", "inherit"])]
+
+ppText = buildProperties [("text-indent", pLength <|> pPercentage <|> pKeyValues ["inherit"])]

@@ -86,6 +86,7 @@ pProperty =  pDisplay
          <|> pQuotes
          <|> pListProps
          <|> pBackgroundColor
+         <|> pText
 
 pDisplay = buildProperties $ tmap pDisplayValue ["display"]
 pDisplayValue = pKeyValues ["inline", "block", "list-item", "none", "inherit"]    -- no support for: run-in, inline-block
@@ -203,6 +204,8 @@ pListProps = buildProperties [ ("list-style-position", pKeyValues ["outside","in
 pListStyleType = pKeyValues ["disc", "circle", "square", "decimal", "lower-roman", "upper-roman", "none"]
 
 pBackgroundColor = buildProperties [("background-color", pColor <|> pKeyValues ["transparent", "inherit"])]
+
+pText = buildProperties [("text-indent", pLength <|> pPercentage <|> pKeyValues ["inherit"])]
 
 pImportant = (True <$ pSymbol "!" <* pKeyword "important") <|> pSucceed False
 

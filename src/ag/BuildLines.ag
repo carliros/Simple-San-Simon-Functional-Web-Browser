@@ -105,7 +105,8 @@ SEM BoxTree
 
 -- building lines of BoxTrees
 SEM BoxTree
-    | BoxContainer loc.lines = applyWrap2 @loc.width 6 @boxes.elements   -- 6 es numero en pixels que un spacio ocupa
+    | BoxContainer loc.lines = let indent = toInt $ unPixelUsedValue $ @loc.usedValueProps Map.! "text-indent"
+                               in applyWrap2 @loc.width indent 6 @boxes.elements   -- 6 es numero en pixels que un spacio ocupa
 
 -- auxiliar functions
 {
