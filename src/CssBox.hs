@@ -4,6 +4,7 @@ import Graphics.UI.WXCore
 import Graphics.UI.WX
 import qualified Data.Map as Map
 import Data.Maybe
+import Data.Char
 import TextExtend
 import PropertyValue
 import ImageProcess
@@ -46,10 +47,24 @@ buildFont props = let fsze = toNumber $ (\vp -> vp/1.6) $ unPixelUsedValue (prop
 getSizeBox cnt wn props = do pnl <- window wn []
                              let myFont = buildFont props
                              set pnl [font := myFont]
-                             (Size wContent hContent,a,e) <- getTextSize pnl cnt
+                             let newCnt = applyTextTransform props cnt
+                             (Size wContent hContent,a,e) <- getTextSize pnl newCnt
                              windowDestroy pnl
                              --let (wExternal,hExternal) = getExternalSizeBox props       -- realmente necesito hacer esto? porque siempre los bordes del texto son nulas
                              return (wContent,hContent,a,e)
+
+applyTextTransform props str 
+    = case usedValue (props Map.! "text-transform") of
+          KeyValue "none" 
+              -> str
+          KeyValue "capitalize"
+              -> let newStr = words str
+                     fcap (c:cs) = toUpper c : cs
+                 in unwords $ map fcap newStr
+          KeyValue "uppercase"
+              -> map toUpper str
+          KeyValue "lowercase"
+              -> map toLower str
 
 -- get the margin properties from a list of css properties
 getMarginProperties props = map toNumber [ maybe 0 unPixelUsedValue (Map.lookup "margin-top"    props)
@@ -184,7 +199,30 @@ onBoxPaint cnt tp props attrs amireplaced dc (Rect x y w h) = do
              --putStrLn $ show w ++ " " ++ show mr ++ " " ++ show br ++ " " ++ show ppr ++ " " ++ show ml ++ " " ++ show bl ++ " " ++ show ppl
              --drawRect dc (rect ptContent szimg) []
              return ()
-     else drawText dc cnt ptContent [color := txtColor]
+     else case usedValue (props Map.! "display") of
+              KeyValue "block"  
+                  -> return ()
+              KeyValue "inline" 
+                  -> do -- text
+                        let newCnt = applyTextTransform props cnt
+                        drawText dc newCnt ptContent [color := txtColor]
+                        -- decoration
+                        case usedValue (props Map.! "text-decoration") of
+                            KeyValue "none" -> return ()
+                            ListValue list  -> do metrics <- getFullTextExtent dc newCnt
+                                                  mapM_ (doDecoration dc ptContent txtColor metrics) list
+
+doDecoration dc (Point x y) txtColor (Size w h, b, a) value
+    = case value of
+          KeyValue "underline" 
+              -> do let yb = h - b + 2
+                    line dc (pt 0 yb) (pt w yb) [penColor := txtColor]
+          KeyValue "overline"
+              -> do let yb = y
+                    line dc (pt 0 yb) (pt w yb) [penColor := txtColor]
+          KeyValue "line-through"
+              -> do let yb = h - b - ((h - b) `div` 3)
+                    line dc (pt 0 yb) (pt w yb) [penColor := txtColor]
 
 -- check if a consider that width according to the TypeElement
 checkWithTypeElement tp lst@(wt:wr:wb:wl:[])

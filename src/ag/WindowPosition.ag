@@ -14,7 +14,7 @@ SEM WindowTree
                     KeyValue "static"   -> (x,y)
                     KeyValue "relative" -> let (xdespl, ydespl) = getDesplazamiento @props
                                            in (x + xdespl, y + ydespl)
-                    otherwise           -> error $ "[fstree fase 2] I am not considering this value: " ++ show cposition
+                    otherwise           -> error $ "[fstree fase 2] I am not considering this position value: " ++ show cposition
         elem.statePos = let pointContent = getTopLeftContentPoint Full @props
                         in ("block", pointContent)
     | WindowContainer
@@ -31,7 +31,7 @@ SEM WindowTree
                             KeyValue "static"   -> (x,y)
                             KeyValue "relative" -> let (xdespl, ydespl) = getDesplazamiento @props
                                                    in (x + xdespl, y + ydespl)
-                            otherwise           -> error $ "[fstree fase 2] I am not considering this value: " ++ show cposition
+                            otherwise           -> error $ "[fstree fase 2] I am not considering this position value: " ++ show cposition
         elem.statePos = let pointContent = getTopLeftContentPoint @tCont @props
                         in (@fcnxt, pointContent)
     | WindowText
@@ -45,7 +45,7 @@ SEM WindowTree
                             KeyValue "static"   -> (x,y)
                             KeyValue "relative" -> let (xdespl, ydespl) = getDesplazamiento @props
                                                    in (x + xdespl, y + ydespl)
-                            otherwise           -> error $ "[fstree fase 2] I am not considering this value: " ++ show cposition
+                            otherwise           -> error $ "[fstree fase 2] I am not considering this position value: " ++ show cposition
 
 SEM WindowTrees
     | Cons hd.statePos = @lhs.statePos
@@ -65,6 +65,24 @@ SEM Lines
                              newY  = y + @hd.lineHeight     -- avanzamos de acuerdo al height de la linea, y no su size
                          in ( fst @lhs.statePos,(x, newY))
 
+SEM Line
+    | Line winds.statePos = case @lhs.align of
+                                "left"   -> @lhs.statePos
+                                "right"  -> let (_,y) = snd @lhs.statePos
+                                                newX  = @lhs.width - @winds.innerLineWidth
+                                            in (fst @lhs.statePos, (newX,y))
+                                "center" -> let (_,y) = snd @lhs.statePos
+                                                newX  = (@lhs.width - @winds.innerLineWidth) `div` 2
+                                            in (fst @lhs.statePos, (newX,y))
+                                otherwise -> error $ "[FSTreeFase2] I am not considering this align value: " ++ show @lhs.align
+
+ATTR Element Lines Line [width: Int ||]
+SEM WindowTree
+    | WindowItemContainer
+        elem.width = toInt $ unPixelUsedValue $ fst @loc.cbSize
+    | WindowContainer
+        elem.width = toInt $ unPixelUsedValue $ fst @loc.cbSize
+
 -- who is the first line?
 ATTR Lines [amifirstline: Bool ||]
 SEM Element
@@ -82,6 +100,20 @@ SEM WindowTree
         elem.indent = toInt $ unPixelUsedValue $ @props Map.! "text-indent"
 SEM Element
     | ELines lines.indent = @lhs.indent
+
+-- downloading the align value
+ATTR Element Lines Line [align: String ||]
+SEM WindowTree
+    | WindowItemContainer
+        elem.align = unKeyUsedValue $ @props Map.! "text-align"
+    | WindowContainer
+        elem.align = unKeyUsedValue $ @props Map.! "text-align"
+
+-- uploading a right-align point value
+ATTR Line WindowTrees [|| innerLineWidth: Int]
+SEM WindowTrees
+    | Cons lhs.innerLineWidth = (fst @hd.size) + 6 + @tl.innerLineWidth
+    | Nil  lhs.innerLineWidth = 0
 
 {
 -- get the desplazamiento

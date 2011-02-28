@@ -69,14 +69,19 @@ updateInitialContainer icb inp varfstree varzipper defaultcss4html varbaseurl = 
     -- building the layout for a fstree
     result <- get varfstree value
     case result of
-        (Just fstree) -> do let boxtree     = sem_BoxRoot (BoxRoot fstree) icb (w,h)
-                                (_,fresult) = sem_WindowRoot (WindowRoot boxtree) 
-                                                             baseurl 
-                                                             icb 
-                                                             (goToURL icb inp varfstree varzipper defaultcss4html varbaseurl) 
-                                                             ("default", (0,0))
+        (Just fstree) -> do let boxtree = sem_BoxRoot (BoxRoot fstree) icb (w,h)
+                                (_,fresult, (wc,hc)) = sem_WindowRoot (WindowRoot boxtree) 
+                                                                      baseurl 
+                                                                      icb 
+                                                                      (goToURL icb inp varfstree varzipper defaultcss4html varbaseurl) 
+                                                                      ("default", (0,0))
                             fresult icb
                             --UP.render (UP.pp boxtree) 200
+                            
+                            -- scrollbars
+                            sw <- get icb size
+                            let ns@(Size nw nh) = sizeMax sw (sz wc hc)
+                            set icb [virtualSize := ns, scrollRate := sz (nw `div` 100) (nh `div` 100) ]
                             return ()
         Nothing       -> return ()
  

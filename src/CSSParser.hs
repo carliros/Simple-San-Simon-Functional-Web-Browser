@@ -205,7 +205,12 @@ pListStyleType = pKeyValues ["disc", "circle", "square", "decimal", "lower-roman
 
 pBackgroundColor = buildProperties [("background-color", pColor <|> pKeyValues ["transparent", "inherit"])]
 
-pText = buildProperties [("text-indent", pLength <|> pPercentage <|> pKeyValues ["inherit"])]
+pText = buildProperties [ ("text-indent", pLength <|> pPercentage <|> pKeyValues ["inherit"])
+                        , ("text-align", pKeyValues ["left", "right", "center", "inherit"])    -- no jutify
+                        , ("text-decoration", pListDecoration <|> pKeyValues ["none", "inherit"])
+                        , ("text-transform", pKeyValues ["capitalize", "uppercase", "lowercase", "none", "inherit"])]
+pListDecoration = ListValue <$> pList1Sep_ng pStuff pDecorationValue
+pDecorationValue = pKeyValues ["underline", "overline", "line-through"]     -- no blink
 
 pImportant = (True <$ pSymbol "!" <* pKeyword "important") <|> pSucceed False
 

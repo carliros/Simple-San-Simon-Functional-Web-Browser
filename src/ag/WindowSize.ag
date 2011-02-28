@@ -117,8 +117,8 @@ tmax (t1,b1) (t2,b2) = let maxt = t1 `max` t2
                        in (maxt,maxb)
 }
 
--- generating a width and height for all boxtrees
-ATTR WindowTree Line [|| size: {(Int,Int)}]
+-- generating a width and height for all boxtrees, and uploading it until the root element
+ATTR WindowRoot WindowTree Line [|| size: {(Int,Int)}]
 SEM WindowTree
     | WindowText
         loc.vdisplay = unKeyComputedValue $ @props Map.! "display"
@@ -235,3 +235,4 @@ SEM Lines
 ATTR Line [|| lineHeight: Int]
 SEM Line
     | Line lhs.lineHeight = funTuple (+) @loc.lineMetrics
+

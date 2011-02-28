@@ -44,6 +44,8 @@ small, sub, sup { font-size: .83em }
 sub {vertical-align: sub }
 sup {vertical-align: super }
 
+s, strike, del {text-decoration: line-through }
+
 ol, ul, dir,
 menu, dd { margin-left: 40px }
 
@@ -51,7 +53,11 @@ ol ul, ul ol,
 ul ul, ol ol { margin-top: 0px
              ; margin-bottom: 0px }
 
+u, ins {text-decoration: underline }
+
 li { display: list-item }
 
 ol {list-style-type: decimal }
+
+a {text-decoration: underline }
 

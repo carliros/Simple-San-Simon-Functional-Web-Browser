@@ -113,4 +113,7 @@ ppListProps = buildUserAgentProperties [ ("list-style-position", pKeyValues ["ou
 
 ppBackgroundColor = buildUserAgentProperties [("background-color", pColor <|> pKeyValues ["transparent", "inherit"])]
 
-ppText = buildProperties [("text-indent", pLength <|> pPercentage <|> pKeyValues ["inherit"])]
+ppText = buildProperties [ ("text-indent", pLength <|> pPercentage <|> pKeyValues ["inherit"])
+                         , ("text-align", pKeyValues ["left", "right", "center", "inherit"])    -- no jutify
+                         , ("text-decoration", pListDecoration <|> pKeyValues ["none", "inherit"])
+                         , ("text-transform", pKeyValues ["capitalize", "uppercase", "lowercase", "none", "inherit"])]
