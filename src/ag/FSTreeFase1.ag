@@ -30,6 +30,7 @@ DATA BoxTree
         attrs: {Map.Map String String} 
         boxes: Boxes
     | BoxContainer
+        name : String
         fcnxt: String
         props: {Map.Map String PropertyValue}
         bRepl: Bool
@@ -61,11 +62,11 @@ SEM BoxTree
             = case computedValue (@loc.usedValueProps Map.! "display") of
                     KeyValue "block"
                         -> case @fcnxt of
-                                "block"  -> WindowContainer "block"  @loc.usedValueProps @attrs Full @bRepl (EWinds @boxes.boxtrees)
-                                "inline" -> WindowContainer "inline" @loc.usedValueProps @attrs Full @bRepl (ELines @loc.lines)
+                                "block"  -> WindowContainer @name "block"  @loc.usedValueProps @attrs Full @bRepl (EWinds @boxes.boxtrees)
+                                "inline" -> WindowContainer @name "inline" @loc.usedValueProps @attrs Full @bRepl (ELines @loc.lines)
                     KeyValue "inline"
                         -> case @fcnxt of
-                                "inline" -> WindowContainer "inline" @loc.usedValueProps @attrs Full @bRepl (EWinds @boxes.boxtrees)
+                                "inline" -> WindowContainer @name "inline" @loc.usedValueProps @attrs Full @bRepl (EWinds @boxes.boxtrees)
                                 _        -> error $ "[fstree fase 1] unexpected fcontext value: " ++ @fcnxt
     | BoxText
         lhs.boxtree = WindowText @loc.usedValueProps @attrs Full @text

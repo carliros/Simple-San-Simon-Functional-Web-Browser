@@ -5,16 +5,22 @@ import Graphics.UI.WX
 import Graphics.UI.WXCore
 import qualified Data.Map as Map
 import Network.Curl
+import Data.Maybe
+import Control.Concurrent
+import Url
 
 -- datatypes
 import NTree
+import FSTreeFase1
+import FSTreeFase2
 import FSBox
-import HTMLParser
+--import HTMLParser old parser
+import HTMLParser2
 import CSSDefaultParser
-import Data.Maybe
 import CssBox
 import PropertyValue
 import WebBrowser
+import ImageProcess
 
 main :: IO()
 main = start gui
@@ -44,7 +50,7 @@ gui = do -- variable to draw lines
          set pnl [layout := fill $ widget l]
 
          -- left components
-         inp <- entry  f [text := "file:///home/carlos/OpenProjects/treebox-prop/test/test1.html"]
+         inp <- entry  f [text := "file:///home/carlos/fwb/test1.html"]
          icb <- scrolledWindow spw [virtualSize := sz 800 600]
          go  <- button f [text := "Paint"]
          set go [on command := onButtonCommand icb inp lines defaultcss4html l]
@@ -70,25 +76,29 @@ onPnlPaint icb lines dc rt = do
         where runCommand (BoxLine (x1,y1) (x2,y2)) = line dc (pt x1 y1) (pt x2 y2) []
 
 onButtonCommand icb inp lines defaultcss4html l = do
+    (Size w h)     <- windowGetClientSize icb
     -- generating the formatting structure to render
-    file   <- get inp text
-    content <- getContentFile file
-    ast    <- parseHtmlString content
-    let (_,fsbox) = sem_Root (Root ast) defaultcss4html 
-    let res    = sem_FSRoot (FSRoot fsbox)
-
-    -- deleting list of lines
-    set lines [value := []]
-
-    -- deleting all windows
-    windowDestroyChildren icb
-    repaint icb
-
-    -- rendering formating structure
-    mapM_ (runCommand) res
-        where runCommand (BoxBlock str pos dim props)
-                                         = do wn <- box str icb pos dim Full props Map.empty False
-                                              set wn [on focus := onFocus l props]
+    url            <- get inp text
+    (eurl,content) <- getContentFile url
+    ast            <- parseString content
+    let result = sem_Root (Root ast) defaultcss4html
+    case result of
+        Nothing       -> return ()
+        (Just fstree) -> do let boxtree     = sem_BoxRoot (BoxRoot fstree) icb (w,h)
+                                (fsbox,_,_) = sem_WindowRoot (WindowRoot boxtree) "" icb goToUrl ("default", (0,0))
+                            let res         = sem_FSRoot (FSRoot fsbox)
+                            -- deleting list of lines
+                            set lines [value := []]
+                            -- deleting all windows
+                            windowDestroyChildren icb
+                            repaint icb
+                            -- rendering formating structure
+                            mapM_ (runCommand) res
+                            return ()
+        where runCommand (BoxBlock str (x,y) (w,h) props)
+                                         = do --wn <- box str icb pos dim Full props Map.empty False
+                                              wn <- window icb [position := pt x y, outerSize := sz w h]
+                                              set wn [on click := onFocus l props, on paint := onPaint str]
                                               return ()
               runCommand (BoxWTam w h)   = do sw@(Size tw th) <- get icb size
                                               let ns@(Size nw nh) = sizeMax sw (sz w h)
@@ -97,14 +107,24 @@ onButtonCommand icb inp lines defaultcss4html l = do
                                               set lines [value := (ln : listLines)]
                                               return ()
 
-onFocus lc props bool 
-    = do if bool
-          then set lc [items := [[nm,sv,cv,uv,av] | (nm,sv,cv,uv,av) <- properties2string props]]
-          else return ()
+onFocus lc props point
+    = set lc [items := [[nm,sv,cv,uv,av] | (nm,sv,cv,uv,av) <- properties2string props]]
+
+onPaint str dc rt@(Rect x y w h)
+    = do roundedRect dc rt 10 []
+         drawText dc str (pt 10 10) []
+
+goToUrl :: FilePath -> IO()
+goToUrl url = return ()
 
 getContentFile uri
-    = do (cCode, content) <- curlGetString uri []
+    = do --(cCode, content) <- curlGetString uri []
+         (CurlResponse cCode _ _ _ content fvalue) <- curlGetResponse uri []
          putStrLn $ show cCode ++ " at " ++ uri
+         (IString eurl) <- fvalue EffectiveUrl
          if cCode == CurlOK
-          then return content
-          else return $ pageNotAvailable (show cCode) uri
+          then do let base = getBaseUrl eurl
+                  forkIO (downloadImages base content)
+                  return (eurl,content)
+          else return $ ("",pageNotAvailable (show cCode) uri)
+

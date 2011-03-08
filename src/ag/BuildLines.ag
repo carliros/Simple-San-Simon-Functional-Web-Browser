@@ -52,26 +52,26 @@ SEM BoxTree
             = if @bRepl
               then let (we,he) = getExternalSizeBox @loc.usedValueProps
                        (iw,ih) = mapTuple (\prop -> toInt $ unPixelUsedValue $ @loc.usedValueProps Map.! prop) ("width", "height")
-                   in [ReplacedContainer @loc.code Full @loc.usedValueProps @attrs (iw+we) (ih+he)]
+                   in [ReplacedContainer @name @loc.code Full @loc.usedValueProps @attrs (iw+we) (ih+he)]
               else let (wl,wr,ht,hb) = getExternalSizeBox4Tuple @loc.usedValueProps
                    in case @boxes.elements of
                         []        -> [] -- Que pasa si el elemento tiene margin,border y padding???????????
                         [only]    -> let (w,h) = getElementSize only
-                                     in [ElementContainer @loc.code Full @loc.usedValueProps @attrs (w+wl+wr) h only]
+                                     in [ElementContainer @name @loc.code Full @loc.usedValueProps @attrs (w+wl+wr) h only]
                         [ini,end] -> let (w1,h1) = getElementSize ini
                                          (w2,h2) = getElementSize end
-                                         eini = ElementContainer @loc.code Init @loc.usedValueProps @attrs (w1+wl) h1 ini
-                                         eend = ElementContainer @loc.code End  @loc.usedValueProps @attrs (w2+wr) h2 end
+                                         eini = ElementContainer @name @loc.code Init @loc.usedValueProps @attrs (w1+wl) h1 ini
+                                         eend = ElementContainer @name @loc.code End  @loc.usedValueProps @attrs (w2+wr) h2 end
                                      in [eini, eend]
                         otherwise -> let ini = head @boxes.elements
                                          end = last @boxes.elements
                                          (w1,h1) = getElementSize ini
                                          (w2,h2) = getElementSize end
-                                         eini = ElementContainer @loc.code Init @loc.usedValueProps @attrs (w1+wl) h1 ini
-                                         eend = ElementContainer @loc.code End  @loc.usedValueProps @attrs (w2+wr) h2 end
+                                         eini = ElementContainer @name @loc.code Init @loc.usedValueProps @attrs (w1+wl) h1 ini
+                                         eend = ElementContainer @name @loc.code End  @loc.usedValueProps @attrs (w2+wr) h2 end
                                          lmed = let lelem = init (tail @boxes.elements)
                                                     lsize = map getElementSize lelem
-                                                in zipWith (\el (w,h) -> ElementContainer @loc.code Medium @loc.usedValueProps @attrs w h el) lelem lsize
+                                                in zipWith (\el (w,h) -> ElementContainer @name @loc.code Medium @loc.usedValueProps @attrs w h el) lelem lsize
                                      in [eini] ++ lmed ++ [eend]
     | BoxText 
         lhs.elements 
@@ -110,8 +110,8 @@ SEM BoxTree
 
 -- auxiliar functions
 {
-getElementSize (ElementText       _ _ _ _ w h _) = (w,h)
-getElementSize (ElementContainer  _ _ _ _ w h _) = (w,h)
-getElementSize (ReplacedContainer _ _ _ _ w h  ) = (w,h)
+getElementSize (ElementText         _ _ _ _ w h _) = (w,h)
+getElementSize (ElementContainer  _ _ _ _ _ w h _) = (w,h)
+getElementSize (ReplacedContainer _ _ _ _ _ w h  ) = (w,h)
 }
 

@@ -30,6 +30,7 @@ DATA WindowTree
         props     : {Map.Map String PropertyValue}
         attrs     : {Map.Map String String}
     | WindowContainer
+        name : String
         fcnxt: String
         props: {Map.Map String PropertyValue}
         attrs: {Map.Map String String}

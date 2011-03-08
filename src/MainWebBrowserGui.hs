@@ -14,7 +14,8 @@ import Url
 import NTree
 import FSTreeFase1
 import FSTreeFase2
-import HTMLParser
+--import HTMLParser    the old parser
+import HTMLParser2
 import CSSDefaultParser
 import CssBox
 import ZipperList
@@ -108,9 +109,10 @@ goToURL pnl inp varfstree varzipper defaultcss4html varbaseurl url = do
     set varzipper [value := newzipper]
             
     -- generating the formatting structure to render
-    ast    <- parseHtmlString content
+    --ast    <- parseHtmlString content      the old parser
+    ast <- parseString content
     --print (Root ast)
-    let (fstree, _) = sem_Root (Root ast) defaultcss4html
+    let fstree = sem_Root (Root ast) defaultcss4html
     set varfstree [value := fstree]
     updateInitialContainer pnl inp varfstree varzipper defaultcss4html varbaseurl
     repaint pnl

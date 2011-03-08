@@ -8,16 +8,16 @@ SEM WindowTree
         lhs.outbox = case @loc.vdisplay of
                         "block"
                             -> case @fcnxt of
-                                "block"  -> FSBox "box b b" @props @elem.outbox
-                                "inline" -> FSBox "box b i" @props @elem.outbox
+                                "block"  -> FSBox @name @props @elem.outbox
+                                "inline" -> FSBox @name @props @elem.outbox
                         "inline"
                             -> case @fcnxt of
-                                "block"  -> FSBox "box i b" @props @elem.outbox
-                                "inline" -> FSBox "box i i" @props @elem.outbox
+                                "block"  -> FSBox @name @props @elem.outbox
+                                "inline" -> FSBox @name @props @elem.outbox
     | WindowText
         lhs.outbox = case @loc.vdisplay of
-                        "block"  -> FSBox "text b i" @props []
-                        "inline" -> FSBox "text i i" @props []
+                        "block"  -> FSBox "text" @props []
+                        "inline" -> FSBox "text" @props []
 
 SEM Line
     | Line lhs.outbox = FSBox "line" Map.empty @winds.outbox

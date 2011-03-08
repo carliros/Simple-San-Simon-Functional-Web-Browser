@@ -17,7 +17,7 @@ browser: gen-data browser-data
 	ghc -i$(SRC) --make $(SRC)MainWebBrowserGui.hs -outputdir $(OUT) -o 3swbrowser -O2
 
 boxer: gen-data boxer-data
-	ghc -i$(SRC) --make $(SRC)MainBoxerF2Gui.hs -outputdir $(OUT) -o boxer -O2
+	ghc -i$(SRC) --make $(SRC)MainBoxerGui.hs -outputdir $(OUT) -o boxer -O2
 
 boxer-data:
 	uuagc --module --catas --semfuns --data $(AG)FSBox.ag -P$(AG)

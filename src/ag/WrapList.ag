@@ -6,12 +6,14 @@ DATA RootList
 TYPE Elements = [ElementList]
 
 DATA ElementList
-    | ReplacedContainer code : Code
+    | ReplacedContainer name : String
+                        code : Code
                         type : {TypeContinuation}
                         props: {Map.Map String PropertyValue}
                         attrs: {Map.Map String String}
                         width,height: Int
-    | ElementContainer code : Code 
+    | ElementContainer name : String
+                       code : Code 
                        type : {TypeContinuation}
                        props: {Map.Map String PropertyValue}
                        attrs: {Map.Map String String}
@@ -44,23 +46,23 @@ list2tree lst = let lgroup = groupBy fcmp lst
                 in map toWindowTree lgroup
     where fcmp (ElementText cod1 _ _ _ _ _ _) 
                (ElementText cod2 _ _ _ _ _ _) = cod1 == cod2
-          fcmp (ElementContainer cod1 _ _ _ _ _ _)
-               (ElementContainer cod2 _ _ _ _ _ _) = cod1 == cod2
-          fcmp (ReplacedContainer cod1 _ _ _ _ _)
-               (ReplacedContainer cod2 _ _ _ _ _) = cod1 == cod2
+          fcmp (ElementContainer _ cod1 _ _ _ _ _ _)
+               (ElementContainer _ cod2 _ _ _ _ _ _) = cod1 == cod2
+          fcmp (ReplacedContainer _ cod1 _ _ _ _ _)
+               (ReplacedContainer _ cod2 _ _ _ _ _) = cod1 == cod2
           fcmp _ _ = False
           toWindowTree lst@((ElementText _ _ props attrs _ _ _):_) 
                 = let etype  = getElementType lst
                       strs   = map (\(ElementText _ _ _ _ _ _ str) -> str) lst
                   in WindowText props attrs etype (unwords strs)
-          toWindowTree lst@((ElementContainer _ _ props attrs _ _ _):_) 
-                = let list  = map (\(ElementContainer _ _ _ _ _ _ e) -> e) lst
+          toWindowTree lst@((ElementContainer nm _ _ props attrs _ _ _):_) 
+                = let list  = map (\(ElementContainer _ _ _ _ _ _ _ e) -> e) lst
                       etype = getElementType lst
                       boxes = list2tree list
-                  in WindowContainer "inline" props attrs etype False (EWinds boxes)
-          toWindowTree lst@((ReplacedContainer _ _ props attrs _ _):_) 
+                  in WindowContainer nm "inline" props attrs etype False (EWinds boxes)
+          toWindowTree lst@((ReplacedContainer nm _ _ props attrs _ _):_) 
                 = let etype = getElementType lst
-                  in WindowContainer "inline" props attrs etype True (ENothing)
+                  in WindowContainer nm "inline" props attrs etype True (ENothing)
 
 getElementType lst = let boolInit = any (isThere Init) lst
                          boolEnd  = any (isThere End)  lst
@@ -73,9 +75,9 @@ getElementType lst = let boolInit = any (isThere Init) lst
                                   then End
                                   else Medium
 
-isThere tp (ElementText       _ tp' _ _ _ _ _) = tp == tp'
-isThere tp (ElementContainer  _ tp' _ _ _ _ _) = tp == tp'
-isThere tp (ReplacedContainer _ tp' _ _ _ _  ) = tp == tp'
+isThere tp (ElementText          _ tp' _ _ _ _ _) = tp == tp'
+isThere tp (ElementContainer  _  _ tp' _ _ _ _ _) = tp == tp'
+isThere tp (ReplacedContainer _  _ tp' _ _ _ _  ) = tp == tp'
 
 instance Show Code where
     show (Code fht chd) = show fht ++ show chd
@@ -103,9 +105,9 @@ inlineFormatting lst width indent space = let width' = foldr (\e w -> (getLength
           doInline w indent s list = let newWidth     = w - indent
                                          (line, rest) = buildLine list (newWidth + s) 0 s
                                      in line: doInline w 0 s rest   -- I apply indent only to the first line
-          getLength (ReplacedContainer _ _ _ _ w _  ) = w
-          getLength (ElementContainer  _ _ _ _ w _ _) = w
-          getLength (ElementText       _ _ _ _ w _ _) = w
+          getLength (ReplacedContainer _ _ _ _ _ w _  ) = w
+          getLength (ElementContainer  _ _ _ _ _ w _ _) = w
+          getLength (ElementText         _ _ _ _ w _ _) = w
           buildLine []         _ _  _     = ([],[])
           buildLine nlst@(e:es) w wt space = let len = wt + getLength e + space
                                              in if len <= w
