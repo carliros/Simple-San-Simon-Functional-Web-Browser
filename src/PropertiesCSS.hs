@@ -62,8 +62,9 @@ cssProperties = [
     , ("background-color"      , False , keyValue "transparent"      , compute_asSpecified     , used_asComputed)
     , ("text-indent"           , True  , pixelValue 0                , compute_toPixel         , used_toPixelValue)
     , ("text-align"            , True  , keyValue "left"             , compute_asSpecified     , used_asComputed)
-    , ("text-decoration"       , True  , keyValue "none"             , compute_asSpecified     , used_asComputed)
+    , ("text-decoration"       , True  , keyValue "none"             , compute_asSpecified     , used_asComputed)   -- it should not be inherit
     , ("text-transform"        , True  , keyValue "none"             , compute_asSpecified     , used_asComputed)
+    , ("white-space"           , True  , keyValue "normal"           , compute_asSpecified     , used_asComputed)
     ]
 
 propertiesCSS = map (\(nm,inh,val,_,_) -> (nm,inh,val)) cssProperties

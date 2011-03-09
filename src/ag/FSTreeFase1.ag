@@ -9,6 +9,7 @@ import UU.Pretty
 import qualified Data.Map as Map
 import System.IO.Unsafe
 import Data.List
+import Data.Char
 
 -- user types and functions
 import FSTreeFase2

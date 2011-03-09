@@ -29,8 +29,9 @@ browser-data:
 	mv $(AG)*.hs $(SRC)
 
 gen-data:
-	#uuagc --module --data $(AG)DataTreeHTML.ag -P$(AG)
+	uuagc --module --data $(AG)DataTreeHTML.ag -P$(AG)
 	uuagc --module --data $(AG)DataTreeCSS.ag -P$(AG)
-	uuagc --module --catas --semfuns        $(AG)StyleProcess.ag -P$(AG)
-	uuagc --module --catas --semfuns --data $(AG)NTree.ag -P$(AG)
+	uuagc --module --catas --semfuns $(AG)StyleProcess.ag -P$(AG)
+	uuagc --module --catas --semfuns $(AG)NTree.ag -P$(AG)
+	uuagc		   --catas --semfuns $(AG)FormatTree.ag
 	mv $(AG)*.hs $(SRC)

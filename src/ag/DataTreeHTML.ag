@@ -1,4 +1,8 @@
 
+imports{
+import qualified Data.Map as Map
+}
+
 DATA Root
     | Root ntree:NTree
 
@@ -15,8 +19,3 @@ DATA Node
 
 DERIVING *: Show
 
-{
-instance Eq Node where
-    NTag n1 _ _ == NTag n2 _ _ = n1 == n2
-    _           == _           = False
-}

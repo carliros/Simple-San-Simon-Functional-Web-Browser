@@ -36,12 +36,6 @@ SEM BoxTree
 -- Distributing the contaning block (cb)
 ATTR BoxRoot BoxTree Boxes [cb: {Window a} ||]
 
--- separating the text into list of text, and getting the sizes
-SEM BoxTree
-    | BoxText loc.strs  = words @text
-              loc.sizes = let fsize cnt = unsafePerformIO $ getSizeBox cnt @lhs.cb @loc.usedValueProps
-                          in map (\str -> let (w,h,_,_) = fsize str in (w,h)) @loc.strs
-
 -- building a plain tree for inline formating
 ATTR BoxTree Boxes [|| elements USE {++} {[]}: {[ElementList]}]
 SEM BoxTree
@@ -76,23 +70,130 @@ SEM BoxTree
     | BoxText 
         lhs.elements 
             = let (wl,wr,ht,hb) = getExternalSizeBox4Tuple @loc.usedValueProps
-              in case @loc.strs of
-                    []        -> [] -- Que pasa si el elemento tiene margin,border y padding???????????
-                    [only]    -> let (w,h) = head @loc.sizes
-                                 in [ElementText @loc.code Full @loc.usedValueProps @attrs (w+wl+wr) h only]
-                    [ini,end] -> let (w1,h1) = head @loc.sizes
-                                     (w2,h2) = last @loc.sizes
-                                     eini = ElementText @loc.code Init @loc.usedValueProps @attrs (w1+wl) h1 ini
-                                     eend = ElementText @loc.code End  @loc.usedValueProps @attrs (w2+wr) h2 end
-                                 in [eini, eend]
-                    otherwise -> let (w1,h1) = head @loc.sizes
-                                     (w2,h2) = last @loc.sizes
-                                     eini = ElementText @loc.code Init @loc.usedValueProps @attrs (w1+wl) h1 (head @loc.strs)
-                                     eend = ElementText @loc.code End  @loc.usedValueProps @attrs (w2+wr) h2 (last @loc.strs)
-                                     lmed = let lelem = init (tail @loc.strs)
-                                                lsize = init (tail @loc.sizes)
-                                            in zipWith (\str (w,h) -> ElementText @loc.code Medium @loc.usedValueProps @attrs w h str) lelem lsize
-                                 in [eini] ++ lmed ++ [eend]
+                  whitespace    = computedValue $ @usedValueProps Map.! "white-space"
+              in case whitespace of
+                    KeyValue "normal"
+                        -> let strings = words @text
+                           in case strings of
+                               []        -> []
+                               [only]    -> let (w,h) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps only
+                                            in [ElementText @loc.code Full @loc.usedValueProps @attrs (w+wl+wr) h only]
+                               [ini,end] -> let (w1,h1) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps ini
+                                                (w2,h2) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps end
+                                                eini = ElementText @loc.code Init @loc.usedValueProps @attrs (w1+wl) h1 ini
+                                                eend = ElementText @loc.code End  @loc.usedValueProps @attrs (w2+wr) h2 end
+                                            in [eini, eend]
+                               otherwise -> let ini = head strings
+                                                end = last strings
+                                                (w1,h1) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps ini
+                                                (w2,h2) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps end
+                                                eini = ElementText @loc.code Init @loc.usedValueProps @attrs (w1+wl) h1 ini
+                                                eend = ElementText @loc.code End  @loc.usedValueProps @attrs (w2+wr) h2 end
+                                                lmed = let lelem = init (tail strings)
+                                                           lsize = map (unsafeGetSizeBox @lhs.cb @loc.usedValueProps) lelem
+                                                       in zipWith (\str (w,h) -> ElementText @loc.code Medium @loc.usedValueProps @attrs w h str) lelem lsize
+                                            in [eini] ++ lmed ++ [eend]
+                    KeyValue "pre"
+                        -> let strings = lines @text
+                           in case strings of
+                               []        -> []
+                               [only]    -> let (w,h) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps only
+                                            in [ElementText @loc.code Full @loc.usedValueProps @attrs (w+wl+wr) h only]
+                               [ini,end] -> let (w1,h1) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps ini
+                                                (w2,h2) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps end
+                                                eini = ElementText @loc.code Init @loc.usedValueProps @attrs (w1+wl) h1 ini
+                                                eend = ElementText @loc.code End  @loc.usedValueProps @attrs (w2+wr) h2 end
+                                            in [eini, LineFeed @loc.code Medium @loc.usedValueProps @attrs, eend]
+                               otherwise -> let ini = head strings
+                                                end = last strings
+                                                (w1,h1) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps ini
+                                                (w2,h2) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps end
+                                                eini = ElementText @loc.code Init @loc.usedValueProps @attrs (w1+wl) h1 ini
+                                                eend = ElementText @loc.code End  @loc.usedValueProps @attrs (w2+wr) h2 end
+                                                lmed = let lelem = init (tail strings)
+                                                           lsize = map (unsafeGetSizeBox @lhs.cb @loc.usedValueProps) lelem
+                                                       in zipWith (\str (w,h) -> ElementText @loc.code Medium @loc.usedValueProps @attrs w h str) lelem lsize
+                                                elements = [eini] ++ lmed ++ [eend]
+                                            in intersperse (LineFeed @loc.code Medium @loc.usedValueProps @attrs) elements
+                    KeyValue "nowrap"
+                        -> let strings = lines @text
+                           in case strings of
+                               []        -> []
+                               [only]    -> let (w,h) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps only
+                                            in [ElementText @loc.code Full @loc.usedValueProps @attrs (w+wl+wr) h only]
+                               [ini,end] -> let (w1,h1) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps ini
+                                                (w2,h2) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps end
+                                                eini = ElementText @loc.code Init @loc.usedValueProps @attrs (w1+wl) h1 ini
+                                                eend = ElementText @loc.code End  @loc.usedValueProps @attrs (w2+wr) h2 end
+                                            in [eini, LineFeed @loc.code Medium @loc.usedValueProps @attrs, eend]
+                               otherwise -> let ini = head strings
+                                                end = last strings
+                                                (w1,h1) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps ini
+                                                (w2,h2) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps end
+                                                eini = ElementText @loc.code Init @loc.usedValueProps @attrs (w1+wl) h1 ini
+                                                eend = ElementText @loc.code End  @loc.usedValueProps @attrs (w2+wr) h2 end
+                                                lmed = let lelem = init (tail strings)
+                                                           lsize = map (unsafeGetSizeBox @lhs.cb @loc.usedValueProps) lelem
+                                                       in zipWith (\str (w,h) -> ElementText @loc.code Medium @loc.usedValueProps @attrs w h str) lelem lsize
+                                                elements = [eini] ++ lmed ++ [eend]
+                                            in intersperse (LineFeed @loc.code Medium @loc.usedValueProps @attrs) elements
+                    KeyValue "pre-line"
+                        -> let subelements = map toElement . map words . lines $ @text
+                               toElement strings 
+                                 = case strings of
+                                    []        -> []
+                                    [only]    -> let (w,h) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps only
+                                                 in [ElementText @loc.code Full @loc.usedValueProps @attrs (w+wl+wr) h only]
+                                    [ini,end] -> let (w1,h1) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps ini
+                                                     (w2,h2) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps end
+                                                     eini = ElementText @loc.code Init @loc.usedValueProps @attrs (w1+wl) h1 ini
+                                                     eend = ElementText @loc.code End  @loc.usedValueProps @attrs (w2+wr) h2 end
+                                                 in [eini, eend]
+                                    otherwise -> let ini = head strings
+                                                     end = last strings
+                                                     (w1,h1) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps ini
+                                                     (w2,h2) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps end
+                                                     eini = ElementText @loc.code Init @loc.usedValueProps @attrs (w1+wl) h1 ini
+                                                     eend = ElementText @loc.code End  @loc.usedValueProps @attrs (w2+wr) h2 end
+                                                     lmed = let lelem = init (tail strings)
+                                                                lsize = map (unsafeGetSizeBox @lhs.cb @loc.usedValueProps) lelem
+                                                            in zipWith (\str (w,h) -> ElementText @loc.code Medium @loc.usedValueProps @attrs w h str) lelem lsize
+                                                 in [eini] ++ lmed ++ [eend]
+                           in concat . intersperse [LineFeed @loc.code Medium @loc.usedValueProps @attrs] $ subelements
+                    KeyValue "pre-wrap"
+                        -> let subelements = map toElement . map words' . lines $ @text
+                               toElement strings 
+                                 = case strings of
+                                    []        -> []
+                                    [only]    -> let (w,h) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps only
+                                                 in [ElementText @loc.code Full @loc.usedValueProps @attrs (w+wl+wr) h only]
+                                    [ini,end] -> let (w1,h1) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps ini
+                                                     (w2,h2) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps end
+                                                     eini = ElementText @loc.code Init @loc.usedValueProps @attrs (w1+wl) h1 ini
+                                                     eend = ElementText @loc.code End  @loc.usedValueProps @attrs (w2+wr) h2 end
+                                                 in [eini, eend]
+                                    otherwise -> let ini = head strings
+                                                     end = last strings
+                                                     (w1,h1) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps ini
+                                                     (w2,h2) = unsafeGetSizeBox @lhs.cb @loc.usedValueProps end
+                                                     eini = ElementText @loc.code Init @loc.usedValueProps @attrs (w1+wl) h1 ini
+                                                     eend = ElementText @loc.code End  @loc.usedValueProps @attrs (w2+wr) h2 end
+                                                     lmed = let lelem = init (tail strings)
+                                                                lsize = map (unsafeGetSizeBox @lhs.cb @loc.usedValueProps) lelem
+                                                            in zipWith (\str (w,h) -> ElementText @loc.code Medium @loc.usedValueProps @attrs w h str) lelem lsize
+                                                 in [eini] ++ lmed ++ [eend]
+                           in concat . intersperse [LineFeed @loc.code Medium @loc.usedValueProps @attrs] $ subelements
+
+{
+unsafeGetSizeBox cb props str = let (w,h,_,_) = unsafePerformIO $ getSizeBox str cb props
+                                in (w,h)
+
+words' :: String -> [String]
+words' []  = []
+words' str = let (wd,rest1) = span (not . isSpace) str
+                 (sp,rest2) = span (isSpace) rest1
+             in (wd ++ sp) : words' rest2
+}
 
 -- distribuiting the width and height of the containing block
 ATTR BoxRoot BoxTree Boxes [cbSize:{(Int,Int)} ||]

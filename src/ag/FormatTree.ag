@@ -1,0 +1,85 @@
+
+imports{
+module FormatTree
+( formatTree
+) where
+
+import UU.Pretty
+import qualified Data.Map as Map
+import DataTreeHTML
+}
+
+-- =====================================
+-- data types
+-- =====================================
+
+DATA Root
+    | Root ntree: NTree
+
+DATA NTree
+    | NTree node  : Node
+            ntrees: NTrees
+
+TYPE NTrees = [NTree]
+
+DATA Node
+    | NText text   : String
+    | NTag  tagname: String
+            isReplaced: Bool
+            attrs  : {Map.Map String String}
+
+-- =====================================
+-- semantic funtions for showNTree
+-- =====================================
+
+-- who is the node root tag?
+ATTR NTree Node NTrees [ noderoot: Bool ||]
+SEM NTree
+    | NTree node.noderoot   = @lhs.noderoot
+            ntrees.noderoot = False
+
+SEM Root
+    | Root ntree.noderoot = True
+
+-- building PP_Doc
+ATTR Root [|| ppdoc: PP_Doc ]
+SEM Root
+    | Root lhs.ppdoc = vlist @ntree.ppdocs
+
+ATTR NTree NTrees Node [|| ppdocs: {[PP_Doc]} ]
+SEM NTree
+    | NTree lhs.ppdocs = let tails = if @lhs.noderoot
+                                     then map (text "   " >|<) @ntrees.ppdocs
+                                     else @ntrees.ppdocs
+                           in @node.ppdocs ++ tails
+
+SEM NTrees
+    | Cons lhs.ppdocs = let str = if null @tl.ppdocs
+                                  then "    "
+                                  else "|   "
+                            (bf,af) = splitAt 2 @hd.ppdocs
+                            aff     = map (text str >|<) af
+                        in bf ++ aff ++ @tl.ppdocs
+    | Nil  lhs.ppdocs = []
+
+SEM Node
+    | NText lhs.ppdocs = if @lhs.noderoot
+                         then [ text  "---NText" >#< text (show @text) ]
+                         else [ text "|"
+                              , text "+---NText" >#< text (show @text)
+                              ]
+    | NTag  lhs.ppdocs = if @lhs.noderoot
+                         then [ text  "---NTag" >#< text @tagname ]
+                         else (text "|") :
+                              [text "+---NTag" >#< text @tagname] ++
+                              (map (\(nm,vl) -> text "|" >#< text nm >#< text "=" >#< text (show vl)) (Map.toList @attrs))
+
+-- =====================================
+-- auxiliar haskell funtions
+-- =====================================
+{
+formatTree :: Root -> IO()
+formatTree rt = do let ppd = sem_Root rt
+                   render ppd 10
+                   putStr "\n"
+}

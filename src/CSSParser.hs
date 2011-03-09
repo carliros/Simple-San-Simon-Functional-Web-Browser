@@ -21,7 +21,7 @@ parseStyleInline tag str = let props = unsafePerformIO (parseIO pInlineStyle str
                                rules = [(True, [SimpSelector (TypeSelector tag [] Nothing)], props)]
                            in sem_SRoot (SRoot rules)
 
-parseString str p = parseIO p str
+parseString p str = parseIO p str
 
 pInlineStyle = pProperties
 
@@ -87,6 +87,7 @@ pProperty =  pDisplay
          <|> pListProps
          <|> pBackgroundColor
          <|> pText
+         <|> pWhiteSpace
 
 pDisplay = buildProperties $ tmap pDisplayValue ["display"]
 pDisplayValue = pKeyValues ["inline", "block", "list-item", "none", "inherit"]    -- no support for: run-in, inline-block
@@ -212,6 +213,8 @@ pText = buildProperties [ ("text-indent", pLength <|> pPercentage <|> pKeyValues
 pListDecoration = ListValue <$> pList1Sep_ng pStuff pDecorationValue
 pDecorationValue = pKeyValues ["underline", "overline", "line-through"]     -- no blink
 
+pWhiteSpace = buildProperties [("white-space", pKeyValues ["normal", "pre", "nowrap", "pre-wrap", "pre-line", "inherit"])]
+
 pImportant = (True <$ pSymbol "!" <* pKeyword "important") <|> pSucceed False
 
 -- Properties' builders
@@ -329,8 +332,8 @@ toFloat = read
 toInt :: String -> Int
 toInt = read
 
-pString1Content = pList1 (pAlphaNum <|> (pAnySym " ,(){}*#[]~=.><+;-\':!%|"))
-pString2Content = pList1 (pAlphaNum <|> (pAnySym " ,(){}*#[]~=.><+;-\":!%|"))
+pString1Content = toString <$> pList1 (pAlphaNum <|> (pAnySym " ,(){}*#[]~=.><+;-\':!%|\\"))
+pString2Content = toString <$> pList1 (pAlphaNum <|> (pAnySym " ,(){}*#[]~=.><+;-\":!%|\\"))
 pSimpleContent  = pList1 pAlphaNum
 pL        = 'a' <..> 'z'
 pU        = 'A' <..> 'Z'
@@ -354,6 +357,16 @@ pStuff  = pList  (pAnySym " \t\r\n")
 pListN 0 sep p = pSucceed []
 pListN n sep p = (:) <$> sep *> p <*> pListN (n-1) sep p
               <|> pSucceed []
+
+-- Auxiliar functions
+toString []     
+    = []
+toString (s:c:cs) 
+    = if s == '\\' && (c == 'A' || c == 'n')
+      then  '\n' : toString cs
+      else s : c : toString cs
+toString (c:cs) 
+    = c : toString cs
 
 -- Parser Instances
 instance Symbol Char where

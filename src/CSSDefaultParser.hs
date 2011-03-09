@@ -38,6 +38,7 @@ ppProperty =  ppDisplay
           <|> ppListProps
           <|> ppBackgroundColor
           <|> ppText
+          <|> ppWhiteSpace
 
 ppDisplay = buildUserAgentProperties $ tmap pDisplayValue ["display"]
 
@@ -117,3 +118,5 @@ ppText = buildProperties [ ("text-indent", pLength <|> pPercentage <|> pKeyValue
                          , ("text-align", pKeyValues ["left", "right", "center", "inherit"])    -- no jutify
                          , ("text-decoration", pListDecoration <|> pKeyValues ["none", "inherit"])
                          , ("text-transform", pKeyValues ["capitalize", "uppercase", "lowercase", "none", "inherit"])]
+
+ppWhiteSpace = buildProperties [("white-space", pKeyValues ["normal", "pre", "nowrap", "pre-wrap", "pre-line", "inherit"])]

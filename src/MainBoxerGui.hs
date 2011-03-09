@@ -10,6 +10,7 @@ import Control.Concurrent
 import Url
 
 -- datatypes
+import DataTreeHTML
 import NTree
 import FSTreeFase1
 import FSTreeFase2
@@ -60,7 +61,7 @@ gui = do -- variable to draw lines
          -- set splitter's behaviour
          (Size w _) <- get f size
          let w' = (w*75) `div` 100 
-         splitterWindowSplitVertically spw icb pnl w'
+         splitterWindowSplitVertically spw pnl icb w'
          splitterWindowSetMinimumPaneSize spw w'
 
          -- main layout

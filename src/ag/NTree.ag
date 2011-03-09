@@ -3,15 +3,17 @@ PRAGMA genlinepragmas
 imports{
 -- libraries
 import Data.List
-import qualified Data.Map as Map
+--import qualified Data.Map as Map
 import Data.Maybe
 import Data.Function
+import Data.Char
 
 -- datatypes
+import DataTreeHTML
+import DataTreeCSS
 import CSSParser (parseStyleString, parseStyleInline)
 import PropertyValue
 import PropertiesCSS
-import DataTreeCSS
 import FSBox
 import FSTreeFase1
 import NumRomans
@@ -42,7 +44,10 @@ SEM NTree
     | NTree lhs.fstree 
                 = let boxesBefore = generateBoxContent (fst @loc.computedContentValueProps) @loc.computedValueProps (fst @loc.myCounterScope) @loc.myQuoteScope
                       boxesAfter  = generateBoxContent (snd @loc.computedContentValueProps) @loc.computedValueProps (fst @loc.myCounterScope) @loc.myQuoteScope
-                      boxes       = catMaybes $ boxesBefore ++ @ntrees.fstrees ++ boxesAfter
+                      boxes       = let before   = map applyWhiteSpaceProperty $ catMaybes boxesBefore
+                                        children = map applyWhiteSpaceProperty $ catMaybes @ntrees.fstrees
+                                        after    = map applyWhiteSpaceProperty $ catMaybes boxesAfter
+                                    in catMaybes $ before ++ children ++ after
                   in case @node.myself of
                        NTag nm iamreplaced attrs
                             -> case computedValue (@loc.computedValueProps Map.! "display") of
@@ -68,32 +73,32 @@ SEM NTree
                                                      in Just $ BoxContainer @node.name "block" @loc.computedValueProps iamreplaced attrs listBCnt
                                                 else Just $ BoxContainer @node.name "inline" @loc.computedValueProps iamreplaced attrs boxes
                        NText str   -- a simple text is never affected by an style rule
-                            -> Just $ BoxText @loc.computedValueProps Map.empty str
-
-{-
--- Generating the Tree-Box Formatting Structure
-ATTR NTrees [|| outbox:{[Maybe FSBox]}]
-SEM NTrees
-    | Cons lhs.outbox = @hd.outbox : @tl.outbox
-    | Nil  lhs.outbox = []
-
-ATTR NTree [|| outbox: {Maybe FSBox} ]
-SEM NTree
-    | NTree lhs.outbox = case @node.myself of
-                            NTag  str _ _ -> if verifyProperty "display" "none" @loc.computedValueProps
-                                             then Nothing
-                                             else Just $ FSBox str @loc.computedValueProps (catMaybes @ntrees.outbox)
-                            NText str     -> if verifyProperty "display" "none" @loc.computedValueProps
-                                             then Nothing
-                                             else Just $ FSBox "text" @loc.computedValueProps []
-
-ATTR Root [|| outbox: FSBox ]
-SEM Root
-    | Root lhs.outbox = fromJust @ntree.outbox
--}
+                            -> Just $ BoxText @loc.computedValueProps Map.empty str     -- his container will apply the white-space property
 
 -- auxiliar functions
 {
+-- data type instances
+instance Eq Node where
+    NTag n1 _ _ == NTag n2 _ _ = n1 == n2
+    _           == _           = False
+
+applyWhiteSpaceProperty (BoxText props attrs str)
+    = let whitespace = computedValue $ props Map.! "white-space"
+      in case whitespace of
+            KeyValue "normal"   -> let res = processString True  True  str in if null res then Nothing else Just (BoxText props attrs res)
+            KeyValue "nowrap"   -> let res = processString True  True  str in if null res then Nothing else Just (BoxText props attrs res)
+            KeyValue "pre-line" -> let res = processString True  False str in if null res then Nothing else Just (BoxText props attrs res)
+            KeyValue "pre"      -> let res = processString False False str in if null res then Nothing else Just (BoxText props attrs res)
+            KeyValue "pre-wrap" -> let res = processString False False str in if null res then Nothing else Just (BoxText props attrs res)
+            KeyValue "inherit"  -> error "[NTree] unexpected inherit value at applyWhyteSpaceProperty."
+    where processString isSpaceCollapsed isLineFeedIgnored input
+              = case (isSpaceCollapsed, isLineFeedIgnored) of
+                    (True , True ) -> unwords . words $ input                               -- case of normal and nowrap
+                    (True , False) -> unlines . map unwords . map words . lines $ input     -- case of pre-line
+                    otherwise      -> input                                                 -- case of pre and pre-wrap
+applyWhiteSpaceProperty another
+    = Just another
+
 doIContainOnlyText [BoxText _ _ str] = (True ,str)
 doIContainOnlyText _                 = (False,"error")
 

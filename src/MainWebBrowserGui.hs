@@ -11,6 +11,7 @@ import Control.Concurrent
 import Url
 
 -- datatypes
+import DataTreeHTML
 import NTree
 import FSTreeFase1
 import FSTreeFase2
@@ -58,7 +59,8 @@ onButtonHistorial fmove varzipper inp pnl varfstree defaultcss4html varbaseurl =
     return ()
 
 onPnlPaint icb inp varfstree varzipper defaultcss4html varbaseurl dc rc = do 
-    updateInitialContainer icb inp varfstree varzipper defaultcss4html varbaseurl
+    return ()
+    --updateInitialContainer icb inp varfstree varzipper defaultcss4html varbaseurl
 
 updateInitialContainer icb inp varfstree varzipper defaultcss4html varbaseurl = do
     -- deleting all windows
@@ -71,14 +73,13 @@ updateInitialContainer icb inp varfstree varzipper defaultcss4html varbaseurl = 
     result <- get varfstree value
     case result of
         (Just fstree) -> do let boxtree = sem_BoxRoot (BoxRoot fstree) icb (w,h)
-                                (_,fresult, (wc,hc)) = sem_WindowRoot (WindowRoot boxtree) 
+                            --UP.render (UP.pp boxtree) 20
+                            let (_,fresult, (wc,hc)) = sem_WindowRoot (WindowRoot boxtree) 
                                                                       baseurl 
                                                                       icb 
                                                                       (goToURL icb inp varfstree varzipper defaultcss4html varbaseurl) 
                                                                       ("default", (0,0))
                             fresult icb
-                            --UP.render (UP.pp boxtree) 200
-                            
                             -- scrollbars
                             sw <- get icb size
                             let ns@(Size nw nh) = sizeMax sw (sz wc hc)

@@ -6,6 +6,10 @@ DATA RootList
 TYPE Elements = [ElementList]
 
 DATA ElementList
+    | LineFeed          code : Code      -- means I must break the line
+                        type : {TypeContinuation}
+                        props: {Map.Map String PropertyValue}
+                        attrs: {Map.Map String String}
     | ReplacedContainer name : String
                         code : Code
                         type : {TypeContinuation}
@@ -42,9 +46,13 @@ getCode (Code fht chd) = toInt fht chd
 -- transform back a list of elementlist into a Tree
 list2tree :: [ElementList] -> WindowTrees
 list2tree [] = error "[wraplist] empty element list"
-list2tree lst = let lgroup = groupBy fcmp lst
+list2tree [LineFeed _ tp props attrs] = [WindowText props attrs tp " "]
+list2tree lst = let realList = filter noLineFeed lst
+                    lgroup   = groupBy fcmp realList
                 in map toWindowTree lgroup
-    where fcmp (ElementText cod1 _ _ _ _ _ _) 
+    where noLineFeed (LineFeed _ _ _ _) = False
+          noLineFeed _                  = True
+          fcmp (ElementText cod1 _ _ _ _ _ _) 
                (ElementText cod2 _ _ _ _ _ _) = cod1 == cod2
           fcmp (ElementContainer _ cod1 _ _ _ _ _ _)
                (ElementContainer _ cod2 _ _ _ _ _ _) = cod1 == cod2
@@ -104,14 +112,19 @@ inlineFormatting lst width indent space = let width' = foldr (\e w -> (getLength
     where doInline w indent s []   = []
           doInline w indent s list = let newWidth     = w - indent
                                          (line, rest) = buildLine list (newWidth + s) 0 s
-                                     in line: doInline w 0 s rest   -- I apply indent only to the first line
+                                     in line: doInline w 0 s rest   -- I apply indent only to the first line, so next I send 0 for indent
           getLength (ReplacedContainer _ _ _ _ _ w _  ) = w
           getLength (ElementContainer  _ _ _ _ _ w _ _) = w
           getLength (ElementText         _ _ _ _ w _ _) = w
-          buildLine []         _ _  _     = ([],[])
-          buildLine nlst@(e:es) w wt space = let len = wt + getLength e + space
-                                             in if len <= w
-                                                then let (ln,rs) = buildLine es w len space
-                                                     in (e:ln, rs)
-                                                else ([],nlst)
+          getLength (LineFeed            _ _ _ _      ) = 0
+          buildLine []         _ _  _      
+              = ([],[])
+          buildLine nlst@(e:es) w wt space 
+              = case e of
+                   LineFeed _ _ _ _ -> ([e],es)
+                   otherwise        -> let len = wt + getLength e + space
+                                       in if len <= w
+                                          then let (ln,rs) = buildLine es w len space
+                                               in (e:ln, rs)
+                                          else ([],nlst)
 }
