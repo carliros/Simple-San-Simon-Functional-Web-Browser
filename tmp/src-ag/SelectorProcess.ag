@@ -1,0 +1,60 @@
+
+imports {
+import Data.Maybe
+import MatchSelector
+}
+
+-- Selector's Stuff
+ATTR Node [|| self:SELF ]
+ATTR NTree [|| nd:Node ]
+SEM NTree
+    | NTree lhs.nd = @node.self
+
+ATTR NTrees NTree [ fathers: {[(Node, [Node])]} ||]
+SEM NTree
+    | NTree ntrees.fathers = (@node.self, @loc.siblings) : @lhs.fathers
+            loc.fathers    = @lhs.fathers
+
+SEM NRoot
+    | NRoot ntree.fathers  = []
+            ntree.siblings = []
+
+ATTR NTrees NTree [ siblings: {[Node]} ||]
+SEM NTrees
+    | Cons tl.siblings = @hd.nd : @lhs.siblings
+           hd.siblings = @lhs.siblings
+
+SEM NTree
+    | NTree ntrees.siblings = []
+            loc.siblings    = @lhs.siblings
+
+-- build my rule declarations for each element's tree
+SEM NTree
+    | NTree loc.reglasEmparejadas 
+                = let applyMatchSelector selector = emparejarSelector @node.self @loc.fathers @loc.siblings selector False
+                      obtenerReglas selector r1 r2 = if applyMatchSelector selector
+                                                     then r1 ++ r2
+                                                     else r2
+                  in Map.foldrWithKey obtenerReglas [] @loc.misHojasEstilo
+
+            loc.myContentRules 
+                = let applyMatchSelector selector 
+                            = emparejarSelector @node.self @loc.fathers @loc.siblings selector True
+                      obtenerReglas selector@(s:_) r1 (r2,r3) 
+                            = if applyMatchSelector selector
+                              then case getPse s of
+                                       Just PseudoBefore -> (r1 ++ r2,       r3)
+                                       Just PseudoAfter  -> (      r2, r1 ++ r3)
+                                       Nothing           -> (      r2,       r3)
+                              else (r2,r3)
+                  in Map.foldrWithKey obtenerReglas ([],[]) @loc.misHojasEstilo
+                                
+
+{
+getPse (SimpSelector ss) = getPsePse ss
+getPse (DescSelector ss) = getPsePse ss
+getPse (ChilSelector ss) = getPsePse ss
+getPse (SiblSelector ss) = getPsePse ss
+getPsePse (TypeSelector _ _ pse) = pse
+getPsePse (UnivSelector   _ pse) = pse
+}

@@ -1,0 +1,64 @@
+<html>
+    <head>
+        <style>
+            h1 {font-size: 30pt}
+            p span { 
+                font-weight: bold
+            }
+            h4 span {
+                font-style: italic
+            }
+            div > h4 {
+                color: blue
+            }
+            span + span { font-style : italic
+                        ; text-decoration: underline overline line-through
+            }
+            p { text-indent: 2em
+              ; text-align: left
+              }
+        </style>
+    </head>
+    <body>
+        <h1> Testeando los Selectores de CSS </h1>
+
+        <div>
+        <h4><span>Descendant</span> selectors</h4>
+        <p>
+            Los selectores descendientes (<span>descendant selectors</span>) 
+            seleccionan elementos que son descendientes de algun elemento. 
+            Por ejemplo, si tenemos "elemA elemB", seleccionan todos los 
+            elemB que son descendientes de elemA.
+        </p>
+        <p>
+            Tenemos dos ejemplos de este tipo en esta pagina. Uno se encuentra 
+            en los subtitulos, aplicando un estilo de texto italic a 
+            <span>"h4 span"</span>. Y el otro se encuentra en los 
+            parrafos que tienen span, aplicando un estilo 
+            bold a <span>"p span"</span>.
+        </p>
+        </div>
+
+
+        <div>
+        <h4><span>Child</span> selectors</h4>
+        <p>
+            Los selectores hijos (<span>child selectors</span>) seleccionan 
+            elementos que son hijos de algun elemento (primer hijo). 
+            Por ejemplo, si tenemos "elemA elemB", seleccionan todos 
+            los elemB que son primeros hijos de elemA. Un ejemplo de 
+            este tipo es "div h4", y a todos estos elementos los pinta de azul.
+        </p>
+        </div>
+
+        <div>
+        <h4><span>Sibling</span> selectors</h4>
+        <p>
+            Los selectores hermanos (<span>sibling selectors</span>) seleccionan 
+            elementos que estan uno despues de otro con el mismo padre. 
+            Un ejemplo, "span span", que los marca como italic y los decora con lineas.
+            <span>Sibling</span> <span>Sibling</span> <span>Sibling</span>.
+        </p>
+        </div>
+    </body>
+</html>

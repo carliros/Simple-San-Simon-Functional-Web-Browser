@@ -1,0 +1,76 @@
+imports{
+import NumRomans
+}
+
+ATTR BoxTree [|| incLI: Int]
+SEM BoxTree
+    | BoxItemContainer
+        lhs.incLI = 1
+    | BoxContainer
+        lhs.incLI = 0
+    | BoxText
+        lhs.incLI = 0
+
+ATTR Boxes BoxTree [counterItem: Int ||]
+
+SEM Boxes
+    | Cons loc.item = @lhs.counterItem + @hd.incLI
+           hd.counterItem = @loc.item
+           tl.counterItem = @loc.item
+SEM BoxRoot
+    | BoxRoot boxtree.counterItem = 0
+
+SEM BoxTree
+    | BoxItemContainer
+        boxes.counterItem = 0
+    | BoxContainer
+        boxes.counterItem = 0
+
+SEM BoxTree
+    | BoxItemContainer 
+        loc.marker = case computedValue (@props `get` "list-style-type") of
+                        KeyValue "none"
+                            -> (NoMarker      , (0,0)  )
+                        KeyValue "disc"
+                            -> (Glyph "disc"  , (14,14))
+                        KeyValue "circle"
+                            -> (Glyph "circle", (14,14))
+                        KeyValue "square"
+                            -> (Glyph "square", (14,14))
+                        KeyValue "decimal" 
+                            -> let str       = show @lhs.counterItem ++ "."
+                                   (w,h,_,_) = unsafePerformIO $ getSizeBox str @lhs.cb @loc.usedValueProps
+                               in (Numering str, (w,h))
+                        KeyValue "lower-roman"
+                            -> let str       = toRomanLower @lhs.counterItem ++ "."
+                                   (w,h,_,_) = unsafePerformIO $ getSizeBox str @lhs.cb @loc.usedValueProps
+                               in (Numering str, (w,h))
+                        KeyValue "upper-roman"
+                            -> let str       = toRomanUpper @lhs.counterItem ++ "."
+                                   (w,h,_,_) = unsafePerformIO $ getSizeBox str @lhs.cb @loc.usedValueProps
+                               in (Numering str, (w,h))
+
+ATTR BoxTree [|| markerDim: {(Int,Int)}]
+SEM BoxTree
+    | BoxItemContainer
+        lhs.markerDim = snd @loc.marker
+    | BoxContainer
+        lhs.markerDim = (0,0)
+    | BoxText
+        lhs.markerDim = (0,0)
+
+ATTR Boxes [|| maxMarkerDim: {(Int,Int)}]
+SEM Boxes
+    | Cons lhs.maxMarkerDim = let (a,c) = @hd.markerDim
+                                  (b,d) = @tl.maxMarkerDim
+                              in (a `max` b, c `max` d)
+    | Nil  lhs.maxMarkerDim = (0,0)
+
+ATTR Boxes BoxTree [ maxMarkerDim: {(Int,Int)} ||]
+SEM BoxTree
+    | BoxItemContainer
+        boxes.maxMarkerDim = @boxes.maxMarkerDim
+    | BoxContainer
+        boxes.maxMarkerDim = @boxes.maxMarkerDim
+SEM BoxRoot
+    | BoxRoot boxtree.maxMarkerDim = (0,0)

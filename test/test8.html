@@ -1,0 +1,49 @@
+<html>
+    <head>
+        <style>
+            span { font-style: italic
+                 ; margin-right: 0px
+                 ; margin-left: 10px
+                 ; padding-right: 3px
+                 ; border-width: 3px 1px 3px 1px
+                 ; border-style: solid
+            }
+            p {text-indent: 20px}
+        </style>
+    </head>
+    <body>
+        <h1>Conclusion de XMonad:</h1>
+        <h4> Testeando el TypeContinuation de los elementos </h4>
+           
+        <p>
+           By moving more information into our pure data structure, we are 
+           able to make stronger statements about the behaviour of our code, 
+           on that information. 
+           <span>By using a purely functional data structure, and QuickCheck, 
+           we can encode these statements as QuickCheck properties, and have 
+           them tested automatically.</span>
+           Finally, by using a data structure which more closely models the 
+           domain we are looking at, the implementation becomes simpler, 
+           cleaner and more obviously correct, and with a strong, statically 
+           typed data structure, we get behaviour for free that previously 
+           required dynamic checking. 
+           The data type described here is the core of a branch of the 
+           xmonad window manager.
+        </p>
+        <p>
+           The zipper version of xmonad is running on my laptop as I write, 
+           and plans are to merge it into the main xmonad branch soon. 
+           Perhaps the most interesting result is that xmonad is now 50 lines 
+           shorter. By moving more logic (explicit focus handling) into the 
+           pure StackSet data structure, most of the event handling code 
+           is now just a shallow wrapper over the StackSet api. Smarter 
+           data structures, less code. It is all good.
+        </p>
+        <p>
+           Thanks goes to Wouter Swiestra for the original idea of using a 
+           zipper to implement focus-tracking in the xmonad, and to 
+           Spencer Janssen, Jason Creighton and David Roundy for several 
+           discussions about the subtleties of focus behaviour.
+        </p>
+    </body>
+</html>

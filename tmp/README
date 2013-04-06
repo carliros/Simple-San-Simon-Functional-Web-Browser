@@ -1,0 +1,58 @@
+
+Simple San Simon Functional Web Browser
+=======================================
+
+It is a computer desktop program for rendering web pages.
+One nice thing is that it is written with Haskell, a purely funcional programming language.
+It supports a generic markup language (like ~ html or xhtml or xml) and part of CSS.
+
+In order to test it, you have to install and then configure.
+
+For more information: http://hsbrowser.wordpress.com
+You can send me an e-mail with suggestions, questions or problems.
+
+Carlos Gomez
+carliros.g@gmail.com
+
+
+First way of installation
+-------------------------
+
+Installation:
+    Basically, you can install it in the way you have known.
+    For example, using cabal:
+        cabal install 3sfwbrowser
+    or manually:
+        runhaskell Setup.hs configure
+        runhaskell Setup.hs build
+        runhaskell Setup.hs install
+
+Configuration:
+    After you install the browser, you have to configure it.
+    In order to get it configured, you have to
+        First, copy the "config" directory to the place where the binary is.
+               For example, if the binary generated is on /usr/local/bin/
+               , you have to copy the "config" directory to /usr/local/bin/
+        Second, copy the "tmp" directory to the place where the binary is.
+                For example, if the binary generated is on /usr/local/bin/
+                , you have to copy the "tmp" directory to /usr/local/bin/
+
+Why to copy those thow directories?
+The first one ('config') saves the config files for the browser, for example 
+the default stylesheet for the browser is 'html4.css', there is also
+a config file to remmember stylesheet's files, it is 'dbf'
+The 'tmp' directory is the place where all resources from the web are downloaded.
+
+Second way of instalation
+-------------------------
+
+    The second is using the 'Makefile', which compile all application.
+    But you have to consider that it just will build the application, it wont install.
+
+    To build the application, just type:  make
+    Then, in order to excute, type: ./3sfwbrowser
+
+Note.- In both ways you have to install all dependencies, but you can use the cabal file
+to know what dependencies you need, and then use the Makefile to build the application.
+
+

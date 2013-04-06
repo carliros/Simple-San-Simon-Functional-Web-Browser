@@ -1,0 +1,21 @@
+<html>
+    <head>
+        <style>
+            q:before {content : open-quote}
+            q:after  {content : close-quote}
+
+            q {quotes: "'" "'" '"' '"' "|" "|"}
+
+            p.note:before { content: "Note:"}
+            p.note {border: solid green}
+        </style>
+    </head>
+    <body>
+        <h1>Vista General</h1>
+        <p> En este proyecto encontraras una descripcion de la implementacion de un Navegador Web con Haskell. </p>
+        <p> Abordamos este proyecto con el objetivo de experimentar las capacidades de Haskell commo Lenguaje de Programacion Funcional con evaluacion perezosa y de proposito general. </p>
+        <p class = "note"> Podemos ver [10] que <q>Haskell ha crecido y madurado lo necesario como para hacer aplicaciones no solo en el ambito academico, sino tambien comercial; Puedes ver una amplia cantidad de estas aplicaciones en el <q>Hackage</q> [11] de Haskell.</q> </p>
+
+        <p> Asi en este proyecto estoy usando la libreria <q>curl</q> [12] para la comunicacion, entre los diferentes protocolos y el navegador web, la libreria <q>uulib</q> (Error Correcting Parser Combinators) [14] para parsear los documentos HTML y CSS, <q>uuag</q> (Attribute Grammar Preprocesor) [13] para procesar la informacion, y <q>wxhaskell</q> (Libreria Grafica) para renderizar los documentos HTML en la pantalla. </p>
+    </body>
+</html>

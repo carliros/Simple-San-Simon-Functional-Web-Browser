@@ -1,0 +1,18 @@
+
+article, headline, author, para {display: block}
+
+headline { font-size: 18pt
+         ; font-weight: bold
+         ; color: blue}
+
+para {margin-left: 20px}
+
+instrument {font-style: italic}
+
+author:before { content: "Author:"
+              ; font-weight: bold}
+
+para:before { content: "Para:"
+            ; font-weight: bold
+            ; display: block}
+

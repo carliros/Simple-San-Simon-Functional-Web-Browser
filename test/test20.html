@@ -1,0 +1,42 @@
+<html>
+    <head>
+        <style>
+            body {counter-reset: chapter}
+            h1:before {
+                  content: "Chapter" counter(chapter, upper-roman) "."
+                ; counter-increment: chapter
+                ; counter-reset: section
+            }
+            h2:before {
+                  content: counter(chapter, upper-roman) "." counter(section)
+                ; counter-increment: section
+            }
+            h1 { font-size: 15pt
+               ; margin: 0pt
+            }
+            h2 { font-size: 12pt
+               ; margin: 0pt
+            }
+        </style>
+    </head>
+    <body>
+       <h1> Introduccion </h1>
+            <h2> Vista General </h2>
+            <h2> Resumen </h2>
+       <h1> DataTypes </h1>
+            <h2> HTML </h2>
+            <h2> CSS </h2>
+            <h2> Formatting Structure </h2>
+       <h1> Parsing </h1>
+            <h2> HTML </h2>
+            <h2> CSS </h2>
+       <h1> Formatting Structure </h1>
+            <h2> Fase 0</h2>
+            <h2> Fase 1</h2>
+            <h2> Fase 2</h2>
+       <h1> Rendering Box </h1>
+            <h2> CSS Visual Box Model</h2>
+            <h2> Renderizando propiedades de CSS </h2>
+       <h1> Bibliografia </h1>
+    </body>
+</html>

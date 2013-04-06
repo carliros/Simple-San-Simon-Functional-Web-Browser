@@ -1,0 +1,184 @@
+PRAGMA genlinepragma
+imports{
+
+--module NTree
+--( NRoot (..)
+--, procesarNTree
+--) where
+
+-- libraries
+import qualified Data.Map as Map
+import Data.List
+import Data.Maybe
+import Data.Function
+import Data.Char
+
+
+-- local modules
+import DataTreeHTML
+import DataTreeCSS
+import Propiedades
+import Property
+
+import FSTreeFase1
+import CommonTypes
+import NumRomans
+import Utiles
+}
+
+INCLUDE "DataTreeHTML.ag"
+INCLUDE "ObtenerHojasEstilo.ag"
+INCLUDE "SelectorProcess.ag"
+INCLUDE "DoSpecifiedValue.ag"
+INCLUDE "DoComputedValue.ag"
+
+INCLUDE "CounterProcess.ag"
+INCLUDE "GeneratedContent.ag"
+
+-- Generating the Formatting Structure of a web page
+ATTR NTrees [|| fstree USE {:} {[]}:{[Maybe BoxTree]}]
+ 
+ATTR NRoot NTree [|| fstree: {Maybe BoxTree}]
+SEM NTree
+    | NTree lhs.fstree 
+                = let boxesBefore = generateBoxContent (fst @loc.computedContentValueProps) @loc.computedValueProps (fst @loc.myCounterScope) @loc.myQuoteScope
+                      boxesAfter  = generateBoxContent (snd @loc.computedContentValueProps) @loc.computedValueProps (fst @loc.myCounterScope) @loc.myQuoteScope
+                      boxes       = let before   = map applyWhiteSpaceProperty $ catMaybes boxesBefore
+                                        children = map applyWhiteSpaceProperty $ catMaybes @ntrees.fstree
+                                        after    = map applyWhiteSpaceProperty $ catMaybes boxesAfter
+                                    in catMaybes $ before ++ children ++ after
+                  in genBox @node.self @loc.computedValueProps boxes @lhs.iamtheroot
+
+-- auxiliar functions
+{
+genBox (NText str) props boxes _
+    = genTextBox props str
+genBox (NTag nm replaced attrs) props boxes broot
+    = if replaced
+      then genReplacedBox nm attrs props
+      else case computedValue (props `get` "display") of
+                KeyValue "none"
+                    -> Nothing
+                KeyValue "list-item"
+                    -> genListItemBox attrs props boxes broot
+                KeyValue "inline"
+                    -> genInlineBox nm attrs props boxes
+                KeyValue "block"
+                    -> genBlockBox nm attrs props boxes broot 
+
+genTextBox props str
+    = Just $ BoxText "text" props Map.empty str
+
+genReplacedBox nm attrs props
+    = Just $ BoxContainer nm NoContext props True attrs []
+
+genListItemBox attrs props boxes broot
+    = let listGrouped      = groupBy funGroupCompare boxes
+          listBoxContainer = map (toBoxContainer broot props Nothing) listGrouped
+      in Just $ BoxItemContainer props attrs listBoxContainer
+
+genInlineBox nm attrs props boxes
+    = case boxes of
+          [BoxText "text" _ _ str]
+                -> mkBoxText str
+          otherwise
+                -> if any isThereBlockDisplay boxes
+                   then error $ "Unsupported feature: inline block at node:" ++ nm
+                   else mkBoxContainer InlineContext
+    where mkBoxContainer context
+              = Just $ BoxContainer nm context props False attrs boxes
+          mkBoxText str
+              = Just $ BoxText nm props attrs str
+
+genBlockBox nm attrs props boxes broot
+    = if any isThereBlockDisplay boxes
+      then let listGrouped      = groupBy funGroupCompare boxes
+               listBoxContainer = map (toBoxContainer broot props Nothing) listGrouped
+           in mkBoxContainer BlockContext listBoxContainer
+      else mkBoxContainer InlineContext boxes
+    where mkBoxContainer context children
+              = Just $ BoxContainer nm context props False attrs children
+          mkBoxText str
+              = Just $ BoxText nm props attrs str
+
+-- data type instances
+instance Eq Node where
+    NTag n1 _ _ == NTag n2 _ _ = n1 == n2
+    _           == _           = False
+
+applyWhiteSpaceProperty (BoxText nm props attrs str)
+    = let whitespace = computedValue $ props `get` "white-space"
+      in case whitespace of
+            KeyValue "normal"   
+                -> let res = processString True  True  str 
+                   in if null res then Nothing else Just (BoxText nm props attrs res)
+            KeyValue "nowrap"   
+                -> let res = processString True  True  str 
+                   in if null res then Nothing else Just (BoxText nm props attrs res)
+            KeyValue "pre-line" 
+                -> let res = processString True  False str 
+                   in if null res then Nothing else Just (BoxText nm props attrs res)
+            KeyValue "pre"      
+                -> let res = processString False False str 
+                   in if null res then Nothing else Just (BoxText nm props attrs res)
+            KeyValue "pre-wrap" 
+                -> let res = processString False False str 
+                   in if null res then Nothing else Just (BoxText nm props attrs res)
+            KeyValue "inherit"  
+                -> error "[NTree] unexpected inherit value at applyWhyteSpaceProperty."
+    where processString isSpaceCollapsed isLineFeedIgnored input
+              = case (isSpaceCollapsed, isLineFeedIgnored) of
+                    (True , True ) -> unwords . words $ input                               -- case of normal and nowrap
+                    (True , False) -> unlines . map unwords . map words . lines $ input     -- case of pre-line
+                    otherwise      -> input                                                 -- case of pre and pre-wrap
+applyWhiteSpaceProperty another
+    = Just another
+
+isThereBlockDisplay bx
+    = case bx of
+        BoxItemContainer       _ _ _ -> True
+        BoxContainer _ _ props _ _ _ -> verifyProperty "display" "block" props
+        BoxText      _   props _ _   -> verifyProperty "display" "block" props
+
+-- This function build a group just for display=inline, and the others is a list of one element
+funGroupCompare = (&&) `on` (\bx -> verifyProperty "display" "inline" (getProps bx))
+    where getProps bx 
+            = case bx of
+                BoxItemContainer props _ _   -> props
+                BoxContainer _ _ props _ _ _ -> props
+                BoxText _        props _ _   -> props
+
+-- function that transform an inline element into a block container
+toBoxContainer broot sprops replaced lst@(bx:bxs) 
+    = case bx of
+        BoxItemContainer _ _ _ 
+            -> bx
+        BoxContainer nm _ props _ _ _ 
+            -> if verifyProperty "display" "block" props
+               then bx
+               else BoxContainer (nm ++ "???")
+                                 InlineContext 
+                                 (doInheritance broot propiedadesCSS sprops replaced) 
+                                 False 
+                                 Map.empty 
+                                 lst
+        BoxText nm props _ _
+            -> if verifyProperty "display" "block" props
+               then bx
+               else BoxContainer (nm ++ "???")
+                                 InlineContext 
+                                 (doInheritance broot propiedadesCSS sprops replaced) 
+                                 False 
+                                 Map.empty 
+                                 lst
+
+-- this function build the specified value and the computed value
+doInheritance broot listProps fatherProps replaced
+    = let inhProps   = Map.fromList $ map (\p -> (getPropertyName p, applyInheritance broot fatherProps p)) listProps
+          blockProps = Map.adjust (adjustPropertyValue (\pv -> pv{specifiedValue = KeyValue "block"})) "display" inhProps
+      in Map.map (doComputedValue broot fatherProps blockProps replaced False) blockProps
+
+-- interface
+genFormattingEstructure ast uacss ucss = sem_NRoot (NRoot ast) uacss ucss
+}
+

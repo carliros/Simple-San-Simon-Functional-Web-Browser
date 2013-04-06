@@ -1,0 +1,32 @@
+
+-- Generating the Box-Tree Formatting Structure
+ATTR WindowRoot WindowTree Line [|| outbox: {FSBox}]
+SEM WindowTree
+    | WindowItemContainer
+        lhs.outbox = FSBox "item" @props @elem.outbox
+    | WindowContainer
+        lhs.outbox = case @loc.vdisplay of
+                        "block"
+                            -> case @fcnxt of
+                                BlockContext  -> FSBox @name @props @elem.outbox
+                                InlineContext -> FSBox @name @props @elem.outbox
+                        "inline"
+                            -> case @fcnxt of
+                                BlockContext  -> FSBox @name @props @elem.outbox
+                                InlineContext -> FSBox @name @props @elem.outbox
+    | WindowText
+        lhs.outbox = case @loc.vdisplay of
+                        "block"  -> FSBox @name @props []
+                        "inline" -> FSBox @name @props []
+
+SEM Line
+    | Line lhs.outbox = FSBox "line" Map.empty @winds.outbox
+
+ATTR WindowTrees Lines Element [|| outbox USE {:} {[]}: {[FSBox]}]
+
+SEM Element
+    | EWinds   lhs.outbox = @winds.outbox
+    | ELines   lhs.outbox = @lines.outbox
+    | ENothing lhs.outbox = []
+
+
