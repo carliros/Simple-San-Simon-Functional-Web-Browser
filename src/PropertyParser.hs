@@ -4,6 +4,8 @@ module PropertyParser where
 import Text.ParserCombinators.UU
 import Text.ParserCombinators.UU.BasicInstances
 import Text.ParserCombinators.UU.Utils
+import Control.Applicative.Interleaved
+import Text.ParserCombinators.UU.Interleaved hiding (mkP)
 import Data.Char
 import qualified Data.Map as Map
 import Data.Maybe
@@ -98,11 +100,11 @@ pShorthandBorderEdge
     = let names = ["border-top", "border-right", "border-bottom", "border-left"]
       in pAny (\nm -> makeDecl nm) names
     where makeDecl nm = pToken nm *> pSimboloAmb ":" *> pValue nm
-          pValue   nm = catMaybes <$> mkParserS pInutil ((\a b c -> [a,b,c])
-                                           <$>  (pMaybe $ mkGram (pPropBorderWidth nm)) 
-                                           <||> (pMaybe $ mkGram (pPropBorderColor nm)) 
-                                           <||> (pMaybe $ mkGram (pPropBorderStyle nm))
-                                      )
+          pValue   nm = catMaybes <$> sepBy ((\a b c -> [a,b,c])
+                                           <$>  (pMaybe $ mkG (pPropBorderWidth nm)) 
+                                           <||> (pMaybe $ mkG (pPropBorderColor nm)) 
+                                           <||> (pMaybe $ mkG (pPropBorderStyle nm))
+                                      ) pInutil
           pPropBorderWidth nm = (\val -> Declaracion (nm ++ "-width") val False) <$> pBorderWidth'
           pPropBorderColor nm = (\val -> Declaracion (nm ++ "-color") val False) <$> pBorderColor'
           pPropBorderStyle nm = (\val -> Declaracion (nm ++ "-style") val False) <$> pBorderStyle'
@@ -110,11 +112,11 @@ pShorthandBorder :: Parser Declaraciones
 pShorthandBorder
     = let names = ["border-top", "border-right", "border-bottom", "border-left"]
       in pToken "border" *> pSimboloAmb ":" *> pValue names
-    where pValue nms   = concat . catMaybes <$> mkParserS pInutil ((\a b c -> [a,b,c])
-                                                    <$>  (pMaybe $ mkGram (pPropBorderWidth nms))
-                                                    <||> (pMaybe $ mkGram (pPropBorderColor nms))
-                                                    <||> (pMaybe $ mkGram (pPropBorderStyle nms))
-                                                )
+    where pValue nms   = concat . catMaybes <$> sepBy ((\a b c -> [a,b,c])
+                                                    <$>  (pMaybe $ mkG (pPropBorderWidth nms))
+                                                    <||> (pMaybe $ mkG (pPropBorderColor nms))
+                                                    <||> (pMaybe $ mkG (pPropBorderStyle nms))
+                                                ) pInutil
           doProps nms val = map (\nm -> Declaracion nm val False) nms
           pPropBorderWidth nms = let pnms = map (++"-width") nms
                                  in doProps pnms <$> pBorderWidth'
