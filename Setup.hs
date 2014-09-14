@@ -14,13 +14,6 @@ main = do let uuagcHook   = uuagcLibUserHook uuagc
               browserHook = uuagcHook {instHook = myInstallHook}
           defaultMainWithHooks browserHook
 
-myCopyHook pkg_descr lbi _ flags
-    = do let libPref = libdir . absoluteInstallDirs pkg_descr lbi . fromFlag . copyDest $ flags
-         putStrLn "======== libPref ========"
-         print libPref
-         rawSystemExit (fromFlag $ copyVerbosity flags) "cp" ["abc/libabc.a", libPref]
-
-
 myInstallHook pkg_descr localbuildinfo _ flags 
     = do let copyFlags = defaultCopyFlags {
                       copyDistPref   = installDistPref flags,
