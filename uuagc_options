@@ -1,0 +1,24 @@
+file: "src-ag/DataTreeHTML.ag"
+options: module, data
+
+file: "src-ag/DataTreeCSS.ag"
+options: module, data
+
+file: "src-ag/ProcesarEstilo.ag"
+options: signatures, catas, semfuns
+
+file: "src-ag/NTree.ag"
+options: signatures, module, catas, semfuns
+
+file: "src-ag/FormatNTree.ag"
+options: signatures, catas, semfuns
+
+file: "src-ag/FSBox.ag"
+options: signatures, catas, semfuns, data
+
+file: "src-ag/FSTreeFase1.ag"
+options: module, catas, semfuns, data
+
+file: "src-ag/FSTreeFase2.ag"
+options: module, catas, semfuns, data
+

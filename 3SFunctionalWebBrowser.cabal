@@ -1,28 +1,36 @@
-Name:                3SFunctionalWebBrowser
-Version:             0.2
-Synopsis:            Simple Functional Web Browser
-Description:         Simple San Simon Functional Web Browser with support for a simple generic markup language and CSS
-Homepage:            http://hsbrowser.wordpress.com
-License:             BSD3
-License-File:        LICENSE
-Author:              Carlos Gomez
-Maintainer:          carliros.g@gmail.com
-Bug-reports:         https://github.com/carliros/Simple-San-Simon-Functional-Web-Browser/issues
-Category:            Web
-Build-Type:          Simple
-Cabal-Version:       >=1.6
-Extra-source-files:  README, Makefile, 
+Name: 3SFWebBrowser
+Version: 0.2.1
+Homepage: http://hsbrowser.wordpress.com
+Synopsis: Simple Web Browser written with Haskell
+Description:         
+    Simple San Simon Functional Web Browser (3SF Web Browser) 
+    is an educational project where the idea is to experiment
+    Haskell as a functional programming language to develop
+    a Web Browser.  
+
+    It supports a simple simple generic markup language and CSS.
+License: BSD3
+License-File: LICENSE
+Author: Carlos Gomez
+Maintainer: carliros.g@gmail.com
+Bug-reports: https://github.com/carliros/Simple-San-Simon-Functional-Web-Browser/issues
+Category: Web
+Build-Type: Custom
+Cabal-Version: >=1.6
+Extra-source-files:  README 
                      config/dbf, config/html4.css, config/user.css,
                      tmp/circle.png, tmp/default.jpg, tmp/disc.png, tmp/logo.jpg, tmp/minilogo.jpg, tmp/square.png,
-                     src/*.hs, src-derived/*.hs
+                     src-ag/*.ag
 
 Source-repository head
     type:       git
     location:   git://github.com/carliros/Simple-San-Simon-Functional-Web-Browser.git
 
 Executable 3sfwbrowser
-    hs-source-dirs: src, src-derived
+    hs-source-dirs: src, src-ag
     Main-is:        MainWebBrowserGui.hs
+    ghc-options:    -Wall
+    other-modules: NTree, DataTreeHTML, DataTreeCSS, FSTreeFase1, FSTreeFase2, ProcesarEstilo, FSBox
     Build-depends:    base
                     , containers
                     , url
@@ -32,6 +40,7 @@ Executable 3sfwbrowser
                     , gd
                     , curl
                     , uu-parsinglib
+                    , uu-interleaved
                     , ListLike
                     , wxcore
                     , wx

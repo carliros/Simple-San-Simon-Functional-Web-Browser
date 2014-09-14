@@ -8,8 +8,10 @@ import Text.HTML.TagSoup
 import Text.HTML.TagSoup.Match
 import System.Directory
 import Control.Concurrent
+import Settings
 import qualified Url as URL
 import Data.List
+import System.IO.Unsafe
 
 -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 -- Temporal Directory
@@ -62,7 +64,8 @@ downloadXMLStyleSheet base stringHTML
                            in href && others
           downloadprocess (url,name)
                 = do css <- download base url
-                     let path = tmpPath ++ name
+                     tmpDir <- retrieveTempDir
+                     let path = tmpDir </> name
                      writeFile path css
                      putStrLn $ "File saved at " ++ path
                      return ()
@@ -82,7 +85,8 @@ downloadHTMLStyleSheet base stringHTML
                            in href && others
           downloadprocess (url,name)
                 = do css <- download base url
-                     let path = tmpPath ++ name
+                     tmpDir <- retrieveTempDir
+                     let path = tmpDir </> name
                      writeFile path css
                      putStrLn $ "File saved at " ++ path
                      return ()
@@ -109,7 +113,8 @@ download base url
 -}
 getStylePath :: String -> String
 getStylePath url = let name = takeFileName url
-                       path = tmpPath ++ name
+                       tmpDir = unsafePerformIO (retrieveTempDir)
+                       path = tmpDir </> name
                    in path
 
 -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -129,7 +134,8 @@ downloadImages base stringHTML
     where downloadprocess (url,name,fload,fsave)
                 = do img <- download base url
                      gdimg <- fload img
-                     let path = tmpPath ++ name
+                     tmpDir <- retrieveTempDir
+                     let path = tmpDir </> name
                      fsave path gdimg
                      putStrLn $ "image saved at " ++ path
 
@@ -139,7 +145,8 @@ downloadImage url = unsafePerformIO $ downloadImage' url
                                   putStrLn $ show cod ++ " at " ++ url
                                   gdimg <- fload img
                                   (w,h) <- imageSize gdimg
-                                  let path = tmpPath ++ name
+                                  tmpDir <- retrieveTempDir
+                                  let path = tmpDir </> name
                                   fsave path gdimg
                                   putStrLn $ "image saved at " ++ path
                                   return (w,h)
@@ -152,7 +159,8 @@ getImageHeight url = let (_,h) = getImageSize url
 
 getImageSize url = unsafePerformIO $ getImageSize' url
     where getImageSize' url = do let (name,fload) = getSimpleFunctionNameType url
-                                     path = tmpPath ++ name
+                                 tmpDir <- retrieveTempDir
+                                 let path = tmpDir </> name
                                  bool <- doesFileExist path
                                  if bool
                                   then do gdimg <- fload path
@@ -177,10 +185,11 @@ getImageFunctionNameType url
 
 getImagePath :: String -> IO String
 getImagePath url = do let name = takeFileName url
-                          path = tmpPath ++ name
+                      tmpDir <- retrieveTempDir
+                      let path = tmpDir </> name
                       bool <- doesFileExist path
                       if bool
                         then return path
-                        else return $ tmpPath ++ "default.jpg"
+                        else return $ tmpDir </> "default.jpg"
 
 
