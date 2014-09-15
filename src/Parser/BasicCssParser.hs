@@ -1,12 +1,13 @@
-{-# LANGUAGE ImpredicativeTypes, FlexibleContexts #-}
-module BasicCssParser where
+{-# LANGUAGE FlexibleContexts   #-}
+{-# LANGUAGE ImpredicativeTypes #-}
+module Parser.BasicCssParser where
 
-import Text.ParserCombinators.UU
-import Text.ParserCombinators.UU.BasicInstances
-import Text.ParserCombinators.UU.Utils
-import CombinadoresBasicos
-import Data.Char
-import DataTreeCSS
+import           Data.Char
+import           Data.DataTreeCSS
+import           Parser.CombinadoresBasicos
+import           Text.ParserCombinators.UU
+import           Text.ParserCombinators.UU.BasicInstances
+import           Text.ParserCombinators.UU.Utils
 
 -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 -- funciones para construir declaraciones
@@ -77,7 +78,7 @@ pPercentage
     = Percentage <$> pNumeroFloat <* pSimbolo "%"
 
 pPercentagePos :: Parser Value
-pPercentagePos 
+pPercentagePos
     = Percentage <$> pNumeroFloatPos <* pSimbolo "%"
 
 -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -91,24 +92,24 @@ pColor :: Parser Value
 pColor = pColorComun <|> pColorHexadecimal <|> pColorFuncion
 
 pColorHexadecimal :: Parser Value
-pColorHexadecimal 
+pColorHexadecimal
     =  (\r g b -> KeyColor (r, g, b))
         <$ pSimbolo "#" <*> pSimpleHex <*> pSimpleHex <*> pSimpleHex
    <|> (\r g b -> KeyColor (r, g, b))
         <$ pSimbolo "#" <*> pDoubleHex <*> pDoubleHex <*> pDoubleHex
 
 pSimpleHex :: Parser Int
-pSimpleHex 
-    = (\h -> toInt Nothing ("0x" ++ [h,h])) 
+pSimpleHex
+    = (\h -> toInt Nothing ("0x" ++ [h,h]))
    <$> pHex
 
 pDoubleHex :: Parser Int
-pDoubleHex 
-    = (\h1 h2 -> toInt Nothing ("0x" ++ [h1,h2])) 
+pDoubleHex
+    = (\h1 h2 -> toInt Nothing ("0x" ++ [h1,h2]))
    <$> pHex <*> pHex
 
 pColorFuncion :: Parser Value
-pColorFuncion 
+pColorFuncion
     = (\r g b -> KeyColor (r,g,b))
         <$ pKeyword "rgb" <* pSimboloAmb "(" <*> pNumeroColor
                                <* pSimboloAmb "," <*> pNumeroColor
@@ -118,15 +119,15 @@ pColorFuncion
 pNumeroColor :: Parser Int
 pNumeroColor =  fixedRange 0 255 <$> pEnteroPos
             <|> fixedRange 0 100 <$> pEnteroPos <* pSimbolo "%"
-    where fixedRange start end val 
+    where fixedRange start end val
              = if val < start then start
                               else if val > end then end
                                                 else val
 
 pColorComun :: Parser Value
-pColorComun 
+pColorComun
     =  KeyColor (0x80, 0x00, 0x00) <$ pKeyword "maroon"
-   <|> KeyColor (0xff, 0x00, 0x00) <$ pKeyword "red" 
+   <|> KeyColor (0xff, 0x00, 0x00) <$ pKeyword "red"
    <|> KeyColor (0xff, 0xa5, 0x00) <$ pKeyword "orange"
    <|> KeyColor (0xff, 0xff, 0x00) <$ pKeyword "yellow"
    <|> KeyColor (0x80, 0x80, 0x00) <$ pKeyword "olive"
@@ -168,13 +169,13 @@ pComplexString =  pDeLimitarCon (pSym '\"') (pTextoRestringido "\"\n")
 
 
 -- Auxiliar functions
-toString []     
+toString []
     = []
-toString (s:c:cs) 
+toString (s:c:cs)
     = if s == '\\' && (c == 'A' || c == 'n')
       then  '\n' : toString cs
       else s : c : toString cs
-toString (c:cs) 
+toString (c:cs)
     = c : toString cs
 
 

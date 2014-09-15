@@ -1,6 +1,9 @@
-{-# LANGUAGE RankNTypes, FlexibleContexts, ImpredicativeTypes #-}
+{-# LANGUAGE FlexibleContexts   #-}
+{-# LANGUAGE ImpredicativeTypes #-}
+{-# LANGUAGE RankNTypes         #-}
+
 -- | Representa la especificacion de una propiedad de CSS
-module Property (
+module Data.Property (
 -- * Tipos de Datos
   Property
 , FunctionComputed
@@ -23,29 +26,28 @@ module Property (
 , adjustPropertyValue
 -- ** Funciones para Valores de Propiedades
 , unPixelValue
-, unPixelUsedValue      
-, unPixelComputedValue  
-, unPixelSpecifiedValue 
-, unKeyUsedColor      
-, unKeyComputedColor  
-, unKeySpecifiedColor 
-, unKeyUsedValue       
-, unKeyComputedValue   
-, unKeySpecifiedValue  
-, compareKeyPropertyValue 
+, unPixelUsedValue
+, unPixelComputedValue
+, unPixelSpecifiedValue
+, unKeyUsedColor
+, unKeyComputedColor
+, unKeySpecifiedColor
+, unKeyUsedValue
+, unKeyComputedValue
+, unKeySpecifiedValue
+, compareKeyPropertyValue
 , compareKeyPropertyValueWith
-, verifyProperty 
+, verifyProperty
 ) where
 
-import Text.ParserCombinators.UU
-import Text.ParserCombinators.UU.BasicInstances
-import Text.ParserCombinators.UU.Utils
-import qualified Data.Map as Map
-import Data.List
+import           Data.List
+import qualified Data.Map                                 as Map
+import           Text.ParserCombinators.UU
+import           Text.ParserCombinators.UU.BasicInstances
+import           Text.ParserCombinators.UU.Utils
 
-import DataTreeCSS
-
-import Utiles
+import           Data.DataTreeCSS
+import           Utils.Utiles
 
 -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 -- DataTypes
@@ -53,13 +55,13 @@ import Utiles
 
 -- | Propiedad CSS
 data Property
-    = Property  { name           :: String
-                , inherited      :: Bool
-                , initial        :: Value
-                , value          :: Parser Value
-                , propertyValue  :: PropertyValue
+    = Property  { name            :: String
+                , inherited       :: Bool
+                , initial         :: Value
+                , value           :: Parser Value
+                , propertyValue   :: PropertyValue
                 , fnComputedValue:: FunctionComputed
-                , fnUsedValue    :: FunctionUsed
+                , fnUsedValue     :: FunctionUsed
                 }
 
 instance Show Property where
@@ -99,10 +101,10 @@ type FunctionUsed =  Bool                              -- soy el root?
 -- | Contruye una Propiedad con (Nombre, Inherited, Value Inicial, Parser, fnc)
 mkProp :: (String, Bool, Value, Parser Value, FunctionComputed, FunctionUsed) -> Property
 mkProp (nm, bool, init, pval, fnc, fnu)
-    = Property  nm 
-                bool 
-                init 
-                pval 
+    = Property  nm
+                bool
+                init
+                pval
                 defaultPropertyValue
                 fnc
                 fnu
@@ -149,7 +151,7 @@ applyInheritance isRoot father prop@(Property nm inh defval _ pv _ _)
 doSpecifiedValue :: Map.Map String Property -> Bool -> [(Tipo,Origen,Declaraciones,Int)] -> Property -> Property
 doSpecifiedValue father isRoot rules prop@(Property nm inh defval _ pv@(PropertyValue NotSpecified _ _ _) _ _)
     = selectValue . applyCascadingSorting $ getPropertyDeclarations nm rules
-    where applyCascadingSorting 
+    where applyCascadingSorting
               = head' . dropWhile null . cascadingSorting
           selectValue rlist
               = if null rlist
@@ -171,9 +173,9 @@ doComputedValue :: Bool -> Map.Map String Property -> Map.Map String Property ->
 doComputedValue iamtheroot fatherProps locProps iamreplaced iamPseudo prop@(Property nm _ _ _ pv@(PropertyValue _ NotSpecified _ _) fnc _)
     = let cv = fnc iamtheroot fatherProps locProps iamreplaced iamPseudo nm pv
       in prop{propertyValue = pv{computedValue = cv}}
- 
+
 -- si el valor es diferente de NotSpecified, solo devolvemos la propiedad
-doComputedValue _ _ _ _ _ p = p 
+doComputedValue _ _ _ _ _ p = p
 
 -- | Hace que el valor computed sea el mismo que el specified
 computed_asSpecified :: FunctionComputed
@@ -184,7 +186,7 @@ doUsedValue :: Bool -> (Float,Float) -> Map.Map String Property -> Map.Map Strin
 doUsedValue iamtheroot icbsize fatherProps locProps attrs iamreplaced prop@(Property nm _ _ _ pv@(PropertyValue _ _ NotSpecified _) _ fnu)
     = let uv = fnu iamtheroot icbsize fatherProps locProps attrs iamreplaced nm pv
       in prop{propertyValue = pv{usedValue = uv}}
- 
+
 -- si el valor es diferente de NotSpecified, solo devolvemos la propiedad
 doUsedValue _ _ _ _ _ _ p = p
 
@@ -195,7 +197,7 @@ used_asComputed _ _ _ _ _ _ _ = computedValue
 -- | Obtener las declaraciones de una propiedad
 getPropertyDeclarations :: String -> [(Tipo,Origen,Declaraciones,Int)] -> [(Tipo,Origen,Declaracion,Int)]
 getPropertyDeclarations nm1 = foldr fConcat []
-    where fConcat (tipo,origen,declaraciones,spe) r2 
+    where fConcat (tipo,origen,declaraciones,spe) r2
                 = let r0 = filter (\(Declaracion nm2 _ _) -> nm1 == nm2) declaraciones
                   in if null r0
                      then r2
@@ -204,7 +206,7 @@ getPropertyDeclarations nm1 = foldr fConcat []
 
 -- | aplicar al algoritmo cascada a una lista de reglas
 cascadingSorting :: [(Tipo,Origen,Declaracion,Int)] -> [[(Tipo,Origen,Declaracion,Int,Int)]]
-cascadingSorting lista1 
+cascadingSorting lista1
     = let lista2 = myZip lista1 [1..]
           lst1 = sortBy fsort $ getDeclarations User      True  lista2
           lst2 = sortBy fsort $ getDeclarations Author    True  lista2
@@ -214,7 +216,7 @@ cascadingSorting lista1
       in [lst1, lst2 ,lst3, lst4, lst5]
     where myZip []             _      = []
           myZip ((a,b,c,d):next) (f:fs) = (a,b,c,d,f) : myZip next fs
-          getDeclarations origin important 
+          getDeclarations origin important
              = filter (\(_,org, Declaracion _ _ imp,_,_) -> origin==org && important==imp)
           fsort (_, _, _, v1, v3) (_, _, _, v2, v4)
                 | v1 > v2             = LT
@@ -241,29 +243,29 @@ defaultPropertyValue = PropertyValue { specifiedValue = NotSpecified
 unPixelValue val
     = case val of
         PixelNumber px -> px
-        PointNumber p  -> error $ "[Property] PointNumber "                        
+        PointNumber p  -> error $ "[Property] PointNumber "
                                        ++ show p ++ ", expecting PixelNumber"
-        EmNumber    e  -> error $ "[Property] EmNumber "                           
+        EmNumber    e  -> error $ "[Property] EmNumber "
                                        ++ show e ++ ", expecting PixelNumber"
-        Percentage  p  -> error $ "[Property] Percentage " 
+        Percentage  p  -> error $ "[Property] Percentage "
                                        ++ show p ++ ", expecting PixelNumber"
-        NotSpecified   -> error $ "[Property] NotSpecified"                        
+        NotSpecified   -> error $ "[Property] NotSpecified"
                                                  ++ ", expecting PixelNumber"
-        _              -> error $ "[Property] I don't know the type: " 
+        _              -> error $ "[Property] I don't know the type: "
                                        ++ show val ++ ", expecting PixelNumber"
 
-unPixelFunction place val tp 
+unPixelFunction place val tp
     = case  val of
             PixelNumber px -> px
-            PointNumber p  -> error $ "[Property] PointNumber "                        
+            PointNumber p  -> error $ "[Property] PointNumber "
                                        ++ show p ++ ", " ++ show tp ++ " expecting PixelNumber at " ++ place
-            EmNumber    e  -> error $ "[Property] EmNumber "                           
+            EmNumber    e  -> error $ "[Property] EmNumber "
                                        ++ show e ++ ", " ++ show tp ++ " expecting PixelNumber at " ++ place
-            Percentage  p  -> error $ "[Property] Percentage " 
+            Percentage  p  -> error $ "[Property] Percentage "
                                        ++ show p ++ ", " ++ show tp ++ " expecting PixelNumber at " ++ place
-            NotSpecified   -> error $ "[Property] NotSpecified"                        
+            NotSpecified   -> error $ "[Property] NotSpecified"
                                        ++ ", " ++ show tp ++ " expecting PixelNumber at " ++ place
-            _              -> error $ "[Property] I don't know the type: " 
+            _              -> error $ "[Property] I don't know the type: "
                                        ++ show val ++ ", " ++ show tp ++ " expecting PixelNumber at " ++ place
 
 unPixelUsedValue      place = (\val -> unPixelFunction place val "used value") . usedValue
@@ -284,14 +286,14 @@ compareKeyPropertyValue :: Value -> String -> Bool
 compareKeyPropertyValue = compareKeyPropertyValueWith (==)
 
 -- generic function to compare
-compareKeyPropertyValueWith fcmp val str 
+compareKeyPropertyValueWith fcmp val str
     = case val of
           KeyValue str' -> fcmp str' str
           _             -> False
 
 -- | verificar si el nombre de una propiedad tiene el valor que le enviamos
 verifyProperty :: String -> String -> Map.Map String Property -> Bool
-verifyProperty nm val props 
+verifyProperty nm val props
     =   let pval = computedValue $ props `get` nm
         in compareKeyPropertyValue pval val
 

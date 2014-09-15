@@ -1,10 +1,10 @@
-module PropertyUsedFunction where
+module Process.PropertyUsedFunction where
 
-import Property
-import DataTreeCSS
-import Attributes
-import DownloadProcess
-import Utiles
+import           Data.DataTreeCSS
+import           Data.Property
+import           Process.Attributes
+import           Process.DownloadProcess
+import           Utils.Utiles
 
 -- for used value
 
@@ -21,7 +21,7 @@ used_height iamtheroot icbsize fatherProps locProps attrs iamreplaced nm prop
 --            (True , False, False) ->    -- margin-top is ignored
 --            (False, False, True ) ->    -- margin-bottom is ignored
 --            (False, False, False) ->    -- nothing is ignored
-            
+
 --            (True , True , True ) ->    -- both margins are ignored and height is dependant
 --            (True , True , False) ->    -- margin-top is ignored and height is dependant
 --            (False, True , True ) ->    -- margin-bottom is ignored and height is dependant
@@ -30,16 +30,16 @@ used_height iamtheroot icbsize fatherProps locProps attrs iamreplaced nm prop
 getBorderWidth iamtheroot icbsize fatherProps locProps attrs iamreplaced nm prop_nm
     = let border_style_prop = locProps `get` (nm ++ "-style")
           bs = used_asComputed iamtheroot icbsize fatherProps locProps attrs iamreplaced (nm ++ "-style") border_style_prop
-      in if compareKeyPropertyValue bs "none" 
-         then 0 
+      in if compareKeyPropertyValue bs "none"
+         then 0
          else unPixelValue $ used_toPixelValue iamtheroot icbsize fatherProps locProps attrs iamreplaced (nm ++ "-width") prop_nm
 
-used_width iamtheroot icbsize fatherProps locProps attrs iamreplaced nm prop = 
+used_width iamtheroot icbsize fatherProps locProps attrs iamreplaced nm prop =
   if iamreplaced -- end inline
   then if compareKeyPropertyValue (computedValue prop) "auto"
        then PixelNumber (toFloat (getImageWidth (getAttribute "src" attrs)))
        else used_toPixelImgValue iamtheroot icbsize fatherProps locProps attrs iamreplaced nm prop
-  else if    (compareKeyPropertyValue (computedValue prop) "auto") 
+  else if    (compareKeyPropertyValue (computedValue prop) "auto")
           && (compareKeyPropertyValue (computedValue $ locProps `get` "display") "inline")
        then KeyValue "auto"
        else let margin_left        = locProps `get` "margin-left"
@@ -93,7 +93,7 @@ used_width iamtheroot icbsize fatherProps locProps attrs iamreplaced nm prop =
                     otherwise
                         -> used_toPixelValue iamtheroot icbsize fatherProps locProps attrs iamreplaced nm prop
 
-used_margin_left iamtheroot icbsize fatherProps locProps attrs iamreplaced nm prop = 
+used_margin_left iamtheroot icbsize fatherProps locProps attrs iamreplaced nm prop =
   let vdisplay = usedValue $ locProps `get` "display"
   in if (compareKeyPropertyValue vdisplay "inline") && iamreplaced
      then if compareKeyPropertyValue (computedValue prop) "auto"
@@ -283,10 +283,10 @@ used_toPixelImgValue iamtheroot icbsize fatherProps locProps attrs iamreplaced n
 
 evaluateValues canibenegative cb_width one two three for five six
     = let res = cb_width - one - two - three - for - five - six
-      in if canibenegative 
-         then res 
-         else if res < 0 
-              then 0 
+      in if canibenegative
+         then res
+         else if res < 0
+              then 0
               else res
 
 

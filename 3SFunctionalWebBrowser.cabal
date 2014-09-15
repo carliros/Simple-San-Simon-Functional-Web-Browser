@@ -30,7 +30,7 @@ Executable 3sfwbrowser
     hs-source-dirs: src, src-ag
     Main-is:        MainWebBrowserGui.hs
     ghc-options:    -Wall
-    other-modules: NTree, DataTreeHTML, DataTreeCSS, FSTreeFase1, FSTreeFase2, ProcesarEstilo, FSBox
+    other-modules: NTree, Data.DataTreeHTML, Data.DataTreeCSS, FSTreeFase1, FSTreeFase2, ProcesarEstilo, FSBox
     Build-depends:    base
                     , containers
                     , url

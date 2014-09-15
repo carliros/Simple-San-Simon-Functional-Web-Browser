@@ -1,22 +1,18 @@
-module DownloadProcess where
-import Network.Curl 
-import Graphics.GD
-import System.FilePath
-import System.IO.Unsafe
-import qualified Data.Set as Set
-import Text.HTML.TagSoup
-import Text.HTML.TagSoup.Match
-import System.Directory
-import Control.Concurrent
-import Settings
-import qualified Url as URL
-import Data.List
-import System.IO.Unsafe
+module Process.DownloadProcess where
 
--- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
--- Temporal Directory
--- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-tmpPath = "./tmp/"
+import           Control.Concurrent
+import           Data.List
+import qualified Data.Set                as Set
+import           Graphics.GD
+import           Network.Curl
+import           System.Directory
+import           System.FilePath
+import           System.IO.Unsafe
+import           Text.HTML.TagSoup
+import           Text.HTML.TagSoup.Match
+
+import           Settings.Settings
+import qualified Utils.Url               as URL
 
 -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 -- HTML
@@ -38,8 +34,8 @@ getResponse :: String -> IO (CurlResponse_ [(String, String)] String)
 getResponse url = curlGetResponse_ url [CurlFollowLocation True, CurlUserAgent "3SWebBrowser"]
 
 pageNoDisponible :: String -> String -> String
-pageNoDisponible error link 
-    = "<html>\ 
+pageNoDisponible error link
+    = "<html>\
             \<head> <style> span {text-decoration: underline}</style></head>\
             \<body>\
                \<h1> This webpage is not available.</h1>\
@@ -70,7 +66,7 @@ downloadXMLStyleSheet base stringHTML
                      putStrLn $ "File saved at " ++ path
                      return ()
 
-downloadHTMLStyleSheet base stringHTML 
+downloadHTMLStyleSheet base stringHTML
     = do let html = parseTags stringHTML
              linkTags = map (fromAttrib "href") $ filter (tagOpen (=="link") funAttrs) html
              linkHref = Set.toList $ Set.fromList linkTags    -- elimina los repetidos
@@ -98,7 +94,7 @@ getUrlFileName url
             ".css"    -> (url, name)
             otherwise -> error $ "[DownloadProcess] error with bad extension file, at: " ++ url
 
-download base url 
+download base url
     = do let url' = if URL.isAbsolute url
                     then url
                     else if URL.isHostRelative url
@@ -120,7 +116,7 @@ getStylePath url = let name = takeFileName url
 -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 -- images
 -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-downloadImages base stringHTML 
+downloadImages base stringHTML
     = do let imgTags =  [ fromAttrib "src" tag
                         | tag <- parseTags stringHTML
                         , tagOpen (=="img") (anyAttrName (== "src")) tag
@@ -175,7 +171,7 @@ getSimpleFunctionNameType url = let name = takeFileName url
                                         ".gif" -> (name, loadGifFile )
                                         otherwise -> error $ "[ImageProcess] error with unsuported image, at: " ++ url
 
-getImageFunctionNameType url 
+getImageFunctionNameType url
     =  let name = takeFileName url
        in  case takeExtension url of
                 ".jpg" -> (url, name, loadJpegByteString, saveJpegFile (-1))

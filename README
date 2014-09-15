@@ -9,16 +9,12 @@ It supports a generic markup language (like ~ html or xhtml or xml) and part of 
 To install
 ----------
 
-cabal install
-
-or you can use the Makefile to build the executable.
+	cabal install
 
 We have a configuration directory ('config' directory) that should be placed
-at your home directory: '~/.3SFWebBrowser/'.  If you are using Cabal, it will
-be created automatically, but if you are using 'make' you will have to copy 
-manually the 'config' content directory to the config path at your home.
+at your home directory: '~/.3SFWebBrowser/'.  Cabal creates it automatically.
 
-You will also need to edit '~/.3SFWebBrowser/dbf' and setup the proper path for
+You will need to edit '~/.3SFWebBrowser/dbf' and setup the proper path for
 'User_Agent_Stylesheet' which is located at the same directory.
 
 

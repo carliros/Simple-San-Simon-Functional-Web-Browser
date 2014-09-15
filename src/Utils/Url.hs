@@ -1,4 +1,4 @@
-module Url where
+module Utils.Url where
 
 import Network.URL
 import System.FilePath

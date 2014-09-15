@@ -1,20 +1,19 @@
 module Main where
 
-import Graphics.UI.WXCore
-import Graphics.UI.WX
-import qualified Data.Map as Map
+import qualified Data.Map                as Map
+import           Graphics.UI.WX
+import           Graphics.UI.WXCore
 
-import DownloadProcess
-import ParserHTML
-import ParserCSS
-import Propiedades
-import FSBox
-import NTree
-
-import DataTreeHTML
-import FSTreeFase1
-import FSTreeFase2
-import CommonTypes
+import           Data.CommonTypes
+import           Data.DataTreeHTML
+import           FSBox
+import           FSTreeFase1
+import           FSTreeFase2
+import           NTree
+import           Parser.ParserCSS
+import           Parser.ParserHTML
+import           Parser.Propiedades
+import           Process.DownloadProcess
 
 main :: IO()
 main = start gui
@@ -56,7 +55,7 @@ gui = do -- variable to draw lines
 
          -- set splitter's behaviour
          (Size w _) <- get f size
-         let w' = (w*75) `div` 100 
+         let w' = (w*75) `div` 100
          splitterWindowSplitVertically spw pnl icb w'
          splitterWindowSetMinimumPaneSize spw w'
 
@@ -100,14 +99,14 @@ onButtonCommand icb inp nmp lines defaultcss4html l wClicked = do
                     = do sw@(Size tw th) <- get icb size
                          let ns@(Size nw nh) = sizeMax sw (sz w h)
                          set icb [virtualSize := ns, scrollRate := sz (nw `div` 100) (nh `div` 100) ]
-              runCommand ln             
+              runCommand ln
                     = do listLines <- get lines value
                          set lines [value := (ln : listLines)]
 
 onWClick lc nmp str props icb wn wClicked point
     = do wnid <- windowGetId wn
          set wClicked [value := wnid]
-         set lc [items := [[nm,sv,cv,uv,av] | (nm,sv,cv,uv,av) <- mostrarPropiedades props]] 
+         set lc [items := [[nm,sv,cv,uv,av] | (nm,sv,cv,uv,av) <- mostrarPropiedades props]]
          set nmp [text := str]
          repaint icb
 

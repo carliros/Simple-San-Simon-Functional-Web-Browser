@@ -1,8 +1,8 @@
-file: "src-ag/DataTreeHTML.ag"
-options: module, data
+file: "src/Data/DataTreeHTML.ag"
+options: module "Data.DataTreeHTML", data
 
-file: "src-ag/DataTreeCSS.ag"
-options: module, data
+file: "src/Data/DataTreeCSS.ag"
+options: module "Data.DataTreeCSS", data
 
 file: "src-ag/ProcesarEstilo.ag"
 options: signatures, catas, semfuns
@@ -21,4 +21,3 @@ options: module, catas, semfuns, data
 
 file: "src-ag/FSTreeFase2.ag"
 options: module, catas, semfuns, data
-

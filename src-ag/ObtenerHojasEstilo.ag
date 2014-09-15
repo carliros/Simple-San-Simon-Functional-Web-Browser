@@ -1,7 +1,6 @@
-
 imports{
-import DownloadProcess
-import ParserCSS
+import Process.DownloadProcess
+import Parser.ParserCSS
 }
 
 -- tagEstilo verifica si es un tag estilo como <style> ... </style>

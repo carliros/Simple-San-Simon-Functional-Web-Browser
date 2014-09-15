@@ -1,13 +1,13 @@
---{-# LANGUAGE FlexibleContexts, RankNTypes, ImpredicativeTypes #-}
-{-# LANGUAGE  FlexibleInstances,
-              TypeSynonymInstances,
-              MultiParamTypeClasses,
-              ImpredicativeTypes,
-              Rank2Types, 
-              FlexibleContexts, 
-              NoMonomorphismRestriction #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE ImpredicativeTypes        #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TypeSynonymInstances      #-}
+
 -- | Modulo Parser para CSS
-module ParserCSS (
+module Parser.ParserCSS (
 -- * Funciones Publicas
   parseFileUserAgent
 , parseFileUser
@@ -18,20 +18,19 @@ module ParserCSS (
 , MapSelector
 ) where
 
-import Text.ParserCombinators.UU
-import Text.ParserCombinators.UU.BasicInstances
-import Text.ParserCombinators.UU.Utils
-import Data.Char
-import qualified Data.Map as Map
-import System.Directory
-import System.IO.Unsafe
+import           Data.Char
+import qualified Data.ListLike                            as LL
+import qualified Data.Map                                 as Map
+import           System.Directory
+import           System.IO.Unsafe
+import           Text.ParserCombinators.UU
+import           Text.ParserCombinators.UU.BasicInstances
+import           Text.ParserCombinators.UU.Utils
 
-import qualified Data.ListLike as LL
-
-import CombinadoresBasicos
-import DataTreeCSS
-import Propiedades
-import ProcesarEstilo
+import           Data.DataTreeCSS
+import           Parser.CombinadoresBasicos
+import           Parser.Propiedades
+import           ProcesarEstilo
 
 -- Interfaces
 
@@ -77,10 +76,10 @@ parseHojaInterna input
 parseHojaExterna :: FilePath -> MapSelector
 parseHojaExterna path
     = unsafePerformIO (parseHojaExterna' path)
-    where parseHojaExterna' file 
+    where parseHojaExterna' file
               = do bool <- doesFileExist file       -- verificamos que exista el archivo, caso contrario []
                    if bool
-                    then do input <- readFile file      
+                    then do input <- readFile file
                             he    <- parseString (pHojaEstilo HojaExterna Author lista_valor_parser) input
                             return $ calcularEspecificidad he
                     else do putStrLn $ "I couldn't read the file: " ++ file
@@ -101,7 +100,7 @@ parseEstiloAtributo tag input
 pHojaEstilo tp org props = concat <$> pList (pReglas tp org props)
 
 --pReglas :: Tipo -> Origen -> [Parser Declaraciones] -> Parser [Regla]
-pReglas tp org props = (\lsel ldcl -> map (\sel -> (tp, org, sel,ldcl)) lsel) 
+pReglas tp org props = (\lsel ldcl -> map (\sel -> (tp, org, sel,ldcl)) lsel)
          <$> pSelectores <* pSimboloAmb "{"
                               <*> pDeclaraciones props
                          <* pSimboloAmb "}"
@@ -128,7 +127,7 @@ pAtributo =  AtribID     <$ pSimbolo "#" <*> pPalabra
          <|> AtribNombre <$ pSimboloDer "[" <*> pPalabra <* pSimboloIzq "]"
          <|> AtribTipoOp "class" "~="
                          <$ pSimbolo "." <*> pPalabra
-         <|> AtribTipoOp <$ pSimboloDer "[" 
+         <|> AtribTipoOp <$ pSimboloDer "["
                               <*> pPalabra <*> pTipoOp <*> pSimpleString
                          <* pSimboloIzq "]"
 
@@ -153,7 +152,7 @@ pEspacioEspecial =  " " <$ pList  (pAnySym "\t\r\n") <* pList1 (pSym ' ') <* pLi
                 <|> " " <$ pList1 (pAnySym "\t\r\n") <* pList  (pSym ' ') <* pList (pAnySym "\t\r\n")
 
 --pDeclaraciones :: [Parser Declaraciones] -> Parser Declaraciones
-pDeclaraciones :: (IsLocationUpdatedBy loc Char, LL.ListLike state Char) 
+pDeclaraciones :: (IsLocationUpdatedBy loc Char, LL.ListLike state Char)
                => [P (Str Char state loc) Declaraciones] -> P (Str Char state loc) Declaraciones
 pDeclaraciones props = concat <$> pList1Sep_ng (pSimboloAmb ";") props'
     where props' =  foldr (<|>) pFail props

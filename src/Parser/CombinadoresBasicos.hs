@@ -1,17 +1,18 @@
--- {-# LANGUAGE FlexibleContexts, Rank2Types, TypeSynonymInstances #-}
-{-# LANGUAGE  FlexibleInstances,
-              TypeSynonymInstances,
-              MultiParamTypeClasses,
-              Rank2Types, FlexibleContexts, NoMonomorphismRestriction #-}
-module CombinadoresBasicos where
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TypeSynonymInstances      #-}
+module Parser.CombinadoresBasicos where
 
-import Text.ParserCombinators.UU
-import Text.ParserCombinators.UU.BasicInstances
-import Text.ParserCombinators.UU.Utils hiding (runParser)
-import Data.Char
-import Data.Maybe
-import qualified Data.ListLike as LL
-import Text.Printf
+import           Data.Char
+import qualified Data.ListLike                            as LL
+import           Data.Maybe
+import           Text.ParserCombinators.UU
+import           Text.ParserCombinators.UU.BasicInstances
+import           Text.ParserCombinators.UU.Utils          hiding (runParser)
+import           Text.Printf
 
 -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 -- Parser Interface
@@ -38,7 +39,7 @@ parseString p input = do let p' = pInutil *> p <* pInutil
                          runParser "nofile" p' input
 
 runParser :: String -> Parser a -> String -> IO a
-runParser inputName p s 
+runParser inputName p s
     = do let (a,b) = execParser p s
          if null b
           then return a
@@ -111,7 +112,7 @@ pHex = pSatisfy isHexDigit (Insertion "hexadecimal" 'a' 5)
 -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pAlphaNum :: Parser Char
-pAlphaNum = pSatisfy isAlphaNum 
+pAlphaNum = pSatisfy isAlphaNum
                      (Insertion "alpha num" 'a' 5)
 
 pAlphaNumGuion :: Parser Char
@@ -168,18 +169,18 @@ pEnteroPos
     = toInt <$> pSignoMas <*> pList1 pDigitoChar
 
 pNumeroFloat :: Parser Float
-pNumeroFloat 
+pNumeroFloat
     =  toFloat <$> pSigno <*> pList1 pDigitoChar
-   <|> (\sg n1 d n2 -> toFloat sg (n1  ++ [d] ++ n2)) 
+   <|> (\sg n1 d n2 -> toFloat sg (n1  ++ [d] ++ n2))
                <$> pSigno <*> pList1 pDigitoChar <*> pSym '.' <*> pList1 pDigitoChar
-   <|> (\sg    d n2 -> toFloat sg ("0" ++ [d] ++ n2)) 
+   <|> (\sg    d n2 -> toFloat sg ("0" ++ [d] ++ n2))
                <$> pSigno                        <*> pSym '.' <*> pList1 pDigitoChar
 
 pNumeroFloatPos :: Parser Float
 pNumeroFloatPos =  toFloat <$> pSignoMas <*> pList1 pDigitoChar
-               <|> (\sg n1 d n2 -> toFloat sg (n1  ++ [d] ++ n2)) 
+               <|> (\sg n1 d n2 -> toFloat sg (n1  ++ [d] ++ n2))
                            <$> pSignoMas <*> pList1 pDigitoChar <*> pSym '.' <*> pList1 pDigitoChar
-               <|> (\sg    d n2 -> toFloat sg ("0" ++ [d] ++ n2)) 
+               <|> (\sg    d n2 -> toFloat sg ("0" ++ [d] ++ n2))
                            <$> pSignoMas                        <*> pSym '.' <*> pList1 pDigitoChar
 
 {-
@@ -192,13 +193,13 @@ pListaN n sep p = (:) <$> sep *> p <*> pListaN (n-1) sep p
 
 -- Auxiliar functions
 {-
-toString []     
+toString []
     = []
-toString (s:c:cs) 
+toString (s:c:cs)
     = if s == '\\' && (c == 'A' || c == 'n')
       then  '\n' : toString cs
       else s : c : toString cs
-toString (c:cs) 
+toString (c:cs)
     = c : toString cs
 -}
 

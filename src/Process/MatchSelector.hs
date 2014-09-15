@@ -1,20 +1,20 @@
 -- | Modulo MatchSelector, emparejar un @Nodo@ con un @Selector@
-module MatchSelector (
+module Process.MatchSelector (
   emparejarSelector
 ) where
 
-import qualified Data.Map as Map
-import Data.Maybe
+import qualified Data.Map          as Map
+import           Data.Maybe
 
-import DataTreeHTML
-import DataTreeCSS
-import Utiles
+import           Data.DataTreeCSS
+import           Data.DataTreeHTML
+import           Utils.Utiles
 
 -- | llama a matchSelector con argumentos por defecto
 emparejarSelector :: Node -> [(Node,[Node])] -> [Node] -> Selector -> Bool -> Bool
 emparejarSelector nd fths sbls = matchSelector nd fths sbls [] 0
 
--- | @matchSelector@ devuelve @True@ 
+-- | @matchSelector@ devuelve @True@
 matchSelector ::   Node -> [(Node,[Node])] -> [Node] -> [(Node,[Node])] -> Int -> Selector -> Bool -> Bool
 matchSelector      _       _                  _         _                  _      []          _
     = True
@@ -31,7 +31,7 @@ applySimplSelector nd fathers siblings before level s nextSel pseudo
 applyDescdSelector _  []     _        _      _     _ _       _
     = False
 applyDescdSelector nd (f:fs) siblings before level s nextSel pseudo
-    =    (testSimpleSelector s (fst f) pseudo && matchSelector nd fs siblings (f:before) (level+1) nextSel False) 
+    =    (testSimpleSelector s (fst f) pseudo && matchSelector nd fs siblings (f:before) (level+1) nextSel False)
       || applyDescdSelector nd fs siblings before level s nextSel False
 
 applyChildSelector _  []     _        _      _     _ _ _
@@ -67,19 +67,19 @@ getNextValidTag (_:xs)            = getNextValidTag xs
 testSimpleSelector :: SSelector -> Node -> Bool -> Bool
 testSimpleSelector ssel nd bool
     = case nd of
-         NTag nm1 _ attrs 
+         NTag nm1 _ attrs
             -> case ssel of
                   TypeSelector nm2 atsel pse
                      ->    compareStrings' nm1 nm2
-                        && testAttributes attrs atsel 
+                        && testAttributes attrs atsel
                         && testPseudo bool pse
                   UnivSelector atsel pse
-                     ->    testAttributes attrs atsel 
+                     ->    testAttributes attrs atsel
                         && testPseudo bool pse
-         otherwise 
+         otherwise
             -> False
 
--- | Testea un elemento pseudo 
+-- | Testea un elemento pseudo
 testPseudo :: Bool -> Maybe PseudoElemento -> Bool
 testPseudo bool pse = if bool then isJust pse else isNothing pse
 

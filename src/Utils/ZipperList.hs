@@ -1,4 +1,4 @@
-module ZipperList
+module Utils.ZipperList
 ( forward
 , backward
 , insert
@@ -6,8 +6,8 @@ module ZipperList
 , getElement)
 where
 
-import Data.Maybe
-import qualified Data.List as List
+import qualified Data.List  as List
+import           Data.Maybe
 
 data WalkList a = WalkList [a] [a]
         deriving Show
@@ -17,7 +17,7 @@ type ListZipper a = (Maybe a, WalkList a)
 forward :: ListZipper a -> ListZipper a
 forward  (e, WalkList xs ys) = (get ys, WalkList (put e xs) (tail' ys))
 
-backward :: ListZipper a -> ListZipper a  
+backward :: ListZipper a -> ListZipper a
 backward (e, WalkList xs ys) = (get xs, WalkList (tail' xs) (put e ys))
 
 insert :: Eq a => a -> ListZipper a -> ListZipper a

@@ -1,17 +1,18 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes #-}
-module ParserHTML
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RankNTypes       #-}
+module Parser.ParserHTML
 ( parseHTML
 , parseHTMLFile
 ) where
 
-import CombinadoresBasicos
-import Text.ParserCombinators.UU
-import Text.ParserCombinators.UU.BasicInstances
-import Text.ParserCombinators.UU.Utils
-import Data.Char
-import qualified Data.Map as Map
+import           Data.Char
+import qualified Data.Map                                 as Map
+import           Text.ParserCombinators.UU
+import           Text.ParserCombinators.UU.BasicInstances
+import           Text.ParserCombinators.UU.Utils
 
-import DataTreeHTML
+import           Data.DataTreeHTML
+import           Parser.CombinadoresBasicos
 
 -- interfaces
 parseHTML :: String -> IO NTree
@@ -33,17 +34,17 @@ pAtributos = Map.fromListWith fconcat <$> pListSep_ng pInutil1 pAtributo
 
 -- parser para ArbolRosa
 pNTree :: Parser NTree
-pNTree =  pTagged 
+pNTree =  pTagged
       <|> pTexto
 
 pTexto :: Parser NTree
 pTexto  = construirTexto  <$> pHTMLTexto
 
 pTagged :: Parser NTree
-pTagged 
+pTagged
     = do (itag,mp) <- pComunTag
          bool      <- pRestoTagInicio
-         ramif     <- if bool 
+         ramif     <- if bool
                       then return []
                       else pList_ng pNTree <* pFinalTag itag
          return (construirTagged itag mp ramif)
@@ -70,5 +71,3 @@ construirTagged nm@(x:_) ats rms = NTree nodo rms
 -- elementos especiales: replaced
 listReplaced :: [String]
 listReplaced = ["img", "IMG"]
-
-

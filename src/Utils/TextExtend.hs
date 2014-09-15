@@ -1,4 +1,4 @@
-module TextExtend where
+module Utils.TextExtend where
 
 import Graphics.UI.WXCore.WxcTypes
 import Graphics.UI.WXCore.WxcDefs

@@ -1,6 +1,6 @@
 
 imports{
-import CounterScope
+import Process.CounterScope
 }
 
 -- counter's quotes

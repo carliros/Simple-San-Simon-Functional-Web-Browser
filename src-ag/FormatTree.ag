@@ -1,4 +1,3 @@
-
 imports{
 module FormatTree
 ( formatTree
@@ -6,10 +5,10 @@ module FormatTree
 
 import UU.Pretty
 import qualified Data.Map as Map
-import DataTreeHTML
+import Data.DataTreeHTML
 }
 
-INCLUDE "DataTreeHTML.ag"
+INCLUDE "../src/Data/DataTreeHTML.ag"
 
 -- =====================================
 -- semantic funtions for showNTree

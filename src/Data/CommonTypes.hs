@@ -1,4 +1,4 @@
-module CommonTypes where
+module Data.CommonTypes where
 
 -- The continuation type of an element when it is divided into parts
 data TypeContinuation 

@@ -1,21 +1,21 @@
-module CssBox where
+module Process.CssBox where
 
-import Graphics.UI.WXCore
-import Graphics.UI.WX hiding (get)
-import qualified Data.Map as Map
-import Data.Maybe
-import Data.Char
-import TextExtend
-import Property
-import DownloadProcess
-import DataTreeCSS
+import           Data.Char
+import           Data.DataTreeCSS
+import qualified Data.Map                as Map
+import           Data.Maybe
+import           Graphics.UI.WX          hiding (get)
+import           Graphics.UI.WXCore
 
-import CommonTypes
-import Attributes
-import Utiles
+import           Data.CommonTypes
+import           Data.Property
+import           Process.Attributes
+import           Process.DownloadProcess
+import           Utils.TextExtend
+import           Utils.Utiles
 
 -- build a font from the list of css properties
-buildFont props 
+buildFont props
     = let fsze = toInt $ (\vp -> vp/1.6) $ unPixelUsedValue "CssBox.hs" (props `get` "font-size")
                              -- la funcion que le aplico es porque wxwidgets trabaja con points
           fwgt = toFontWeight $ computedValue (props `get` "font-weight")
@@ -27,7 +27,7 @@ buildFont props
                      , _fontFamily = family
                      , _fontFace   = face
                      }
-    where toFontWeight w 
+    where toFontWeight w
             = case w of
                 KeyValue "bold" -> WeightBold
                 otherwise       -> WeightNormal
@@ -36,7 +36,7 @@ buildFont props
                 KeyValue "italic"  -> ShapeItalic
                 KeyValue "oblique" -> ShapeSlant
                 otherwise          -> ShapeNormal
-          getFont_Family_Face fn 
+          getFont_Family_Face fn
             = case fn of
                 ListValue list -> case head list of
                                     StringValue str       -> (FontDefault,str)
@@ -49,7 +49,7 @@ buildFont props
                 otherwise      -> (FontDefault,"")  -- por si acaso
 
 -- get the size(width and height) of a string with the list of css properties
-getSizeBox cnt wn props 
+getSizeBox cnt wn props
     = do pnl <- window wn []
          let myFont = buildFont props
          set pnl [font := myFont]
@@ -61,9 +61,9 @@ getSizeBox cnt wn props
          -- (width,height,descent,externalLeading)
          -- descent is the distance from baseline to the bottom's font
 
-applyTextTransform props str 
+applyTextTransform props str
     = case usedValue (props `get` "text-transform") of
-          KeyValue "none" 
+          KeyValue "none"
               -> str
           KeyValue "capitalize"
               -> let newStr = words str
@@ -107,15 +107,15 @@ getBorderColorProperties props = [ maybe (0,0,0) unKeyComputedColor (props `getM
                                  , maybe (0,0,0) unKeyComputedColor (props `getM` "border-left-color"  )]
 
 -- get the length of the external boxes (margin, border and padding area) of a css box as a tuple
-getExternalSizeBox props = 
-    let [mt,mr,mb,ml]     = getMarginProperties props 
+getExternalSizeBox props =
+    let [mt,mr,mb,ml]     = getMarginProperties props
         [bt,br,bb,bl]     = getBorderProperties props
         [ppt,ppr,ppb,ppl] = getPaddingProperties props
     in (ml+bl+ppl+ppr+br+mr,mt+bt+ppt+ppb+bb+mb)
 
 -- get the length of the external boxes (margin, border and padding area) of a css box as a cuadtuple
-getExternalSizeBox4Tuple props = 
-    let [mt,mr,mb,ml]     = getMarginProperties props 
+getExternalSizeBox4Tuple props =
+    let [mt,mr,mb,ml]     = getMarginProperties props
         [bt,br,bb,bl]     = getBorderProperties props
         [ppt,ppr,ppb,ppl] = getPaddingProperties props
     in ( ml+bl+ppl  -- external left
@@ -125,7 +125,7 @@ getExternalSizeBox4Tuple props =
        )
 
 -- get the (x,y) position of the content area of a css box
-getTopLeftContentPoint tp props = 
+getTopLeftContentPoint tp props =
     let [mt,_,_,ml]   = checkWithTypeElement tp $ getMarginProperties props
         [bt,_,_,bl]   = checkWithTypeElement tp $ getBorderProperties props
         [ppt,_,_,ppl] = checkWithTypeElement tp $ getPaddingProperties props
@@ -152,23 +152,23 @@ onBoxPaint cnt tp props attrs replaced dc rt@(Rect x y w h) = do
     -- setting the font style
     let myFont = buildFont props
     dcSetFontStyle dc myFont
-     
+
     -- margin points
     let [mt,mr,mb,ml] = checkWithTypeElement tp $ getMarginProperties props
- 
+
     --border color
     let toColor (r,g,b) = rgb r g b
     let [bct,bcr,bcb,bcl] = map toColor $ getBorderColorProperties props
 
     -- text color
     let txtColor = toColor $ maybe (0,0,0) unKeyComputedColor (props `getM` "color")
-    
+
     -- background color, brush
     let bkgBrush = case props `getM` "background-color" of
                         Just p -> case computedValue p of
                                     KeyValue "transparent" -> brushTransparent
                                     KeyColor value         -> brushSolid (toColor value)
-                        Nothing  -> error "unexpected value at background-color property" 
+                        Nothing  -> error "unexpected value at background-color property"
 
     -- border style and border widths
     let toPenStyle s = case s of
@@ -180,7 +180,7 @@ onBoxPaint cnt tp props attrs replaced dc rt@(Rect x y w h) = do
     let [bst,bsr,bsb,bsl] = getBorderStyleProperties props
 
     let [bt,br,bb,bl] = checkWithTypeElement tp $ getBorderProperties props
-    
+
     -- padding widths
     let [ppt,ppr,ppb,ppl] = checkWithTypeElement tp $ getPaddingProperties props
 
@@ -191,7 +191,7 @@ onBoxPaint cnt tp props attrs replaced dc rt@(Rect x y w h) = do
     -- painting the background-color
     let bkgRect = rect (pt bx1 by1) (sz (bx2 - bx1 + 1) (by2 - by1 + 1))
     drawRect dc bkgRect [brush := bkgBrush, pen := penTransparent]
-   
+
     -- painting the borders
     paintLine dc (bx1,by1) (bx2,by1) bt True  True  [penWidth := 1, penColor := bct, penKind := toPenStyle bst]
     paintLine dc (bx2,by1) (bx2,by2) br False False [penWidth := 1, penColor := bcr, penKind := toPenStyle bsr]
@@ -212,10 +212,10 @@ onBoxPaint cnt tp props attrs replaced dc rt@(Rect x y w h) = do
              --drawRect dc (rect ptContent szimg) []
              return ()
      else case usedValue (props `get` "display") of
-             {- KeyValue "block"  
+             {- KeyValue "block"
                   -> return ()
-              KeyValue "inline" 
-             -} _ 
+              KeyValue "inline"
+             -} _
                   -> do -- text
                         let newCnt = applyTextTransform props cnt
                         drawText dc newCnt ptContent [color := txtColor]
@@ -227,7 +227,7 @@ onBoxPaint cnt tp props attrs replaced dc rt@(Rect x y w h) = do
 
 doDecoration dc (Point x y) txtColor (Size width height, baseline, a) value
     = case value of
-          KeyValue "underline" 
+          KeyValue "underline"
               -> do let yb = height - baseline + 2
                     line dc (pt 0 yb) (pt width yb) [penColor := txtColor]
           KeyValue "overline"
@@ -246,13 +246,13 @@ checkWithTypeElement tp lst@(wt:wr:wb:wl:[])
         End    -> [wt,wr,wb,0 ]     -- I don't consider the left width
 
 -- paint a line of a specific width
-paintLine _  _       _       0     _    _   _     
+paintLine _  _       _       0     _    _   _
     = return ()
-paintLine dc (x1,y1) (x2,y2) width kind dir style 
+paintLine dc (x1,y1) (x2,y2) width kind dir style
     = do line dc (pt x1 y1) (pt x2 y2) style
          if kind  -- kind -> | True == Horizontal, | False == Vertical
           then do let (y3,y4) = if dir -- dir -> | True == Up2Down, | False == Bottom2Up
-                                then (y1+1,y2+1) 
+                                then (y1+1,y2+1)
                                 else (y1-1,y2-1)
                   paintLine dc (x1,y3) (x2,y4) (width - 1) kind dir style
           else do let (x3,x4) = if dir -- dir -> | True == Left2Right, | False == Right2Left

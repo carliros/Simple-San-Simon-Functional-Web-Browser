@@ -1,5 +1,3 @@
-PRAGMA genlinepragmas
-
 imports{
 module FSBox
 ( FSRoot (..)
@@ -9,7 +7,7 @@ module FSBox
 ) where
 
 import qualified Data.Map as M
-import Property
+import Data.Property
 }
 
 DATA FSRoot

@@ -1,11 +1,4 @@
-PRAGMA genlinepragma
 imports{
-
---module NTree
---( NRoot (..)
---, procesarNTree
---) where
-
 -- libraries
 import qualified Data.Map as Map
 import Data.List
@@ -15,18 +8,17 @@ import Data.Char
 
 
 -- local modules
-import DataTreeHTML
-import DataTreeCSS
-import Propiedades
-import Property
-
+import Data.DataTreeHTML
+import Data.DataTreeCSS
+import Parser.Propiedades
+import Data.Property
+import Data.CommonTypes
 import FSTreeFase1
-import CommonTypes
-import NumRomans
-import Utiles
+import Utils.NumRomans
+import Utils.Utiles
 }
 
-INCLUDE "DataTreeHTML.ag"
+INCLUDE "../src/Data/DataTreeHTML.ag"
 INCLUDE "ObtenerHojasEstilo.ag"
 INCLUDE "SelectorProcess.ag"
 INCLUDE "DoSpecifiedValue.ag"

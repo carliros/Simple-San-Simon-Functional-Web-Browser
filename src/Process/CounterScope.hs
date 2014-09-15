@@ -1,7 +1,8 @@
-module CounterScope where
+module Process.CounterScope where
 
-import qualified Data.Map as Map
-import DataTreeCSS
+import qualified Data.Map         as Map
+
+import           Data.DataTreeCSS
 
 data Scope = ChildScope   [Int]     -- on reset, I create a new scope
            | SiblingScope [Int]     -- on reset, I overwrite the last scope
@@ -11,7 +12,7 @@ resetScope scopes value
     = case value of
         KeyValue "none"  -> scopes
         ListValue values -> foldl updateReset scopes values
-    where updateReset (childScope, siblingScope) (CounterValue str mb) 
+    where updateReset (childScope, siblingScope) (CounterValue str mb)
                 = case mb of
                     Just val -> setup str val
                     Nothing  -> setup str 0
@@ -30,7 +31,7 @@ resetScope scopes value
                                                            funNew v scp = Map.insert key v scp
                                                        in (funNew cval childScope, funNew sval siblingScope)
 
-incrScope scopes value 
+incrScope scopes value
     = case value of
         KeyValue "none"  -> scopes
         ListValue values -> foldl updateIncr scopes values

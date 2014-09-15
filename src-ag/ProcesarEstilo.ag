@@ -8,10 +8,10 @@ module ProcesarEstilo (
 ) where
 
 import qualified Data.Map as Map
-import DataTreeCSS
+import Data.DataTreeCSS
 }
 
-INCLUDE "DataTreeCSS.ag"
+INCLUDE "../src/Data/DataTreeCSS.ag"
 
 -- Atributo que contiene la misma informacion (self) de si mismo
 SET All = * - SRoot

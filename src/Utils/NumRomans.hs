@@ -1,4 +1,4 @@
-module NumRomans where
+module Utils.NumRomans where
 import Data.Char
 
 toRomanUpper :: Int -> String

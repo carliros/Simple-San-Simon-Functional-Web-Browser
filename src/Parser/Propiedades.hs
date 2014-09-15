@@ -1,6 +1,6 @@
 {-# LANGUAGE ImpredicativeTypes, FlexibleContexts #-}
 -- | El modulo Propiedades representa las propiedades de CSS.
-module Propiedades ( 
+module Parser.Propiedades ( 
 -- * Funciones Publicas
   mostrarPropiedades
 , lista_valor_parser
@@ -12,13 +12,13 @@ import Text.ParserCombinators.UU.BasicInstances
 import Text.ParserCombinators.UU.Utils
 import qualified Data.Map as Map
 import qualified Data.ListLike as LL
-import Property
-import DataTreeCSS
 
-import BasicCssParser
-import PropertyParser
-import PropertyComputedFunction
-import PropertyUsedFunction
+import Data.Property
+import Data.DataTreeCSS
+import Parser.BasicCssParser
+import Parser.PropertyParser
+import Process.PropertyComputedFunction
+import Process.PropertyUsedFunction
 
 
 -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

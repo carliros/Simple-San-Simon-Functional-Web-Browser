@@ -1,8 +1,8 @@
-module PropertyComputedFunction where
+module Process.PropertyComputedFunction where
 
-import Property
-import DataTreeCSS
-import Data.Maybe
+import           Data.DataTreeCSS
+import           Data.Maybe
+import           Data.Property
 
 -- for computed value
 computed_display :: FunctionComputed
@@ -131,7 +131,7 @@ computed_border_color iamtheroot fatherProps locProps iamreplaced iamPseudo nm p
         NotSpecified     -> specifiedValue (locProps `get` "color")
         KeyColor (r,g,b) -> KeyColor (r,g,b)        -- the color is the same as specified and computed
 
-isLengthOrPercentage val 
+isLengthOrPercentage val
     = case val of
         PixelNumber _ -> True
         PointNumber _ -> True

@@ -1,26 +1,24 @@
 -- | main gui
 module Main where
 
-import Graphics.UI.WX
-import Graphics.UI.WXCore
-import qualified Data.Map as Map
-import qualified Data.List as List
+import qualified Data.List               as List
+import qualified Data.Map                as Map
+import           Graphics.UI.WX
+import           Graphics.UI.WXCore
 
-import Settings
-
--- datatypes
-import DownloadProcess
-import Url
-import ParserHTML
-import ParserCSS
-import Propiedades
-import NTree
-import DataTreeHTML
-import FSTreeFase1
-import FSTreeFase2
-import CssBox
-import ZipperList
-import CommonTypes
+import           Data.CommonTypes
+import           Data.DataTreeHTML
+import           FSTreeFase1
+import           FSTreeFase2
+import           NTree
+import           Parser.ParserCSS
+import           Parser.ParserHTML
+import           Parser.Propiedades
+import           Process.CssBox
+import           Process.DownloadProcess
+import           Settings.Settings
+import           Utils.Url
+import           Utils.ZipperList
 
 about :: String
 about = "Simple San Simon Functional Web browser\n\
@@ -95,9 +93,9 @@ updateInitialContainer icb inp varfstree varzipper varDefaultCSS4Html varUserCSS
             (Just fstree) -> do let boxtree = processFSTree1 fstree icb (w,h)
                                 --print boxtree
                                 let (_,fresult, (wc,hc)) = processFSTree2 boxtree
-                                                                          baseurl 
-                                                                          icb 
-                                                                          (goToURL icb inp varfstree varzipper varDefaultCSS4Html varUserCSS4Html varbaseurl) 
+                                                                          baseurl
+                                                                          icb
+                                                                          (goToURL icb inp varfstree varzipper varDefaultCSS4Html varUserCSS4Html varbaseurl)
                                 fresult icb
                                 -- scrollbars
                                 sw <- get icb size
@@ -110,14 +108,14 @@ renderPage pnl inp varfstree varzipper varDefaultCSS4Html varUserCSS4Html varbas
          url <- get inp text
          goToURL pnl inp varfstree varzipper varDefaultCSS4Html varUserCSS4Html varbaseurl url
 
-goToURL pnl inp varfstree varzipper varDefaultCSS4Html varUserCSS4Html varbaseurl url 
+goToURL pnl inp varfstree varzipper varDefaultCSS4Html varUserCSS4Html varbaseurl url
     = do -- getting the content of the url
          (eurl,content) <- getContenidoURL url
 
          -- getting the base url
          let baseurl = getBaseUrl eurl
          set varbaseurl [value := baseurl]
-    
+
          -- setting the url
          set inp [text := eurl]
 
@@ -125,7 +123,7 @@ goToURL pnl inp varfstree varzipper varDefaultCSS4Html varUserCSS4Html varbaseur
          zipper <- get varzipper value
          let newzipper = insert url zipper
          set varzipper [value := newzipper]
-            
+
          -- generating the formatting structure to render
          ast <- parseHTML content
          --print (Root ast)
@@ -173,5 +171,5 @@ createMenus f sfiles varzipper inp pnl varfstree varDefaultCSS4Html varUserCSS4H
                                       newStylesheet <- fparse fn
                                       set var [value := newStylesheet]
                         Nothing -> return ()
-          
+
 

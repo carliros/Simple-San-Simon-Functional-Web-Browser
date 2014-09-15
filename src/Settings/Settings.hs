@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-module Settings (
+module Settings.Settings (
   readConfigFile
 , writeConfigFile
 , retrieveConfigPath
@@ -7,13 +7,13 @@ module Settings (
 , retrieveTempDir
 ) where
 
-import Text.ParserCombinators.UU
-import Text.ParserCombinators.UU.BasicInstances
-import Text.ParserCombinators.UU.Utils
-import CombinadoresBasicos
-import System.Directory
-import System.FilePath
-import qualified Data.Map as Map
+import qualified Data.Map                                 as Map
+import           Parser.CombinadoresBasicos
+import           System.Directory
+import           System.FilePath
+import           Text.ParserCombinators.UU
+import           Text.ParserCombinators.UU.BasicInstances
+import           Text.ParserCombinators.UU.Utils
 
 readConfigFile :: IO (Map.Map String String)
 readConfigFile
@@ -43,7 +43,7 @@ retrieveTempDir
          doesTmpExist <- doesDirectoryExist tmpDir
          if doesTmpExist then return tmpDir
                          else error $ "We could not find temporary directory at " ++ tmpDir
-                 
+
 -- parser
 pFiles :: Parser [(String,String)]
 pFiles = pList pFile

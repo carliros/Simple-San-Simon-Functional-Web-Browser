@@ -1,20 +1,20 @@
-{-# LANGUAGE ImpredicativeTypes, FlexibleContexts #-}
-module PropertyParser where
+{-# LANGUAGE FlexibleContexts   #-}
+{-# LANGUAGE ImpredicativeTypes #-}
+module Parser.PropertyParser where
 
-import Text.ParserCombinators.UU
-import Text.ParserCombinators.UU.BasicInstances
-import Text.ParserCombinators.UU.Utils
-import Control.Applicative.Interleaved
-import Text.ParserCombinators.UU.Interleaved hiding (mkP)
-import Data.Char
-import qualified Data.Map as Map
-import Data.Maybe
+import           Control.Applicative.Interleaved
+import           Data.Char
+import qualified Data.Map                                 as Map
+import           Data.Maybe
+import           Text.ParserCombinators.UU
+import           Text.ParserCombinators.UU.BasicInstances
+import           Text.ParserCombinators.UU.Interleaved    hiding (mkP)
+import           Text.ParserCombinators.UU.Utils
 
-import CombinadoresBasicos
-import BasicCssParser
-
-import Property
-import DataTreeCSS
+import           Data.DataTreeCSS
+import           Data.Property
+import           Parser.BasicCssParser
+import           Parser.CombinadoresBasicos
 
 -- | display
 pDisplay :: Parser Value
@@ -23,39 +23,39 @@ pDisplay
 
 -- | position
 pPosition :: Parser Value
-pPosition 
+pPosition
     = pKeyValues ["static", "relative", "inherit"]     -- no support for absolute, fixed
 
 -- | top, bottom, ...
 pOffset :: Parser Value
-pOffset 
+pOffset
     = pLength <|> pPercentagePos <|> pKeyValues ["auto", "inherit"]
 
 -- | float
 pFloat :: Parser Value
-pFloat 
+pFloat
     = pKeyValues ["none", "inherit"]   -- no support for left, right
 
 -- | margin
 pMarginWidth :: Parser Value
-pMarginWidth 
+pMarginWidth
     = pLength <|> pPercentagePos <|> pKeyValues ["auto", "inherit"]
 pShorthandMargin :: Parser Declaraciones
-pShorthandMargin 
-    = buildSimpleShorthandProp 
-            "margin" 
-            ["margin-top", "margin-right", "margin-bottom", "margin-left"] 
+pShorthandMargin
+    = buildSimpleShorthandProp
+            "margin"
+            ["margin-top", "margin-right", "margin-bottom", "margin-left"]
             pMarginWidth
 
 -- | padding
 pPaddingWidth :: Parser Value
-pPaddingWidth 
+pPaddingWidth
     = pLengthPos <|> pPercentagePos <|> pKeyValues ["inherit"]
 pShorthandPadding :: Parser Declaraciones
 pShorthandPadding
-    = buildSimpleShorthandProp 
-            "padding" 
-            ["padding-top", "padding-right", "padding-bottom", "padding-left"] 
+    = buildSimpleShorthandProp
+            "padding"
+            ["padding-top", "padding-right", "padding-bottom", "padding-left"]
             pPaddingWidth
 
 -- | border
@@ -66,13 +66,13 @@ pBorderWidth' :: Parser Value
 pBorderWidth'
     = pLengthPos
 pShorthandBorderWidth :: Parser Declaraciones
-pShorthandBorderWidth 
-    = buildSimpleShorthandProp 
-            "border-width" 
+pShorthandBorderWidth
+    = buildSimpleShorthandProp
+            "border-width"
             ["border-top-width", "border-right-width", "border-bottom-width", "border-left-width"]
             pBorderWidth
 pBorderColor :: Parser Value
-pBorderColor 
+pBorderColor
     = pBorderColor' <|> pKeyValues ["inherit"]
 pBorderColor' :: Parser Value
 pBorderColor'
@@ -80,11 +80,11 @@ pBorderColor'
 pShorthandBorderColor :: Parser Declaraciones
 pShorthandBorderColor
     = buildSimpleShorthandProp
-            "border-color" 
+            "border-color"
             ["border-top-color", "border-right-color", "border-bottom-color", "border-left-color"]
             pBorderColor
 pBorderStyle :: Parser Value
-pBorderStyle 
+pBorderStyle
     = pBorderStyle' <|> pKeyValues ["inherit"]
 pBorderStyle' :: Parser Value
 pBorderStyle'
@@ -101,8 +101,8 @@ pShorthandBorderEdge
       in pAny (\nm -> makeDecl nm) names
     where makeDecl nm = pToken nm *> pSimboloAmb ":" *> pValue nm
           pValue   nm = catMaybes <$> sepBy ((\a b c -> [a,b,c])
-                                           <$>  (pMaybe $ mkG (pPropBorderWidth nm)) 
-                                           <||> (pMaybe $ mkG (pPropBorderColor nm)) 
+                                           <$>  (pMaybe $ mkG (pPropBorderWidth nm))
+                                           <||> (pMaybe $ mkG (pPropBorderColor nm))
                                            <||> (pMaybe $ mkG (pPropBorderStyle nm))
                                       ) pInutil
           pPropBorderWidth nm = (\val -> Declaracion (nm ++ "-width") val False) <$> pBorderWidth'
@@ -143,34 +143,34 @@ pFontSize
     = pFontSizeValue <|> pKeyValues ["inherit"]
 
 pFontSizeValue :: Parser Value
-pFontSizeValue 
+pFontSizeValue
     = pAbosoluteFontSize <|> pRelativeFontSize <|> pLength <|> pPercentagePos
 pAbosoluteFontSize :: Parser Value
-pAbosoluteFontSize 
-    = KeyValue <$> (    pKeyword "xx-small" 
-                    <|> pKeyword "x-small" 
-                    <|> pKeyword "small" 
-                    <|> pKeyword "medium" 
-                    <|> pKeyword "large" 
-                    <|> pKeyword "x-large" 
+pAbosoluteFontSize
+    = KeyValue <$> (    pKeyword "xx-small"
+                    <|> pKeyword "x-small"
+                    <|> pKeyword "small"
+                    <|> pKeyword "medium"
+                    <|> pKeyword "large"
+                    <|> pKeyword "x-large"
                     <|> pKeyword "xx-large"
                    )
 pRelativeFontSize :: Parser Value
-pRelativeFontSize 
+pRelativeFontSize
     = KeyValue <$> (pKeyword "smaller" <|> pKeyword "larger")
 pFontFamilyList :: Parser Value
-pFontFamilyList 
+pFontFamilyList
     = ListValue <$> pList1Sep_ng (pSimboloAmb ",") pFontFamilyValue
 pFontFamilyValue :: Parser Value
-pFontFamilyValue 
+pFontFamilyValue
     = pStringValue <|> pGenericFamily
 pGenericFamily :: Parser Value
-pGenericFamily 
+pGenericFamily
     =  KeyValue <$> (pKeyword "serif" <|> pKeyword "sans-serif" <|> pKeyword "cursive" <|> pKeyword "fantasy" <|> pKeyword "monospace")
 
 -- | color
 pColorValue :: Parser Value
-pColorValue 
+pColorValue
     = pColor <|> pKeyValues ["inherit"]
 
 -- | dimentions: height and width
@@ -180,34 +180,34 @@ pDimentionValue
 
 -- | line height
 pLineHeight :: Parser Value
-pLineHeight 
+pLineHeight
     = pLengthPos <|> pPercentagePos <|> pKeyValues ["inherit"]
 
 -- | vertical align
 pVerticalAlign :: Parser Value
-pVerticalAlign 
+pVerticalAlign
     = pLength <|> pPercentage <|> pKeyValues ["baseline", "sub", "super", "text-top", "text-bottom", "inherit"]  -- "top", "bottom", "middle"
 
 -- | generated content, quotes and lists
 pContent :: Parser Value
-pContent 
+pContent
     = pListContent <|> pKeyValues ["normal", "none", "inherit"]
 
 pListContent :: Parser Value
-pListContent 
+pListContent
     = ListValue <$> pList1Sep_ng pInutil (pStringValue <|> pCounter <|> pKeyValues ["open-quote", "close-quote", "no-open-quote", "no-close-quote"])
 -- pInutil??? isn't better pInutil1
 
 pCounter :: Parser Value
-pCounter 
-    =  Counter  <$ pKeyword "counter"  <*  pSimboloAmb "(" 
+pCounter
+    =  Counter  <$ pKeyword "counter"  <*  pSimboloAmb "("
                                                 <*> pSimpleContent <*> pCounterStyle
                                        <*  pSimboloAmb ")"
-   <|> Counters <$ pKeyword "counters" <*  pSimboloAmb "(" 
+   <|> Counters <$ pKeyword "counters" <*  pSimboloAmb "("
                                                 <*> pSimpleContent <* pSimboloAmb "," <*> pString <*> pCounterStyle
                                        <*  pSimboloAmb ")"
 pCounterStyle :: Parser (Maybe Value)
-pCounterStyle 
+pCounterStyle
     = Just <$ pSimboloAmb "," <*> pListStyleType
    <|> pReturn Nothing
 
@@ -224,10 +224,10 @@ pListCounter
     = ListValue <$> pList1Sep_ng pInutil pCounterValue
 
 pCounterValue :: Parser Value
-pCounterValue 
+pCounterValue
     = CounterValue <$> pSimpleContent <* pInutil <*> pMaybeInteger
 pMaybeInteger :: Parser (Maybe Int)
-pMaybeInteger 
+pMaybeInteger
     =  Just <$> pEntero    --) `opt` Nothing
    <|> pReturn Nothing
 
@@ -239,11 +239,11 @@ pListQuote :: Parser Value
 pListQuote
     = ListValue  <$> pList1Sep_ng pInutil pQuoteValue
 pQuoteValue :: Parser Value
-pQuoteValue 
+pQuoteValue
     = QuoteValue <$> pString <* pInutil <*> pString
 
 pListStylePositionProp :: Parser Value
-pListStylePositionProp 
+pListStylePositionProp
     = pKeyValues ["outside","inherit"]
 
 pListStyleTypeProp :: Parser Value
@@ -251,12 +251,12 @@ pListStyleTypeProp
     = pListStyleType <|> pKeyValues ["inherit"]
 
 pListStyleType :: Parser Value
-pListStyleType 
+pListStyleType
     = pKeyValues ["disc", "circle", "square", "decimal", "lower-roman", "upper-roman", "none"]
 
 -- | background color
 pBackgroundColor :: Parser Value
-pBackgroundColor 
+pBackgroundColor
     = pColor <|> pKeyValues ["transparent", "inherit"]
 
 -- | text
@@ -277,15 +277,15 @@ pTextTransform
     = pKeyValues ["capitalize", "uppercase", "lowercase", "none", "inherit"]
 
 pListDecoration :: Parser Value
-pListDecoration 
+pListDecoration
     = ListValue <$> pList1Sep_ng pInutil pDecorationValue
 
 pDecorationValue :: Parser Value
-pDecorationValue 
+pDecorationValue
     = pKeyValues ["underline", "overline", "line-through"]     -- no blink
 
 -- white space
 pWhiteSpace :: Parser Value
-pWhiteSpace 
+pWhiteSpace
     = pKeyValues ["normal", "pre", "nowrap", "pre-wrap", "pre-line", "inherit"]
 

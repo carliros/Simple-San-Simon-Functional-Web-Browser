@@ -1,5 +1,5 @@
 -- | Modulo de funciones utiles
-module Utiles where
+module Utils.Utiles where
 {-
 (
 -- * Funciones para tuplas
