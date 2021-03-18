@@ -1,23 +1,23 @@
-Name: 3SFWebBrowser
-Version: 0.2.1
-Homepage: http://hsbrowser.wordpress.com
-Synopsis: Simple Web Browser written with Haskell
-Description:         
-    Simple San Simon Functional Web Browser (3SF Web Browser) 
-    is an educational project where the idea is to experiment
-    Haskell as a functional programming language to develop
-    a Web Browser.  
+name:                3SFWebBrowser
+version:             0.2.1
+homepage:            http://hsbrowser.wordpress.com
+synopsis:            Simple Web Browser written with Haskell
+description:         
+                     Simple San Simon Functional Web Browser (3SF Web Browser) 
+                     is an educational project where the idea is to experiment
+                     Haskell as a functional programming language to develop
+                     a Web Browser.  
 
-    It supports a simple simple generic markup language and CSS.
-License: BSD3
-License-File: LICENSE
-Author: Carlos Gomez
-Maintainer: carliros.g@gmail.com
-Bug-reports: https://github.com/carliros/Simple-San-Simon-Functional-Web-Browser/issues
-Category: Web
-Build-Type: Custom
-Cabal-Version: >=1.6
-Extra-source-files:   README 
+                     It supports a simple simple generic markup language and CSS.
+license:             BSD3
+license-file:        LICENSE
+author:              Carlos Gomez
+maintainer:          carliros.g@gmail.com
+bug-reports:         https://github.com/carliros/Simple-San-Simon-Functional-Web-Browser/issues
+category:            Web
+build-type:          Simple
+cabal-version:       >=1.10
+extra-source-files:   README 
                     , config/dbf
                     , config/html4.css
                     , config/user.css
@@ -29,11 +29,11 @@ Extra-source-files:   README
                     , config/tmp/square.png
                     , src-ag/*.ag
 
-Source-repository head
+source-repository head
     type:       git
     location:   git://github.com/carliros/Simple-San-Simon-Functional-Web-Browser.git
 
-Executable 3SFWebBrowser
+executable 3SFWebBrowser
     --hs-source-dirs: src, src-ag
     --Main-is:        MainWebBrowserGui.hs
     --ghc-options:    -Wall
