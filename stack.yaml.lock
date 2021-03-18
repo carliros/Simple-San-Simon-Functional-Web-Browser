@@ -3,7 +3,28 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    hackage: uuagc-cabal-1.2.0.0@sha256:4defb1455dedcc3b0222c6f069c51e08fa70b1bd9ec044c0b7accedb49c2c367,1104
+    pantry-tree:
+      size: 576
+      sha256: 44f4802199e40cb060220d6659c66fd3c9a92ef58aca374fa33ead877abfedc9
+  original:
+    hackage: uuagc-cabal-1.2.0.0
+- completed:
+    hackage: uulib-0.9.24@sha256:152da205e22befdeeb65e734990142d578456efb6e14e46bfd22e4cb63cd374d,1801
+    pantry-tree:
+      size: 2343
+      sha256: 65e2c597dd20e0a985f42a5cbc526a39122aebb347b7c399e414f560b18579be
+  original:
+    hackage: uulib-0.9.24
+- completed:
+    hackage: uuagc-0.9.53.1@sha256:ff22a1145455fa064f870694882249c3fc344987e35fcb10ff7f8e21a239e6bb,3292
+    pantry-tree:
+      size: 7106
+      sha256: 8d4c72c15f003edad2661fa1220520330ffd21a2c7b404282c3989f0f324f7b9
+  original:
+    hackage: uuagc-0.9.53.1
 snapshots:
 - completed:
     size: 565712
