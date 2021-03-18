@@ -1,0 +1,64 @@
+Name: 3SFWebBrowser
+Version: 0.2.1
+Homepage: http://hsbrowser.wordpress.com
+Synopsis: Simple Web Browser written with Haskell
+Description:         
+    Simple San Simon Functional Web Browser (3SF Web Browser) 
+    is an educational project where the idea is to experiment
+    Haskell as a functional programming language to develop
+    a Web Browser.  
+
+    It supports a simple simple generic markup language and CSS.
+License: BSD3
+License-File: LICENSE
+Author: Carlos Gomez
+Maintainer: carliros.g@gmail.com
+Bug-reports: https://github.com/carliros/Simple-San-Simon-Functional-Web-Browser/issues
+Category: Web
+Build-Type: Custom
+Cabal-Version: >=1.6
+Extra-source-files:   README 
+                    , config/dbf
+                    , config/html4.css
+                    , config/user.css
+                    , config/tmp/circle.png
+                    , config/tmp/default.jpg
+                    , config/tmp/disc.png
+                    , config/tmp/logo.jpg
+                    , config/tmp/minilogo.jpg
+                    , config/tmp/square.png
+                    , src-ag/*.ag
+
+Source-repository head
+    type:       git
+    location:   git://github.com/carliros/Simple-San-Simon-Functional-Web-Browser.git
+
+Executable 3SFWebBrowser
+    --hs-source-dirs: src, src-ag
+    --Main-is:        MainWebBrowserGui.hs
+    --ghc-options:    -Wall
+    --other-modules:   NTree
+    --               , Data.DataTreeHTML
+    --               , Data.DataTreeCSS
+    --               , FSTreeFase1
+    --               , FSTreeFase2
+    --               , ProcesarEstilo
+    --               , FSBox
+
+    --Build-depends:    base
+    --                , containers
+    --                , url
+    --                , directory
+    --                , tagsoup
+    --                , filepath
+    --                , gd
+    --                , curl
+    --                , uu-parsinglib
+    --                , uu-interleaved
+    --                , ListLike
+    --                , wxcore
+    --                , wx
+    hs-source-dirs:      src
+    main-is:             Main.hs
+    default-language:    Haskell2010
+    build-depends:       base >= 4.7 && < 5
