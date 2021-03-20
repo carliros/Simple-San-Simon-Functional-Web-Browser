@@ -61,16 +61,18 @@ executable 3SFWebBrowser
     --                , wx
     other-modules:       Data.DataTreeHTML
                        , Data.DataTreeCSS
-    --                   , FSBox
+                       , Utils.Utiles
+                       , Data.Property
+                       , FSBox
     --                   , NTree
     --                   , FSTreeFase1
     --                   , FSTreeFase2
     --                   , ProcesarEstilo
-    --                   , FSBox
-    hs-source-dirs:      src
+    hs-source-dirs:      src, src-ag
     main-is:             Main.hs
     default-language:    Haskell2010
     build-depends:       base >= 4.7 && < 5
                        , uuagc >= 0.9.53.1
                        , uuagc-cabal >= 1.2.0.0
                        , containers
+                       , uu-parsinglib

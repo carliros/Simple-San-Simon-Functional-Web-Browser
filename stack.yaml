@@ -44,6 +44,8 @@ extra-deps:
   - uuagc-cabal-1.2.0.0
   - uulib-0.9.24
   - uuagc-0.9.53.1
+  - uu-parsinglib-2.9.1.1
+  - uu-interleaved-0.2.0.2
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

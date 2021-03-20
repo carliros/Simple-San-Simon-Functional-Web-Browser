@@ -25,6 +25,20 @@ packages:
       sha256: 8d4c72c15f003edad2661fa1220520330ffd21a2c7b404282c3989f0f324f7b9
   original:
     hackage: uuagc-0.9.53.1
+- completed:
+    hackage: uu-parsinglib-2.9.1.1@sha256:08e3d148cf6b2a6d8e99193f15367a76beacda4e5d8d7829727caaa30adf72ea,3149
+    pantry-tree:
+      size: 974
+      sha256: ccf341334b763e390b0471dda9e0dfad70975dba994b30c7b6d41a3d7e5fa0a2
+  original:
+    hackage: uu-parsinglib-2.9.1.1
+- completed:
+    hackage: uu-interleaved-0.2.0.2@sha256:595e62dfca0e3a08e9fd37e102568313d4f3e2c29fab26a66f3640cc9412ecf3,1721
+    pantry-tree:
+      size: 237
+      sha256: 030748a52a5397cb0217fc58f4ea89f7c7f4daaafea71d95ca40335da9d9cecc
+  original:
+    hackage: uu-interleaved-0.2.0.2
 snapshots:
 - completed:
     size: 565712
