@@ -46,9 +46,18 @@ extra-deps:
   - uuagc-0.9.53.1
   - uu-parsinglib-2.9.1.1
   - uu-interleaved-0.2.0.2
+  - gtk-0.15.5
+  - gtk3-0.15.5
+  - cairo-0.13.8.1
+  - gio-0.13.8.1
+  - glib-0.13.8.1
+  - gtk2hs-buildtools-0.13.8.0
+  - pango-0.13.8.1
 
 # Override default flag values for local packages and extra-deps
-# flags: {}
+flags:
+    gtk:
+        have-quartz-gtk: true
 
 # Extra package databases containing global packages
 # extra-package-dbs: []

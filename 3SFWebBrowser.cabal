@@ -75,4 +75,5 @@ executable 3SFWebBrowser
                        , uuagc >= 0.9.53.1
                        , uuagc-cabal >= 1.2.0.0
                        , containers
+                       , gtk3
                        , uu-parsinglib
