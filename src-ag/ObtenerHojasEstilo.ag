@@ -19,7 +19,7 @@ SEM NTree
 -- caso contrario, no es nada (lista vacia)
 -- Subimos al NRoot todas las Hojas de Estilo (excepto los de Estilo Atributos)
 
-ATTR NTree NTrees [|| reglas: {MapSelector}]
+ATTR NTree NTrees [ || reglas: {MapSelector}]
 SEM NTrees
     | Cons lhs.reglas = Map.unionWith (++) @hd.reglas @tl.reglas
     | Nil  lhs.reglas = Map.empty

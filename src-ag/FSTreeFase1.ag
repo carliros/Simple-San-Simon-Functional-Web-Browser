@@ -54,8 +54,8 @@ INCLUDE "BuildLines.ag"
 INCLUDE "ListMarker.ag"
 
 -- Going from Fase 1 to the Fase 2
-ATTR Boxes [|| boxtree USE {:} {[]}:{[WindowTree]}]
-ATTR BoxRoot BoxTree [|| boxtree: {WindowTree} ]
+ATTR Boxes [ || boxtree USE {:} {[]}:{[WindowTree]}]
+ATTR BoxRoot BoxTree [ || boxtree: {WindowTree} ]
 SEM BoxTree
     | BoxItemContainer
         lhs.boxtree

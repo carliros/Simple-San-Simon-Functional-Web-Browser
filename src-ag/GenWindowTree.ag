@@ -35,7 +35,7 @@ SEM WindowTree
                                         Nothing  -> Nothing
 
 -- Building the tree of windows
-ATTR WindowRoot WindowTree [|| result: {WX.Window a -> IO()}]
+ATTR WindowRoot WindowTree [ || result: {WX.Window a -> IO()}]
 SEM WindowTree
     | WindowItemContainer
         lhs.result = \cb -> do case @marker of
@@ -59,8 +59,8 @@ SEM WindowTree
                                                 in WX.set cbox [WX.on WX.focus WX.:= onClick @lhs.goToURL url']
                                     Nothing   -> return ()
 
-ATTR Element Lines Line [|| result USE {++} {[]} : {[WX.Window a -> IO()]}]
-ATTR WindowTrees [|| result USE {:} {[]}: {[WX.Window a -> IO()]}]
+ATTR Element Lines Line [ || result USE {++} {[]} : {[WX.Window a -> IO()]}]
+ATTR WindowTrees [ || result USE {:} {[]}: {[WX.Window a -> IO()]}]
 
 {
 onClick function url bool

@@ -15,17 +15,17 @@ INCLUDE "../src/Data/DataTreeCSS.ag"
 
 -- Atributo que contiene la misma informacion (self) de si mismo
 SET All = * - SRoot
-ATTR All [|| self: SELF]
+ATTR All [ || self: SELF]
 
 -- contando los pseudo elementos en 'd'
-ATTR MaybePseudo [|| d: Int ]
+ATTR MaybePseudo [ || d: Int ]
 SEM MaybePseudo
     | Just    lhs.d = 1     -- tiene un pseudo
     | Nothing lhs.d = 0     -- no tiene pseudo
 
 -- contando los atributos ID en 'b' y los otros atributos en 'c'
 -- luego sumamos todos los 'b' y 'c'
-ATTR Atributos Atributo [|| b, c USE {+} {0}: Int]
+ATTR Atributos Atributo [ || b, c USE {+} {0}: Int]
 SEM Atributo
     | AtribID     lhs.b = 1   
                   lhs.c = 0   -- 0 (cero) porque no tiene otros atributos
@@ -38,7 +38,7 @@ SEM Atributo
 -- los atributos universales no tienen nombre
 -- dejamos 'b' y 'c' sin tocarlos
 -- luego sumamos los 'b', 'c' y 'd'
-ATTR Selector ESelector SSelector [|| b, c, d USE {+} {0}: Int ]
+ATTR Selector ESelector SSelector [ || b, c, d USE {+} {0}: Int ]
 SEM SSelector
     | TypeSelector lhs.d = @maybePseudo.d + 1
 
@@ -47,7 +47,7 @@ SEM SSelector
 -- colocamos 1 como resultado porque no tiene selectores
 -- caso contrario generamos el numero
 -- el output es la Regla + especificidad
-ATTR Regla [|| output: {(Tipo, Origen, Selector, Declaraciones, Int)}]
+ATTR Regla [ || output: {(Tipo, Origen, Selector, Declaraciones, Int)}]
 SEM Regla
     | Tuple lhs.output 
                 = let especificidad 
@@ -64,14 +64,14 @@ SEM Regla
                      )
 
 -- recoge todas las nuevas reglas en una lista
-ATTR HojaEstilo [|| output USE {:} {[]}: {[( Tipo
+ATTR HojaEstilo [ || output USE {:} {[]}: {[( Tipo
                                            , Origen
                                            , Selector
                                            , Declaraciones
                                            , Int)]}]
 
 -- expande las declaraciones y colocal en reverso a los selectores
-ATTR SRoot [|| output2: {MapSelector}]
+ATTR SRoot [ || output2: {MapSelector}]
 SEM SRoot
     | SRoot lhs.output2
                 = let fMap (t,o,s,d,e) map' = Map.insertWith (++) (reverse s) [(t,o,d,e)] map'

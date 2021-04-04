@@ -105,7 +105,7 @@ SEM WindowTree
         elem.align = unKeyUsedValue $ @props `get` "text-align"
 
 -- uploading a right-align point value
-ATTR Line WindowTrees [|| innerLineWidth: Int]
+ATTR Line WindowTrees [ || innerLineWidth: Int]
 SEM WindowTrees
     | Cons lhs.innerLineWidth = (fst @hd.size) + 6 + @tl.innerLineWidth
     | Nil  lhs.innerLineWidth = 0

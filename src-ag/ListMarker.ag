@@ -2,7 +2,7 @@ imports{
 import Utils.NumRomans
 }
 
-ATTR BoxTree [|| incLI: Int]
+ATTR BoxTree [ || incLI: Int]
 SEM BoxTree
     | BoxItemContainer
         lhs.incLI = 1
@@ -50,7 +50,7 @@ SEM BoxTree
                                    (w,h,_,_) = unsafePerformIO $ getSizeBox str @lhs.cb @loc.usedValueProps
                                in (Numering str, (w,h))
 
-ATTR BoxTree [|| markerDim: {(Int,Int)}]
+ATTR BoxTree [ || markerDim: {(Int,Int)}]
 SEM BoxTree
     | BoxItemContainer
         lhs.markerDim = snd @loc.marker
@@ -59,7 +59,7 @@ SEM BoxTree
     | BoxText
         lhs.markerDim = (0,0)
 
-ATTR Boxes [|| maxMarkerDim: {(Int,Int)}]
+ATTR Boxes [ || maxMarkerDim: {(Int,Int)}]
 SEM Boxes
     | Cons lhs.maxMarkerDim = let (a,c) = @hd.markerDim
                                   (b,d) = @tl.maxMarkerDim

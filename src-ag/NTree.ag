@@ -28,9 +28,9 @@ INCLUDE "CounterProcess.ag"
 INCLUDE "GeneratedContent.ag"
 
 -- Generating the Formatting Structure of a web page
-ATTR NTrees [|| fstree USE {:} {[]}:{[Maybe BoxTree]}]
+ATTR NTrees [ | fstree USE {:} {[]}:{[Maybe BoxTree]}]
  
-ATTR NRoot NTree [|| fstree: {Maybe BoxTree}]
+ATTR NRoot NTree [ || fstree: {Maybe BoxTree}]
 SEM NTree
     | NTree lhs.fstree 
                 = let boxesBefore = generateBoxContent (fst @loc.computedContentValueProps) @loc.computedValueProps (fst @loc.myCounterScope) @loc.myQuoteScope

@@ -42,7 +42,7 @@ SEM WindowTree
                                 --KeyValue "middle"      -> 
                                 PixelNumber num        -> toInt num
 -- font metrics
-ATTR Element WindowTree [|| fontMetrics: {(Int,Int)}]
+ATTR Element WindowTree [ || fontMetrics: {(Int,Int)}]
 SEM WindowTree
     | WindowText
         loc.fontMetrics = unsafePerformIO $ getSizeBox @text @lhs.cb @props
@@ -62,7 +62,7 @@ SEM WindowTree
         loc.fontBottom  = snd @loc.fontMetrics
         lhs.fontMetrics = @loc.fontMetrics
 
-ATTR WindowTrees [|| fontMetrics USE {:} {[]}: {[(Int,Int)]}]
+ATTR WindowTrees [ || fontMetrics USE {:} {[]}: {[(Int,Int)]}]
 
 SEM Element
     | EWinds   lhs.fontMetrics = foldr tmax (0,0) @winds.fontMetrics    -- verificar con el maximo de numeros negativos
@@ -70,7 +70,7 @@ SEM Element
     | ENothing lhs.fontMetrics = (0,0)   -- I don't use this value
 
 -- logical metrics
-ATTR Element WindowTree [|| logicalMetrics: {(Int,Int)}]
+ATTR Element WindowTree [ || logicalMetrics: {(Int,Int)}]
 SEM WindowTree
     | WindowText
         lhs.logicalMetrics = let line_height = toInt $ unPixelUsedValue "WindowSize.ag 1" $ @props `get` "line-height"
@@ -87,7 +87,7 @@ SEM WindowTree
     | WindowItemContainer
         lhs.logicalMetrics = @elem.logicalMetrics
 
-ATTR WindowTrees [|| logicalMetrics USE {:} {[]}: {[(Int,Int)]}]
+ATTR WindowTrees [ || logicalMetrics USE {:} {[]}: {[(Int,Int)]}]
 
 SEM Element
     | EWinds   lhs.logicalMetrics = foldr tmax (0,0) @winds.logicalMetrics
@@ -118,7 +118,7 @@ tmax (t1,b1) (t2,b2) = let maxt = t1 `max` t2
 }
 
 -- generating a width and height for all boxtrees, and uploading it until the root element
-ATTR WindowRoot WindowTree Line [|| size: {(Int,Int)}]
+ATTR WindowRoot WindowTree Line [ || size: {(Int,Int)}]
 SEM WindowTree
     | WindowText
         loc.vdisplay = unKeyComputedValue $ @props `get` "display"
@@ -213,16 +213,16 @@ SEM Line
                       , foldr (\t v -> (snd t) `max` v) 0 @winds.size
                       )
 
-ATTR WindowTrees Lines [|| size USE {:} {[]} : {[(Int,Int)]}]
+ATTR WindowTrees Lines [ || size USE {:} {[]} : {[(Int,Int)]}]
 
-ATTR Element [|| size: {[(Int,Int)]}]
+ATTR Element [ || size: {[(Int,Int)]}]
 SEM Element
     | EWinds   lhs.size = @winds.size   -- normal height
     | ELines   lhs.size = @lines.size   -- logicalHeight of each line
     | ENothing lhs.size = []
 
 -- height of a line
-ATTR Element Lines [|| lineHeights: {[Int]}]
+ATTR Element Lines [ || lineHeights: {[Int]}]
 SEM Element
     | EWinds   lhs.lineHeights = []
     | ELines   lhs.lineHeights = @lines.lineHeights
@@ -232,7 +232,7 @@ SEM Lines
     | Cons lhs.lineHeights = @hd.lineHeight : @tl.lineHeights
     | Nil  lhs.lineHeights = []
 
-ATTR Line [|| lineHeight: Int]
+ATTR Line [ || lineHeight: Int]
 SEM Line
     | Line lhs.lineHeight = funTuple (+) @loc.lineMetrics
 

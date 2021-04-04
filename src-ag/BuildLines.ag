@@ -37,7 +37,7 @@ SEM BoxTree
 ATTR BoxRoot BoxTree Boxes [cb: {Window a} ||]
 
 -- building a plain tree for inline formating
-ATTR BoxTree Boxes [|| elements USE {++} {[]}: {[ElementList]}]
+ATTR BoxTree Boxes [ || elements USE {++} {[]}: {[ElementList]} ]
 SEM BoxTree
     | BoxItemContainer
         lhs.elements = []   -- always block, I dont' need to separate into lines

@@ -5,8 +5,8 @@ import Process.MatchSelector
 }
 
 -- Selector's Stuff
-ATTR Node [|| self:SELF ]
-ATTR NTree [|| nd:Node ]
+ATTR Node [ || self:SELF ]
+ATTR NTree [ || nd:Node ]
 SEM NTree
     | NTree lhs.nd = @node.self
 
