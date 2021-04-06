@@ -8,7 +8,11 @@ import Graphics.UI.Gtk
   , initGUI, mainGUI, widgetShowAll, deleteEvent, mainQuit
   , set, on
   , windowNew, windowTitle, windowDefaultWidth, windowDefaultHeight
+  , entryNew, entryText
+  , containerAdd
   )
+import Graphics.UI.Gtk.Layout.VBox ( vBoxNew )
+import Graphics.UI.Gtk.Layout.Layout ( layoutNew, layoutWidth, layoutHeight )
 
 import Data.DataTreeHTML (Node(..), NTree(..))
 import Parser.ParserCSS (parseFileUserAgent)
@@ -23,6 +27,17 @@ main :: IO ()
 main = do
   defaultcss4html <- parseFileUserAgent "./config/html4.css"
   window <- initializeMainWindow
+  vBox <- vBoxNew True 5
+  
+  -- display url
+  display <- entryNew
+  containerAdd vBox display
+  -- main box content
+  mainContent <- layoutNew Nothing Nothing
+  set mainContent [ layoutHeight := 300 ]
+  containerAdd vBox mainContent
+
+  containerAdd window vBox
   widgetShowAll window
   mainGUI
 

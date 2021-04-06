@@ -65,6 +65,17 @@ executable 3SFWebBrowser
                        , Data.Property
                        , FSBox
                        , ProcesarEstilo
+                       , Parser.BasicCssParser
+                       , Parser.CombinadoresBasicos
+                       , Parser.ParserCSS
+                       , Parser.PropertyParser
+                       , Parser.Propiedades
+                       , Process.Attributes
+                       , Process.DownloadProcess
+                       , Process.PropertyComputedFunction
+                       , Process.PropertyUsedFunction
+                       , Settings.Settings
+                       , Utils.Url
     --                   , NTree
     --                   , FSTreeFase1
     --                   , FSTreeFase2
