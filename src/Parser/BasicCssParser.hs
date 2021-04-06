@@ -4,7 +4,18 @@ module Parser.BasicCssParser where
 
 import           Data.Char
 import           Data.DataTreeCSS
-import           Parser.CombinadoresBasicos
+import           Parser.CombinadoresBasicos (
+      pSimboloAmb
+    , pInutil1
+    , pNumeroFloat
+    , pNumeroFloatPos
+    , pSimbolo
+    , pHex
+    , pEnteroPos
+    , pAlphaNum
+    , pPalabra
+    , toInt
+    )
 import           Text.ParserCombinators.UU
 import           Text.ParserCombinators.UU.BasicInstances
 import           Text.ParserCombinators.UU.Utils
@@ -120,9 +131,9 @@ pNumeroColor :: Parser Int
 pNumeroColor =  fixedRange 0 255 <$> pEnteroPos
             <|> fixedRange 0 100 <$> pEnteroPos <* pSimbolo "%"
     where fixedRange start end val
-             = if val < start then start
-                              else if val > end then end
-                                                else val
+             | val < start = start
+             | val > end = end
+             | otherwise = val
 
 pColorComun :: Parser Value
 pColorComun
@@ -155,9 +166,9 @@ pString       =  pSym '\"' *> pString1Content <* pSym '\"'
              <|> pSym '\'' *> pString2Content <* pSym '\''
 
 pString1Content :: Parser String
-pString1Content = toString <$> pList1 (pAlphaNum <|> (pAnySym " ,(){}*#[]~=.><+;-\':!%|\\"))
+pString1Content = toString <$> pList1 (pAlphaNum <|> pAnySym " ,(){}*#[]~=.><+;-\':!%|\\")
 pString2Content :: Parser String
-pString2Content = toString <$> pList1 (pAlphaNum <|> (pAnySym " ,(){}*#[]~=.><+;-\":!%|\\"))
+pString2Content = toString <$> pList1 (pAlphaNum <|> pAnySym " ,(){}*#[]~=.><+;-\":!%|\\")
 
 pSimpleContent :: Parser String
 pSimpleContent  = pPalabra

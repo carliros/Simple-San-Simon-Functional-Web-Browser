@@ -98,7 +98,7 @@ pShorthandBorderStyle
 pShorthandBorderEdge :: Parser Declaraciones
 pShorthandBorderEdge
     = let names = ["border-top", "border-right", "border-bottom", "border-left"]
-      in pAny (\nm -> makeDecl nm) names
+      in pAny makeDecl names
     where makeDecl nm = pToken nm *> pSimboloAmb ":" *> pValue nm
           pValue   nm = catMaybes <$> sepBy ((\a b c -> [a,b,c])
                                            <$>  (pMaybe $ mkG (pPropBorderWidth nm))

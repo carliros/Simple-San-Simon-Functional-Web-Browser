@@ -25,7 +25,7 @@ import           System.Directory
 import           System.IO.Unsafe
 import           Text.ParserCombinators.UU
 import           Text.ParserCombinators.UU.BasicInstances
-import           Text.ParserCombinators.UU.Utils
+import           Text.ParserCombinators.UU.Utils ( pAnySym, runParser )
 
 import           Data.DataTreeCSS
 import           Parser.CombinadoresBasicos
@@ -41,11 +41,13 @@ parseFileUserAgent file
          if bool
           then do content <- readFile file
                   if isEmptyFile content
-                   then return (Map.empty)
-                   else do he <- parseFile (pHojaEstilo HojaExterna UserAgent lista_valor_parser) file
+                   then return Map.empty
+                   else do let parser = pHojaEstilo HojaExterna UserAgent lista_valor_parser
+                           let parser' = pInutil *> parser <* pInutil
+                           let he = runParser file parser' content :: [(Tipo, Origen, Selector, Declaraciones)]
                            return $ calcularEspecificidad he
           else do putStrLn $ "I couldn't read the file: " ++ file
-                  return (Map.empty)
+                  return Map.empty
 
 -- | Reconoce Hojas de Estilo del User
 parseFileUser :: FilePath -> IO MapSelector
@@ -54,23 +56,25 @@ parseFileUser file
          if bool
           then do content <- readFile file
                   if isEmptyFile content
-                   then return (Map.empty)
-                   else do he <- parseString (pHojaEstilo HojaExterna User lista_valor_parser) content
+                   then return Map.empty
+                   else do let parser = pHojaEstilo HojaExterna User lista_valor_parser
+                           let parser' = pInutil *> parser <* pInutil
+                           let he = runParser file parser' content :: [(Tipo, Origen, Selector, Declaraciones)]
                            return $ calcularEspecificidad he
           else do putStrLn $ "I couldn't read the file: " ++ file
-                  return (Map.empty)
+                  return Map.empty
 
 isEmptyFile :: String -> Bool
 isEmptyFile content
-    = words content == []
+    = null (words content)
 
 -- | Reconoce Hojas de Estilo Internas del Author
 parseHojaInterna :: String -> MapSelector
 parseHojaInterna input
-    = unsafePerformIO (parseHojaInterna' input)     -- ########## solo las primeras veces, luego hay que quitar unsafe ###########
-    where parseHojaInterna' input
-             = do he <- parseString (pHojaEstilo HojaInterna Author lista_valor_parser) input
-                  return $ calcularEspecificidad he
+    = let parser = pHojaEstilo HojaInterna Author lista_valor_parser
+          parser' = pInutil *> parser <* pInutil
+          he = runParser "no-file" parser' input :: [(Tipo, Origen, Selector, Declaraciones)]
+      in calcularEspecificidad he
 
 -- | Reconoce Hojas de Estilo Externas del Author
 parseHojaExterna :: FilePath -> MapSelector
@@ -80,20 +84,22 @@ parseHojaExterna path
               = do bool <- doesFileExist file       -- verificamos que exista el archivo, caso contrario []
                    if bool
                     then do input <- readFile file
-                            he    <- parseString (pHojaEstilo HojaExterna Author lista_valor_parser) input
+                            let parser = pHojaEstilo HojaExterna Author lista_valor_parser
+                            let parser' = pInutil *> parser <* pInutil
+                            let he = runParser file parser' input :: [(Tipo, Origen, Selector, Declaraciones)]
                             return $ calcularEspecificidad he
                     else do putStrLn $ "I couldn't read the file: " ++ file
-                            return (Map.empty)
+                            return Map.empty
 
 -- | Reconoce los Estilo Atributo del Author
 parseEstiloAtributo :: String -> String -> MapSelector
 parseEstiloAtributo tag input
-    = unsafePerformIO (parseEstiloAtributo' tag input)      -- ########## solo las primeras veces, luego hay que quitar unsafe ###########
-    where parseEstiloAtributo' tag input
-              = do decls <- parseString (pDeclaraciones lista_valor_parser) input
-                   let sel = [SimpSelector (TypeSelector tag [] Nothing)]
-                       he  = [(EstiloAtributo, Author, sel, decls)]
-                   return $ calcularEspecificidad he
+    = let parser = pDeclaraciones lista_valor_parser
+          parser' = pInutil *> parser <* pInutil
+          decls = runParser "no-file" parser' input :: Declaraciones
+          sel = [SimpSelector (TypeSelector tag [] Nothing)]
+          he  = [(EstiloAtributo, Author, sel, decls)]
+      in calcularEspecificidad he
 
 -- Combinadores
 --pHojaEstilo :: Tipo -> Origen -> [Parser Declaraciones] -> Parser HojaEstilo
@@ -111,9 +117,9 @@ pSelectores = pList1Sep_ng (pSimboloAmb ",") pSelector
 pSelector :: Parser Selector
 pSelector =  (\ssel -> [SimpSelector ssel]) <$> pSSelector
          <|> (\ssel op sel -> case op of
-                                ">" -> (ChilSelector ssel) : sel
-                                "+" -> (SiblSelector ssel) : sel
-                                " " -> (DescSelector ssel) : sel)
+                                ">" -> ChilSelector ssel : sel
+                                "+" -> SiblSelector ssel : sel
+                                " " -> DescSelector ssel : sel)
             <$> pSSelector <*> pOperador <*> pSelector
 
 pSSelector :: Parser SSelector

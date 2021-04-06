@@ -108,5 +108,4 @@ lista_valor_parser =  map (construirDeclaracion . propertyParser) propiedadesCSS
 
 -- Muestra los nombres y values (tupla de 5) de la lista de Propiedades de CSS
 mostrarPropiedades :: Map.Map String Property -> [(String, String, String, String, String)]
-mostrarPropiedades props = Map.fold (\x xs -> (showPropertyValues x) : xs) [] props
-
+mostrarPropiedades = Map.foldr (\x xs -> showPropertyValues x : xs) []

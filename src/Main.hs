@@ -11,6 +11,7 @@ import Graphics.UI.Gtk
   )
 
 import Data.DataTreeHTML (Node(..), NTree(..))
+import Parser.ParserCSS (parseFileUserAgent)
 
 simpleNode :: Node
 simpleNode = NText "text"
@@ -20,6 +21,7 @@ simpleTree = NTree simpleNode []
 
 main :: IO ()
 main = do
+  defaultcss4html <- parseFileUserAgent "./config/html4.css"
   window <- initializeMainWindow
   widgetShowAll window
   mainGUI

@@ -64,6 +64,7 @@ executable 3SFWebBrowser
                        , Utils.Utiles
                        , Data.Property
                        , FSBox
+                       , ProcesarEstilo
     --                   , NTree
     --                   , FSTreeFase1
     --                   , FSTreeFase2
@@ -77,3 +78,11 @@ executable 3SFWebBrowser
                        , containers
                        , gtk3
                        , uu-parsinglib
+                       , uu-interleaved
+                       , ListLike
+                       , directory
+                       , gd
+                       , curl
+                       , filepath
+                       , tagsoup
+                       , url
