@@ -1,12 +1,9 @@
+-- Generating the list of boxes to paint (see Process.RenderBox).
+-- Positions computed by WindowPosition.ag are relative to the parent box,
+-- here they are turned into absolute positions of the canvas.
 
--- wxHaskell specific part of the formatting structure (fase 2).
--- Needs "import qualified Graphics.UI.WX as WX" and "import Process.CssBoxWx"
--- in FSTreeFase2.ag when it is INCLUDEd again.
-
--- Distributing the url function and baseurl
-ATTR All [ goToURL: {\url -> IO()}
-           baseurl: String
-         ||]
+-- Distributing the baseurl, used to resolve relative links
+ATTR All [ baseurl: String ||]
 
 -- Distributing an url between children
 ATTR All - WindowRoot [linkURL: {Maybe String} ||]
@@ -17,56 +14,62 @@ SEM WindowTree
     | WindowItemContainer
         loc.linkURL = case Map.lookup "href" @attrs of
                         Just url -> Just url
-                        Nothing  -> case @lhs.linkURL of
-                                        Just url -> Just url
-                                        Nothing  -> Nothing
+                        Nothing  -> @lhs.linkURL
         elem.linkURL = @loc.linkURL
-    | WindowContainer 
+    | WindowContainer
         loc.linkURL = case Map.lookup "href" @attrs of
                         Just url -> Just url
-                        Nothing  -> case @lhs.linkURL of
-                                        Just url -> Just url
-                                        Nothing  -> Nothing
+                        Nothing  -> @lhs.linkURL
         elem.linkURL = @loc.linkURL
-    | WindowText 
+    | WindowText
         loc.linkURL = case Map.lookup "href" @attrs of
                         Just url -> Just url
-                        Nothing  -> case @lhs.linkURL of
-                                        Just url -> Just url
-                                        Nothing  -> Nothing
+                        Nothing  -> @lhs.linkURL
 
--- Building the tree of windows
-ATTR WindowRoot WindowTree [|| result: {WX.Window a -> IO()}]
+-- Distributing the absolute position of the parent box
+ATTR All - WindowRoot [offset: {(Int,Int)} ||]
+SEM WindowRoot
+    | WindowRoot windowTree.offset = (0,0)
+
 SEM WindowTree
     | WindowItemContainer
-        lhs.result = \cb -> do case @marker of
-                                    Numering str -> boxMarker str cb @loc.markerPosition @sizeMarker Full @props @attrs False
-                                    Glyph   name -> let attrs' = Map.insert "src" (name ++ ".png") @attrs
-                                                    in boxMarker "" cb @loc.markerPosition @sizeMarker Full @props attrs' True
-                                    NoMarker     -> return ()
-                               cbox <- boxContainer cb @loc.position @loc.size Full @props @attrs False
-                               mapM_ (\f -> f cbox) @elem.result
-    | WindowContainer 
-        lhs.result = \cb -> do cbox <- boxContainer cb @loc.position @loc.size @tCont @props @attrs @bRepl
-                               mapM_ (\f -> f cbox) @elem.result
+        loc.absPosition = addPoint @lhs.offset @loc.position
+        elem.offset     = @loc.absPosition
+    | WindowContainer
+        loc.absPosition = addPoint @lhs.offset @loc.position
+        elem.offset     = @loc.absPosition
     | WindowText
-        lhs.result = \cb -> do cbox <- box @text cb @loc.position @loc.size @tCont @props @attrs False
-                               case @loc.linkURL of
-                                    Just url -> let url' = if isAbsolute url
-                                                           then url
-                                                           else if isHostRelative url
-                                                                then @lhs.baseurl        ++ url
-                                                                else @lhs.baseurl ++ "/" ++ url
-                                                in WX.set cbox [WX.on WX.focus WX.:= onClick @lhs.goToURL url']
-                                    Nothing   -> return ()
+        loc.absPosition = addPoint @lhs.offset @loc.position
 
-ATTR Element Lines Line [|| result USE {++} {[]} : {[WX.Window a -> IO()]}]
-ATTR WindowTrees [|| result USE {:} {[]}: {[WX.Window a -> IO()]}]
+-- Building the list of boxes, in painting order (parents before children)
+ATTR WindowRoot WindowTree [|| result: {[RenderBox]}]
+SEM WindowTree
+    | WindowItemContainer
+        lhs.result = let markerPos = addPoint @lhs.offset @loc.markerPosition
+                         marker    = case @marker of
+                                        Numering str -> [RenderBox str markerPos @sizeMarker Full @props @attrs False Nothing]
+                                        Glyph   name -> let attrs' = Map.insert "src" (name ++ ".png") @attrs
+                                                        in [RenderBox "" markerPos @sizeMarker Full @props attrs' True Nothing]
+                                        _            -> []
+                         cbox      = RenderBox "" @loc.absPosition @loc.size Full @props @attrs False Nothing
+                     in marker ++ (cbox : @elem.result)
+    | WindowContainer
+        lhs.result = RenderBox "" @loc.absPosition @loc.size @tCont @props @attrs @bRepl Nothing : @elem.result
+    | WindowText
+        lhs.result = [RenderBox @text @loc.absPosition @loc.size @tCont @props @attrs False (fmap (resolveURL @lhs.baseurl) @loc.linkURL)]
+
+ATTR Element Lines Line [|| result USE {++} {[]} : {[RenderBox]}]
+ATTR WindowTrees [|| result USE {++} {[]}: {[RenderBox]}]
 
 {
-onClick function url bool
-    = if bool
-      then function url
-      else return ()
-}
+addPoint :: (Int,Int) -> (Int,Int) -> (Int,Int)
+addPoint (x1,y1) (x2,y2) = (x1 + x2, y1 + y2)
 
+resolveURL :: String -> String -> String
+resolveURL baseurl url
+    = if isAbsolute url
+      then url
+      else if isHostRelative url
+           then baseurl        ++ url
+           else baseurl ++ "/" ++ url
+}

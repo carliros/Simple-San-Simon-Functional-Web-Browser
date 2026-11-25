@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-3SF Web Browser: an educational desktop web browser in Haskell (wxHaskell GUI) that renders a simple HTML/XML-like markup plus a subset of CSS. Single executable `3sfwbrowser`, entry point `src/MainWebBrowserGui.hs`. Code identifiers and comments are a mix of English and Spanish (e.g. `Propiedades`, `ProcesarEstilo`, `ObtenerHojasEstilo`).
+3SF Web Browser: an educational desktop web browser in Haskell (GTK 4 GUI through haskell-gi) that renders a simple HTML/XML-like markup plus a subset of CSS. Executables `3sfwbrowser` (entry point `src/MainWebBrowserGui.hs`) and `3sfboxer`. Code identifiers and comments are a mix of English and Spanish (e.g. `Propiedades`, `ProcesarEstilo`, `ObtenerHojasEstilo`).
 
 ## Build / run
 
@@ -29,12 +29,12 @@ Pipeline, driven by `renderPage` / `genFormattingEstructure` in `src/MainWebBrow
 2. **Parse** — `Parser/ParserHTML.hs` (tagsoup + uu-parsinglib) builds the `DataTreeHTML` AST; `Parser/ParserCSS.hs`, `BasicCssParser.hs`, `PropertyParser.hs`, `Propiedades.hs` parse stylesheets into `DataTreeCSS` / property values. `ProcesarEstilo.ag` processes parsed stylesheets. Two default stylesheets are parsed at startup (user-agent `html4.css` and user CSS) and kept in GUI variables.
 3. **`NTree.ag`** (module `NTree`) — styling phase over the document tree: gathers stylesheets (`ObtenerHojasEstilo`), selector matching (`SelectorProcess`, `Process/MatchSelector.hs`), specified → computed values (`DoSpecifiedValue`, `DoComputedValue`), CSS counters (`CounterProcess`), generated content (`GeneratedContent`). Output is the input to phase 1 of the formatting structure.
 4. **`FSTreeFase1.ag`** — "used values" (`DoUsedValue`), line building (`BuildLines`), list markers (`ListMarker`); produces the first formatting-structure tree (box model from `FSBox.ag` / `Process/CssBox.hs`).
-5. **`FSTreeFase2.ag`** — sizes and positions (`WindowSize`, `WindowPosition`), then window tree and box tree (`GenWindowTree`, `GenBoxTree`) for drawing. `updateInitialContainer` re-runs this phase on window resize without re-parsing.
-6. **Render** — wxHaskell painting in `MainWebBrowserGui.hs`; history navigation uses `Utils/ZipperList.hs`; settings in `Settings/Settings.hs`.
+5. **`FSTreeFase2.ag`** — sizes and positions (`WindowSize`, `WindowPosition`), then the list of boxes to paint and the box tree (`GenWindowTree`, `GenBoxTree`). `updateInitialContainer` re-runs this phase on window resize without re-parsing.
+6. **Render** — GTK 4 / cairo painting (`Process/CssBoxCairo.hs`, `MainWebBrowserGui.hs`); history navigation uses `Utils/ZipperList.hs`; settings in `Settings/Settings.hs`.
 
 Notes:
 - `.ag` files compose via `INCLUDE`; top-level files (`NTree`, `FSTreeFase1`, `FSTreeFase2`, `FSBox`, `ProcesarEstilo`) are the ones listed in `uuagc_options`, so a new `.ag` fragment must be `INCLUDE`d from one of them.
 - `3SFunctionalWebBrowser.cabal`'s `other-modules` lists only some modules and its `Extra-source-files` mentions `tmp/*` while images live in `config/tmp/`; `uuagc_options` also references `FormatNTree.ag`, which doesn't exist (the file is `FormatTree.ag`, and is not wired into the executable). Check these when a build fails on missing modules or files.
-- Branch `haskell-gi-boxer`: migration from wxHaskell to haskell-gi (GTK 4). The `3sfwbrowser` executable is commented out in the cabal file; the built executable is `3sfboxer` (`src/MainBoxerGui.hs`, box-tree viewer). Run it from the repo root (`cabal run 3sfboxer`), since it reads `./config/html4.css`.
-- The AGs no longer depend on a GUI toolkit: the `cb` attribute is a `Utils.TextMeasure.TextMeasurer` (Pango implementation in `Utils/PangoMeasure.hs`). wx-only code is parked, unbuilt, in `Process/CssBoxWx.hs`, `Utils/TextExtend.hs` and `src-ag/GenWindowTree.ag` (its `INCLUDE` in `FSTreeFase2.ag` is commented out).
+- The GUI uses GTK 4 through haskell-gi (migrated from wxHaskell). Executables: `3sfwbrowser` (`src/MainWebBrowserGui.hs`) and `3sfboxer` (`src/MainBoxerGui.hs`, box-tree viewer), sharing a `common gui` stanza in the cabal file. Run them from the repo root (`cabal run 3sfwbrowser -- <url>`), since they fall back to `./config/html4.css`.
+- The AGs don't depend on a GUI toolkit: the `cb` attribute is a `Utils.TextMeasure.TextMeasurer` (Pango implementation in `Utils/PangoMeasure.hs`), and `GenWindowTree.ag` outputs a flat list of `Process.RenderBox` with absolute positions, painted with cairo/Pango by `Process/CssBoxCairo.hs` on a single `DrawingArea`. Links are resolved in the AG and hit-tested on click.
 - Keep `default-language: Haskell2010`: it enables `DeepSubsumption`, which the uu-parsinglib `Parser` type synonym code relies on under GHC 9.x.

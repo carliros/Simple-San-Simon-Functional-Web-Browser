@@ -7,6 +7,7 @@ import Utils.Url
 
 -- my libraries
 import Process.CssBox
+import Process.RenderBox
 import Data.Property
 import Data.DataTreeCSS
 import FSBox
@@ -63,17 +64,15 @@ DATA ListMarker
 
 DERIVING *: Show
 
-INCLUDE "WindowSize.ag"
-INCLUDE "WindowPosition.ag"
--- GenWindowTree.ag builds the wxHaskell windows used by the 3sfwbrowser
--- executable. It is disabled while the browser is migrated to haskell-gi.
--- INCLUDE "GenWindowTree.ag"
-INCLUDE "GenBoxTree.ag"
-
 SET All = WindowRoot WindowTree Element WindowTrees Lines Line
 
 -- Distributing the text measurer, used as the initial containing block (cb)
 ATTR All [ cb: {TextMeasurer} ||]
+
+INCLUDE "WindowSize.ag"
+INCLUDE "WindowPosition.ag"
+INCLUDE "GenWindowTree.ag"
+INCLUDE "GenBoxTree.ag"
 
 {
 -- interface

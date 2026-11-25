@@ -136,7 +136,7 @@ onDraw measurer defaultcss4html canvas inp icbScroll icb grid nmp
             Nothing     -> return ()
             Just fstree -> do
                 let boxtree = sem_BoxRoot (BoxRoot fstree) measurer (w,h)
-                    (fsbox,_) = sem_WindowRoot (WindowRoot boxtree) measurer
+                    (fsbox,_,_) = sem_WindowRoot (WindowRoot boxtree) "" measurer
                     res     = procesarFSBox (FSRoot fsbox)
                 -- the layout is lazy, force it here so that errors are caught
                 _ <- evaluate (forceObjects res)
