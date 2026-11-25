@@ -1,7 +1,5 @@
 imports{
 -- libraries
-import Graphics.UI.WXCore hiding (empty)
-import Graphics.UI.WX hiding (text, empty, get)
 
 --import UU.Pretty
 import qualified Data.Map as Map
@@ -17,6 +15,7 @@ import Parser.Propiedades
 import Data.DataTreeCSS
 import Process.DownloadProcess
 import Utils.Utiles
+import Utils.TextMeasure
 
 import Data.CommonTypes
 }

@@ -61,7 +61,7 @@ propiedadesCSS
    , mkProp ("color"                 , True  , KeyColor (0,0,0)            , pColorValue             , computed_asSpecified     , used_asComputed)
    , mkProp ("width"                 , False , KeyValue "auto"             , pDimentionValue         , computed_dimention       , used_width)
    , mkProp ("height"                , False , KeyValue "auto"             , pDimentionValue         , computed_dimention       , used_height)
-   , mkProp ("line-height"           , True  , EmNumber 1.2                , pLineHeight             , computed_toPixel         , used_toPixelValue)
+   , mkProp ("line-height"           , True  , KeyValue "normal"           , pLineHeight             , computed_line_height     , used_line_height )
    , mkProp ("vertical-align"        , False , KeyValue "baseline"         , pVerticalAlign          , computed_vertical_align  , used_vertical_align)
    , mkProp ("content"               , False , KeyValue "normal"           , pContent                , computed_content         , used_asComputed)
    , mkProp ("counter-increment"     , False , KeyValue "none"             , pCounterIncrement       , computed_counter         , used_asComputed)
@@ -99,7 +99,7 @@ pShorthandList
 --lista_valor_parser :: [Parser Declaraciones]
 lista_valor_parser :: (IsLocationUpdatedBy loc Char, LL.ListLike state Char) 
                    => [P (Str Char state loc) Declaraciones]
-lista_valor_parser =  map (construirDeclaracion . propertyParser) propiedadesCSS
+lista_valor_parser =  map (\p -> construirDeclaracion (propertyParser p)) propiedadesCSS
                    ++ pShorthandList
 
 -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -108,5 +108,5 @@ lista_valor_parser =  map (construirDeclaracion . propertyParser) propiedadesCSS
 
 -- Muestra los nombres y values (tupla de 5) de la lista de Propiedades de CSS
 mostrarPropiedades :: Map.Map String Property -> [(String, String, String, String, String)]
-mostrarPropiedades props = Map.fold (\x xs -> (showPropertyValues x) : xs) [] props
+mostrarPropiedades props = Map.foldr (\x xs -> (showPropertyValues x) : xs) [] props
 

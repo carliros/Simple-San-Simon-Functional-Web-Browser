@@ -34,7 +34,7 @@ SEM BoxTree
         loc.code = Code @lhs.codFather @lhs.codChild
 
 -- Distributing the contaning block (cb)
-ATTR BoxRoot BoxTree Boxes [cb: {Window a} ||]
+ATTR BoxRoot BoxTree Boxes [cb: {TextMeasurer} ||]
 
 -- building a plain tree for inline formating
 ATTR BoxTree Boxes [|| elements USE {++} {[]}: {[ElementList]}]

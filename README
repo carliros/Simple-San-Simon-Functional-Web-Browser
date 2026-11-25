@@ -6,16 +6,71 @@ It is a computer desktop program for rendering web pages.
 One nice thing is that it is written with Haskell, a purely funcional programming language.
 It supports a generic markup language (like ~ html or xhtml or xml) and part of CSS.
 
-To install
-----------
+The GUI uses GTK 4 through haskell-gi. There are two programs:
 
-	cabal install
+  * 3sfwbrowser: the web browser.
+  * 3sfboxer: shows the box tree of the formatting structure of a page, and
+    the CSS properties (specified, computed, used and actual values) of
+    each box.
 
-We have a configuration directory ('config' directory) that should be placed
-at your home directory: '~/.3SFWebBrowser/'.  Cabal creates it automatically.
 
-You will need to edit '~/.3SFWebBrowser/dbf' and setup the proper path for
-'User_Agent_Stylesheet' which is located at the same directory.
+Requirements
+------------
+
+  * GHC (tested with 9.10.3) and cabal-install (tested with 3.12)
+  * GTK 4, GObject Introspection, libgd and libcurl, with their development
+    files. On Debian/Ubuntu:
+
+	sudo apt install pkg-config libgtk-4-dev libgirepository1.0-dev libgd-dev libcurl4-openssl-dev
+
+uuagc (the attribute grammar compiler) and the haskell-gi bindings are
+fetched and built by cabal; the first build takes a while.
+
+
+To build
+--------
+
+From the root of the repository:
+
+	cabal update
+	cabal build all
+
+
+Configuration
+-------------
+
+The browser reads its configuration from '~/.3SFWebBrowser/'. The first
+time it is started from the root of the repository, it creates that
+directory from the 'config' directory, with a 'dbf' file pointing to its
+copies of html4.css (User_Agent_Stylesheet) and user.css (User_Stylesheet).
+Both stylesheets can be changed later in the Settings menu.
+
+Downloaded images and stylesheets are saved at '~/.3SFWebBrowser/tmp/'.
+
+
+Web browser (3sfwbrowser)
+-------------------------
+
+From the root of the repository:
+
+	cabal run 3sfwbrowser
+	cabal run 3sfwbrowser -- file://$PWD/examples/test3.html   # open a page at start
+
+Type a URL and press Enter or "Get". "Update" recomputes the layout,
+"=<<" and ">>=" go backward and forward in the history. Click a link to
+follow it. The stylesheets can be changed in the Settings menu.
+
+
+Boxer GUI (3sfboxer)
+--------------------
+
+From the root of the repository (it reads './config/html4.css'):
+
+	cabal run 3sfboxer
+
+Type a URL (for example file:///<path to the repository>/examples/test1.html,
+which is the default) and press Enter or the "Dibujar" button. Click a box
+to see its properties.
 
 
 For more information

@@ -1,5 +1,6 @@
 module Utils.ZipperList
-( forward
+( ListZipper
+, forward
 , backward
 , insert
 , initZipperList

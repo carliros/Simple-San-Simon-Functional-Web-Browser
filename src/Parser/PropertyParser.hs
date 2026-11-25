@@ -181,7 +181,7 @@ pDimentionValue
 -- | line height
 pLineHeight :: Parser Value
 pLineHeight
-    = pLengthPos <|> pPercentagePos <|> pKeyValues ["inherit"]
+    = pLengthPos <|> pPercentagePos <|> NumberValue <$> pNumeroFloatPos <|> pKeyValues ["normal", "inherit"]
 
 -- | vertical align
 pVerticalAlign :: Parser Value
