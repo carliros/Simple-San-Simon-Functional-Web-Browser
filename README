@@ -17,6 +17,42 @@ at your home directory: '~/.3SFWebBrowser/'.  Cabal creates it automatically.
 You will need to edit '~/.3SFWebBrowser/dbf' and setup the proper path for
 'User_Agent_Stylesheet' which is located at the same directory.
 
+Note: the GUI is being migrated from wxHaskell to haskell-gi (GTK 4).
+For now only the Boxer GUI (3sfboxer) is built; the web browser
+executable (3sfwbrowser) is disabled in the cabal file.
+
+
+Boxer GUI (3sfboxer)
+--------------------
+
+3sfboxer shows the box tree of the formatting structure of a page, and the
+CSS properties (specified, computed, used and actual values) of each box.
+
+Requirements:
+
+  * GHC (tested with 9.10.3) and cabal-install (tested with 3.12)
+  * GTK 4, GObject Introspection, libgd and libcurl, with their development
+    files. On Debian/Ubuntu:
+
+	sudo apt install pkg-config libgtk-4-dev libgirepository1.0-dev libgd-dev libcurl4-openssl-dev
+
+uuagc (the attribute grammar compiler) and the haskell-gi bindings are
+fetched and built by cabal; the first build takes a while.
+
+To build, from the root of the repository:
+
+	cabal update
+	cabal build 3sfboxer
+
+To start it, also from the root of the repository (it reads
+'./config/html4.css'):
+
+	cabal run 3sfboxer
+
+Type a URL (for example file:///<path to the repository>/examples/test1.html,
+which is the default) and press Enter or the "Dibujar" button. Click a box
+to see its properties.
+
 
 For more information
 --------------------

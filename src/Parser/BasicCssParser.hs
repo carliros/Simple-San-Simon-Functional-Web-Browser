@@ -55,7 +55,7 @@ pKeyValue :: String -> Parser Value
 pKeyValue str = KeyValue <$> pKeyword str
 
 pKeyValues :: [String] -> Parser Value
-pKeyValues = pAny pKeyValue
+pKeyValues = pAny (\s -> pKeyValue s)
 
 -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 -- Valores Length

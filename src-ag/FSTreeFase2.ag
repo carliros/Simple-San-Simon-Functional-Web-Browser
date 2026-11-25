@@ -1,7 +1,5 @@
 imports{
 -- libraries
-import qualified Graphics.UI.WXCore as WXC
-import qualified Graphics.UI.WX as WX
 import qualified Data.Map as Map
 import System.IO.Unsafe
 import Data.Function
@@ -14,6 +12,7 @@ import Data.DataTreeCSS
 import FSBox
 import Process.DownloadProcess
 import Utils.Utiles
+import Utils.TextMeasure
 
 import Data.CommonTypes
 import Process.Attributes
@@ -66,8 +65,15 @@ DERIVING *: Show
 
 INCLUDE "WindowSize.ag"
 INCLUDE "WindowPosition.ag"
-INCLUDE "GenWindowTree.ag"
+-- GenWindowTree.ag builds the wxHaskell windows used by the 3sfwbrowser
+-- executable. It is disabled while the browser is migrated to haskell-gi.
+-- INCLUDE "GenWindowTree.ag"
 INCLUDE "GenBoxTree.ag"
+
+SET All = WindowRoot WindowTree Element WindowTrees Lines Line
+
+-- Distributing the text measurer, used as the initial containing block (cb)
+ATTR All [ cb: {TextMeasurer} ||]
 
 {
 -- interface

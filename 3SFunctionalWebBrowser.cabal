@@ -16,23 +16,60 @@ Maintainer: carliros.g@gmail.com
 Bug-reports: https://github.com/carliros/Simple-San-Simon-Functional-Web-Browser/issues
 Category: Web
 Build-Type: Custom
-Cabal-Version: >=1.6
+Cabal-Version: 1.24
 Extra-source-files:  README 
                      config/dbf, config/html4.css, config/user.css,
-                     tmp/circle.png, tmp/default.jpg, tmp/disc.png, tmp/logo.jpg, tmp/minilogo.jpg, tmp/square.png,
-                     src-ag/*.ag
+                     config/tmp/circle.png, config/tmp/default.jpg, config/tmp/disc.png, config/tmp/logo.jpg, config/tmp/minilogo.jpg, config/tmp/square.png,
+                     src-ag/*.ag, src/Data/*.ag, uuagc_options
 
 Source-repository head
     type:       git
     location:   git://github.com/carliros/Simple-San-Simon-Functional-Web-Browser.git
 
-Executable 3sfwbrowser
+Custom-setup
+    setup-depends:    base
+                    , Cabal
+                    , directory
+                    , uuagc
+                    , uuagc-cabal
+
+-- The web browser still uses wxHaskell; it is disabled while the GUI
+-- is migrated to haskell-gi (start with 3sfboxer).
+-- Executable 3sfwbrowser
+--     hs-source-dirs: src, src-ag
+--     Main-is:        MainWebBrowserGui.hs
+--     ghc-options:    -Wall
+--     other-modules: NTree, Data.DataTreeHTML, Data.DataTreeCSS, FSTreeFase1, FSTreeFase2, ProcesarEstilo, FSBox
+--     Build-depends:    base
+--                     , containers
+--                     , url
+--                     , directory
+--                     , tagsoup
+--                     , filepath
+--                     , gd
+--                     , curl
+--                     , uu-parsinglib
+--                     , uu-interleaved
+--                     , ListLike
+--                     , wxcore
+--                     , wx
+
+-- Box-tree viewer of the formatting structure (GTK 4 through haskell-gi)
+Executable 3sfboxer
     hs-source-dirs: src, src-ag
-    Main-is:        MainWebBrowserGui.hs
-    ghc-options:    -Wall
-    other-modules: NTree, Data.DataTreeHTML, Data.DataTreeCSS, FSTreeFase1, FSTreeFase2, ProcesarEstilo, FSBox
+    Main-is:        MainBoxerGui.hs
+    ghc-options:    -Wall -threaded
+    default-language: Haskell2010
+    other-modules:    NTree, Data.DataTreeHTML, Data.DataTreeCSS, FSTreeFase1, FSTreeFase2, ProcesarEstilo, FSBox
+                    , Data.CommonTypes, Data.Property
+                    , Parser.BasicCssParser, Parser.CombinadoresBasicos, Parser.ParserCSS
+                    , Parser.ParserHTML, Parser.PropertyParser, Parser.Propiedades
+                    , Process.Attributes, Process.CounterScope, Process.CssBox, Process.DownloadProcess
+                    , Process.MatchSelector, Process.PropertyComputedFunction, Process.PropertyUsedFunction
+                    , Settings.Settings, Utils.NumRomans, Utils.PangoMeasure, Utils.TextMeasure, Utils.Url, Utils.Utiles
     Build-depends:    base
                     , containers
+                    , text
                     , url
                     , directory
                     , tagsoup
@@ -42,6 +79,13 @@ Executable 3sfwbrowser
                     , uu-parsinglib
                     , uu-interleaved
                     , ListLike
-                    , wxcore
-                    , wx
-
+                    , haskell-gi-base
+                    , gi-gtk      >= 4.0 && < 4.1
+                    , gi-gdk      >= 4.0 && < 4.1
+                    , gi-gio
+                    , gi-glib
+                    , gi-pango
+                    , gi-pangocairo
+                    , gi-cairo
+                    , gi-cairo-render
+                    , gi-cairo-connector

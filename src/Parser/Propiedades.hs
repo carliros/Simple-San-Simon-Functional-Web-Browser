@@ -99,7 +99,7 @@ pShorthandList
 --lista_valor_parser :: [Parser Declaraciones]
 lista_valor_parser :: (IsLocationUpdatedBy loc Char, LL.ListLike state Char) 
                    => [P (Str Char state loc) Declaraciones]
-lista_valor_parser =  map (construirDeclaracion . propertyParser) propiedadesCSS
+lista_valor_parser =  map (\p -> construirDeclaracion (propertyParser p)) propiedadesCSS
                    ++ pShorthandList
 
 -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -108,5 +108,5 @@ lista_valor_parser =  map (construirDeclaracion . propertyParser) propiedadesCSS
 
 -- Muestra los nombres y values (tupla de 5) de la lista de Propiedades de CSS
 mostrarPropiedades :: Map.Map String Property -> [(String, String, String, String, String)]
-mostrarPropiedades props = Map.fold (\x xs -> (showPropertyValues x) : xs) [] props
+mostrarPropiedades props = Map.foldr (\x xs -> (showPropertyValues x) : xs) [] props
 

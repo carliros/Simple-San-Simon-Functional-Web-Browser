@@ -1,9 +1,10 @@
 
-SET All = WindowRoot WindowTree Element WindowTrees Lines Line 
+-- wxHaskell specific part of the formatting structure (fase 2).
+-- Needs "import qualified Graphics.UI.WX as WX" and "import Process.CssBoxWx"
+-- in FSTreeFase2.ag when it is INCLUDEd again.
 
--- Distributing the initial contaning block (icb), url function and baseurl
-ATTR All [ cb: {WX.Window a}
-           goToURL: {\url -> IO()}
+-- Distributing the url function and baseurl
+ATTR All [ goToURL: {\url -> IO()}
            baseurl: String
          ||]
 
