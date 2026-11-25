@@ -192,7 +192,7 @@ used_vertical_align iamtheroot icbsize fatherProps locProps attrs iamreplaced nm
     = case computedValue prop of
         Percentage fl   -> let dim = let nmlh = "line-height"
                                          proplh = locProps `get` nmlh
-                                     in unPixelValue $ used_toPixelValue iamtheroot icbsize fatherProps locProps attrs iamreplaced nmlh proplh
+                                     in unPixelValue $ used_line_height iamtheroot icbsize fatherProps locProps attrs iamreplaced nmlh proplh
                            in PixelNumber ((fl * dim) / 100)
         otherwise       -> computedValue prop
 
@@ -269,6 +269,15 @@ used_toPixelValue iamtheroot icbsize fatherProps locProps attrs iamreplaced nm p
                            in PixelNumber ((fl * width) / 100)
         PixelNumber px -> PixelNumber px
         otherwise      -> error $ "[PropertiesCSS] error on used value for pixel/percentage at property name: " ++ nm
+
+-- line-height in pixels: "normal" is 1.2 times the font-size of the element
+used_line_height iamtheroot icbsize fatherProps locProps attrs iamreplaced nm prop
+    = let font_size = unPixelComputedValue (locProps `get` "font-size")
+      in case computedValue prop of
+            KeyValue "normal" -> PixelNumber (1.2 * font_size)
+            NumberValue num   -> PixelNumber (num * font_size)
+            PixelNumber px    -> PixelNumber px
+            otherwise         -> error $ "[PropertiesCSS] error on used value for line-height: " ++ show otherwise
 
 used_toPixelImgValue iamtheroot icbsize fatherProps locProps attrs iamreplaced nm prop
     = case computedValue prop of

@@ -42,7 +42,7 @@ data Canvas = Canvas { cvObjects  :: IORef [Object]
 
 main :: IO ()
 main = do
-    app <- new Gtk.Application [ #applicationId := "org.hsbrowser.Boxer" ]
+    app <- new Gtk.Application [ #applicationId := "org.hsbrowser.Boxer", #flags := [Gio.ApplicationFlagsNonUnique] ]
     _ <- on app #activate (gui app)
     _ <- Gio.applicationRun app Nothing
     return ()

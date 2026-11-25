@@ -66,6 +66,7 @@ DATA Value
     | PointNumber   Float
     | EmNumber      Float
     | Percentage    Float
+    | NumberValue   Float     -- a plain number, as in line-height: 1.5
     | KeyValue      String
     | KeyColor      rgb: {(Int,Int,Int)}   -- fixed to [0,255]
     | StringValue   String

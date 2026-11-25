@@ -61,7 +61,7 @@ propiedadesCSS
    , mkProp ("color"                 , True  , KeyColor (0,0,0)            , pColorValue             , computed_asSpecified     , used_asComputed)
    , mkProp ("width"                 , False , KeyValue "auto"             , pDimentionValue         , computed_dimention       , used_width)
    , mkProp ("height"                , False , KeyValue "auto"             , pDimentionValue         , computed_dimention       , used_height)
-   , mkProp ("line-height"           , True  , EmNumber 1.2                , pLineHeight             , computed_toPixel         , used_toPixelValue)
+   , mkProp ("line-height"           , True  , KeyValue "normal"           , pLineHeight             , computed_line_height     , used_line_height )
    , mkProp ("vertical-align"        , False , KeyValue "baseline"         , pVerticalAlign          , computed_vertical_align  , used_vertical_align)
    , mkProp ("content"               , False , KeyValue "normal"           , pContent                , computed_content         , used_asComputed)
    , mkProp ("counter-increment"     , False , KeyValue "none"             , pCounterIncrement       , computed_counter         , used_asComputed)

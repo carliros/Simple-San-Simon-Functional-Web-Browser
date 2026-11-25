@@ -39,17 +39,13 @@ From the root of the repository:
 Configuration
 -------------
 
-The browser reads its configuration from '~/.3SFWebBrowser/', a copy of the
-'config' directory of the repository:
+The browser reads its configuration from '~/.3SFWebBrowser/'. The first
+time it is started from the root of the repository, it creates that
+directory from the 'config' directory, with a 'dbf' file pointing to its
+copies of html4.css (User_Agent_Stylesheet) and user.css (User_Stylesheet).
+Both stylesheets can be changed later in the Settings menu.
 
-	cp -r config ~/.3SFWebBrowser
-
-Then edit '~/.3SFWebBrowser/dbf' and set the paths of 'User_Agent_Stylesheet'
-(the html4.css file) and 'User_Stylesheet' (any css file, or remove the line).
 Downloaded images and stylesheets are saved at '~/.3SFWebBrowser/tmp/'.
-
-Without that directory the browser still starts, using './config/html4.css',
-but it can not show images.
 
 
 Web browser (3sfwbrowser)

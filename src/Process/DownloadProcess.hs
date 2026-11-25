@@ -1,6 +1,7 @@
 module Process.DownloadProcess where
 
 import           Control.Concurrent
+import           Control.Exception       (SomeException, try)
 import           Data.List
 import qualified Data.Set                as Set
 import           Graphics.GD
@@ -132,7 +133,7 @@ downloadImages base stringHTML
                      gdimg <- fload img
                      tmpDir <- retrieveTempDir
                      let path = tmpDir </> name
-                     fsave path gdimg
+                     saveAtomically fsave path gdimg
                      putStrLn $ "image saved at " ++ path
 
 downloadImage url = unsafePerformIO $ downloadImage' url
@@ -143,9 +144,17 @@ downloadImage url = unsafePerformIO $ downloadImage' url
                                   (w,h) <- imageSize gdimg
                                   tmpDir <- retrieveTempDir
                                   let path = tmpDir </> name
-                                  fsave path gdimg
+                                  saveAtomically fsave path gdimg
                                   putStrLn $ "image saved at " ++ path
                                   return (w,h)
+
+-- | Save an image to a temporary file and then rename it, so that the layout
+-- (which reads the images while they are downloaded) never sees a partial file.
+saveAtomically :: (FilePath -> a -> IO ()) -> FilePath -> a -> IO ()
+saveAtomically fsave path img
+    = do let partial = path ++ ".part"
+         fsave partial img
+         renameFile partial path
 
 getImageWidth url = let (w,_) = getImageSize url
                     in w
@@ -159,9 +168,11 @@ getImageSize url = unsafePerformIO $ getImageSize' url
                                  let path = tmpDir </> name
                                  bool <- doesFileExist path
                                  if bool
-                                  then do gdimg <- fload path
-                                          (w,h) <- imageSize gdimg
-                                          return (w,h)
+                                  then do r <- try (fload path >>= imageSize)
+                                          case r of
+                                            Right (w,h) -> return (w,h)
+                                            Left e      -> do putStrLn $ "[ImageProcess] could not read " ++ path ++ ": " ++ show (e :: SomeException)
+                                                              return (50,50)
                                   else return (50,50)   -- default (width, height), usually because the dowloading process of images is not completed
 
 getSimpleFunctionNameType url = let name = takeFileName url

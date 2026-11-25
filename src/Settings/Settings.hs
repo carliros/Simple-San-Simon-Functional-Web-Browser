@@ -2,11 +2,13 @@
 module Settings.Settings (
   readConfigFile
 , writeConfigFile
+, ensureConfigDir
 , retrieveConfigPath
 , retrieveConfigFile
 , retrieveTempDir
 ) where
 
+import           Control.Monad
 import qualified Data.Map                                 as Map
 import           Parser.CombinadoresBasicos
 import           System.Directory
@@ -22,9 +24,29 @@ readConfigFile
          return $ Map.fromList lf
 
 writeConfigFile list
-    = do configFile <- retrieveConfigFile
+    = do configFile <- (</> "dbf") <$> retrieveConfigPath
          let cnt = unlines $ map (\(a,b) -> a ++ " = " ++ "\"" ++ b ++ "\"") $ Map.toList list
          writeFile configFile cnt
+
+-- | First run: create the config directory (~/.3SFWebBrowser) from the
+-- 'config' directory of the repository, when it is the current directory.
+-- The dbf file is written with the absolute paths of the stylesheets.
+ensureConfigDir :: IO ()
+ensureConfigDir
+    = do configPath <- retrieveConfigPath
+         exists     <- doesDirectoryExist configPath
+         source     <- makeAbsolute "config"
+         hasSource  <- doesDirectoryExist source
+         when (not exists && hasSource) $ do
+            putStrLn $ "Creating the config directory at " ++ configPath
+            createDirectoryIfMissing True (configPath </> "tmp")
+            forM_ ["html4.css", "user.css"] $ \f -> copyIfExists (source </> f) (configPath </> f)
+            images <- listDirectory (source </> "tmp")
+            forM_ images $ \f -> copyIfExists (source </> "tmp" </> f) (configPath </> "tmp" </> f)
+            writeConfigFile $ Map.fromList [ ("User_Agent_Stylesheet", configPath </> "html4.css")
+                                           , ("User_Stylesheet"      , configPath </> "user.css" ) ]
+    where copyIfExists from to = do e <- doesFileExist from
+                                    when e (copyFile from to)
 
 -- read configs
 retrieveConfigPath
@@ -40,9 +62,8 @@ retrieveConfigFile
 retrieveTempDir
     = do configPath <- retrieveConfigPath
          let tmpDir = configPath </> "tmp"
-         doesTmpExist <- doesDirectoryExist tmpDir
-         if doesTmpExist then return tmpDir
-                         else error $ "We could not find temporary directory at " ++ tmpDir
+         createDirectoryIfMissing True tmpDir
+         return tmpDir
 
 -- parser
 pFiles :: Parser [(String,String)]

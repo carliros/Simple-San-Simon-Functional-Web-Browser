@@ -126,6 +126,18 @@ toPixelValue iamtheroot fatherProps locProps iamreplaced iamPseudo prop
                                (PixelNumber num2) = computed_font_size iamtheroot fatherProps locProps iamreplaced iamPseudo "font-size" font_size
                            in PixelNumber (num1*num2)
 
+-- line-height: "normal" and numbers are inherited as they are, so that they
+-- scale with the font-size of each element; lengths and percentages are
+-- computed to pixels with the font-size of the element.
+computed_line_height iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop
+    = case specifiedValue prop of
+        KeyValue "normal" -> KeyValue "normal"
+        NumberValue num   -> NumberValue num
+        Percentage  per   -> let font_size = locProps `get` "font-size"
+                                 (PixelNumber px) = computed_font_size iamtheroot fatherProps locProps iamreplaced iamPseudo "font-size" font_size
+                             in PixelNumber ((per*px)/100)
+        _                 -> toPixelValue iamtheroot fatherProps locProps iamreplaced iamPseudo prop
+
 computed_border_color iamtheroot fatherProps locProps iamreplaced iamPseudo nm prop
     = case specifiedValue prop of
         NotSpecified     -> specifiedValue (locProps `get` "color")

@@ -18,6 +18,7 @@ module Parser.ParserCSS (
 , MapSelector
 ) where
 
+import           Control.Monad            (unless)
 import           Data.Char
 import qualified Data.ListLike                            as LL
 import qualified Data.Map                                 as Map
@@ -44,7 +45,7 @@ parseFileUserAgent file
                    then return (Map.empty)
                    else do he <- parseFile (pHojaEstilo HojaExterna UserAgent lista_valor_parser) file
                            return $ calcularEspecificidad he
-          else do putStrLn $ "I couldn't read the file: " ++ file
+          else do unless (null file) $ putStrLn $ "I couldn't read the file: " ++ file
                   return (Map.empty)
 
 -- | Reconoce Hojas de Estilo del User
@@ -57,7 +58,7 @@ parseFileUser file
                    then return (Map.empty)
                    else do he <- parseString (pHojaEstilo HojaExterna User lista_valor_parser) content
                            return $ calcularEspecificidad he
-          else do putStrLn $ "I couldn't read the file: " ++ file
+          else do unless (null file) $ putStrLn $ "I couldn't read the file: " ++ file
                   return (Map.empty)
 
 isEmptyFile :: String -> Bool

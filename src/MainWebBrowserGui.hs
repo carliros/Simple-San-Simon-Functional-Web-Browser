@@ -64,7 +64,7 @@ data Browser
 main :: IO ()
 main = do
     hSetBuffering stdout LineBuffering
-    app <- new Gtk.Application [ #applicationId := "org.hsbrowser.Browser" ]
+    app <- new Gtk.Application [ #applicationId := "org.hsbrowser.Browser", #flags := [Gio.ApplicationFlagsNonUnique] ]
     -- an optional url to open at start: 3sfwbrowser [url]
     args <- getArgs
     _ <- on app #activate (browser app (case args of { (url:_) -> Just url; [] -> Nothing }))
@@ -74,8 +74,11 @@ main = do
 browser :: Gtk.Application -> Maybe String -> IO ()
 browser app startUrl = do
     -- variables and config files
-    lfiles <- readConfigFile `catch` \(e :: SomeException) ->
-                do hPutStrLn stderr $ "Using the default configuration, could not read the config file: " ++ show e
+    ensureConfigDir `catch` \(e :: SomeException) ->
+        hPutStrLn stderr $ "Could not create the config directory: " ++ displayException e
+    lfiles <- readConfigFile `catch` \(_ :: SomeException) ->
+                do configPath <- retrieveConfigPath
+                   hPutStrLn stderr $ "No config file at " ++ configPath ++ ", using ./config/html4.css"
                    return $ Map.fromList [("User_Agent_Stylesheet", "./config/html4.css")]
     defaultcss4html <- parseFileUserAgent $ maybe "" id $ Map.lookup "User_Agent_Stylesheet" lfiles
     usercss4html    <- parseFileUser      $ maybe "" id $ Map.lookup "User_Stylesheet"       lfiles
